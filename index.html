@@ -1,15 +1,446 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="no-js" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--- basic page needs
+    ================================================== -->
+    <meta charset="utf-8">
     <title>Karan Tank</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- mobile specific metas
+    ================================================== -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CSS
+    ================================================== -->
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <!-- script
+    ================================================== -->
+    <script src="assets/js/modernizr.js"></script>
+    <script src="assets/js/pace.min.js"></script>
+
+    <!-- favicons
+    ================================================== -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+
 </head>
-<body>
-    Welcome!
-    <p>
-        Advanced Pentesting <a href="assets/pdf/Wifi_Attacks.pdf">Wifi Attacks</a>
-    </p>   
+
+<body id="top">
+
+    <div id="preloader">
+        <div id="loader"></div>
+    </div>
+
+    <!-- site header
+    ================================================== -->
+    <header class="s-header">
+
+        <div class="header-logo">
+            <a class="site-logo" href="index.html">
+                <img src="./assets/img/Logo1.svg" alt="Homepage">
+            </a>
+        </div>
+
+        <nav class="header-nav-wrap">
+            <ul class="header-main-nav">
+                <li class="current"><a class="smoothscroll" href="#intro" title="intro">Intro</a></li>
+                <li><a class="smoothscroll" href="#about" title="about">About</a></li>
+                <li><a class="smoothscroll" href="#services" title="services">Skills</a></li>
+                <li><a class="smoothscroll" href="#works" title="works">Works</a></li>
+                <li><a class="smoothscroll" href="#contact" title="contact us">Say Hello</a></li>	
+            </ul>
+
+            <ul class="header-social">
+                <li><a href="https://linkedin.com/in/Karan-Tank"><i class="fab fa-linkedin" aria-hidden="true"></i></a></li>
+            </ul>
+        </nav>
+
+        <a class="header-menu-toggle" href="#"><span>Menu</span></a>
+
+    </header> <!-- end s-header -->
+
+
+    <!-- intro
+    ================================================== -->
+    <section id="intro" class="s-intro target-section">
+
+        <div class="row intro-content">
+
+            <div class="column large-9 mob-full intro-text">
+                <h3>Hello, I'm Karan Tank</h3>
+                <h1>
+                    Information Security Analyst <br>
+                    CSI, CHFI
+                </h1>
+            </div>
+
+            <div class="intro-scroll">
+                <a href="#about" class="intro-scroll-link smoothscroll">
+                    Scroll For More
+                </a>
+            </div>
+
+            <div class="intro-grid"></div>
+            <div class="intro-pic"></div>
+
+        </div> <!-- end row -->
+
+    </section> <!-- end intro -->
+
+
+    <!-- about
+    ================================================== -->
+    <section id="about" class="s-about target-section">
+
+        <div class="about-me">
+
+            <div class="row heading-block" data-aos="fade-up">
+                <div class="column large-full">
+                    <h2 class="section-heading">About Me</h2>
+                </div>
+            </div>
+
+            <div class="row about-me__content" data-aos="fade-up">
+                <div class="column large-full about-me__text">
+                    <p class="lead">
+                    Information Security professional 
+                    with 4 Months of Co-Op experience developing and 
+                    implementing security solutions with Corporation of City of Brampton.
+                    Certified with EC-Council's Computer Hacking Forensic Investigator(CHFI) and 
+                    currently working with gomart.ca as Information Security Analyst
+                    </p>
+                </div>
+            </div>
+    
+            <div class="row about-me__buttons">
+                <div class="column large-half tab-full" data-aos="fade-up">
+                    <a href="assets/pdf/ECC-CHFI-Certificate-ANSI.pdf" class="btn btn--stroke full-width">Certification</a>
+                </div>
+                <div class="column large-half tab-full" data-aos="fade-up">
+                    <a href="assets/pdf/Resume-Karan-Tank.pdf" class="btn btn--primary full-width">Resume</a>
+                </div>
+            </div>
+
+        </div> <!-- end about-me -->
+
+        <div class="about-experience">
+
+            <div class="row heading-block" data-aos="fade-up">
+                <div class="column large-full">
+                    <h2 class="section-heading">Work & Education</h2>
+                </div>
+            </div>
+
+            <div class="row about-experience__timeline">
+
+                <div class="column large-half tab-full" data-aos="fade-up">
+                    <div class="timeline">
+
+                        <div class="timeline__icon-wrap">
+                            <span class="timeline__icon timeline__icon--work"></span>
+                        </div>
+
+                        <div class="timeline__block">
+                            <div class="timeline__bullet"></div>
+                            <div class="timeline__header">
+                                <p class="timeline__timeframe">July 2020 - Present</p>
+                                <h3 class="item-title">Information Security Analyst</h3>
+                                <h5>Gomart.ca</h5>
+                            </div>
+                            <div class="timeline__desc">
+                                <p>Enforcing Brute force attack prevention, IP blacklisting, Filesystem Security
+                                Protection against XSS, image hotlinking, malicious crawling bots
+                                Implementing and Configuring Firewall rules, filtering outbound requests
+                                Spam prevention using Google reCaptcha, Honeypot, Registration by approval
+                                Maintaining code and database backups
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline__block">
+                            <div class="timeline__bullet"></div>
+                            <div class="timeline__header">
+                                <p class="timeline__timeframe">March 2016 - June 2017</p>
+                                <h3 class="item-title">Information Security Analyst, Co-Op</h3>
+                                <h5>Corporation of City of Brampton</h5>
+                            </div>
+                            <div class="timeline__desc">
+                                <p>
+                                    Developed Powershell Script to automate the day-to-day work
+                                    Onboarding and Offboarding of User accounts
+                                    Assigning email addresses and Access control user accounts on Active Directory
+                                    Performed risk analysis to identify appropriate security measures
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="column large-half tab-full" data-aos="fade-up">
+                    <div class="timeline">
+
+                        <div class="timeline__icon-wrap">
+                            <span class="timeline__icon timeline__icon--education"></span>
+                        </div>
+                        <div class="timeline__block">
+                            <div class="timeline__bullet"></div>
+                            <div class="timeline__header">
+                                <p class="timeline__timeframe">July 2020</p>
+                                <h3 class="item-title">Computer Hacking Forensic Investigator (CHFIv9)</h3>
+                                <h5>Ec-Council</h5>
+                            </div>
+                            <div class="timeline__desc">
+                                <p>
+                                    Perform incident response and computer forensics
+                                    Identify data, images and/or activity which may be target of an internal investigation
+                                    Investigating bit-stream imaging/acquiring of the digital media seized
+                                    Recovering information and electronic data from computer data storage devices
+                                    Extract and analyze logs from various devices such as proxies, firewalls, IPSs, IDSes, Desktop, Servers, Switches, AD
+                                    servers, DHCP servers, etc
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline__block">
+                            <div class="timeline__bullet"></div>
+                            <div class="timeline__header">
+                                <p class="timeline__timeframe">January 2018 - April 2020</p>
+                                <h3 class="item-title">Computer Security and Investigations (Advanced Diploma)</h3>
+                                <h5>Sir Sandford Fleming College</h5>
+                            </div>
+                            <div class="timeline__desc">
+                                <p>
+                                    3 years Advanced Diploma
+                                    Advanced Ethical Hacking, Advanced Computer Forensics
+                                    Network Security & Incident Response
+                                    Vulnerability, Threat and Risk Analysis
+                                    Internet and Hacking Investigations
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- end about-experience -->
+
+    </section> <!-- end s-about -->
+
+
+    <!-- services
+    ================================================== -->
+    <section id="services" class="s-services ss-dark target-section">
+
+        <div class="shadow-overlay"></div>
+
+        <div class="row heading-block heading-block--center" data-aos="fade-up">
+            <div class="column large-full">
+                <h2 class="section-heading section-heading--centerbottom">Capabilities</h2>
+
+                <p class="section-desc">
+                    My passion and goal is to help you make your business secure.
+                </p>
+            </div>
+        </div> <!-- end heading-block -->
+
+        <div class="row services-list block-large-1-3 block-medium-1-2 block-tab-full">
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">Network Architecture</h4>
+                </div>
+            </div>
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">Network Security</h4>
+                </div>
+            </div>
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">Pentesting</h4>
+                </div>
+            </div>
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">Risk Management</h4>
+                </div>
+            </div>
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">Incident Handeling</h4>
+                </div>
+            </div>
+
+            <div class="column item-service" data-aos="fade-up">
+                <div class="item-service__content">
+                    <h4 class="item-title">IDS/IPS</h4>
+                </div>
+            </div>
+
+        </div> <!-- end services-list -->
+
+    </section> <!-- end s-services -->
+
+
+
+    <!-- works
+    ================================================== -->
+    <section id="works" class="s-works target-section">
+
+        <div class="row heading-block heading-block--center" data-aos="fade-up">
+            <div class="column large-full">
+                <h2 class="section-heading section-heading--centerbottom">Selected Works</h2>
+                <p class="section-desc">
+                    Here are some of my selected works I have done lately. Feel free to 
+                    check them out.
+                </p>
+            </div>
+        </div> <!-- end heading-block -->
+
+        <div class="masonry-wrap">
+
+            <div class="masonry">
+                <div class="grid-sizer"></div>
+    
+                <div class="masonry__brick" data-aos="fade-up">
+                    <div class="item-folio">
+                        <div class="item-folio__thumb">
+                            <a href="assets/pdf/Wifi_Attacks.pdf" class="thumb-link" title="Shutterbug" data-size="1050x700">
+                                <img src="assets/img/wifi-security.png" 
+                                     srcset="assets/img/wifi-security.png 1x, assets/img/wifi-security.png 2x" alt="">
+                            </a>    
+                        </div>
+    
+                        <div class="item-folio__text">
+                            <h4 class="item-folio__title">
+                                Wifi Attacks
+                            </h4>
+                        </div>
+                    </div>
+                </div> <!-- end masonry__brick -->
+    
+                <div class="masonry__brick" data-aos="fade-up">
+                    <div class="item-folio">
+                        <div class="item-folio__thumb">
+                            <a href="assets/pdf/OWASP_VulnerabilityAssessment.pdf" class="thumb-link" title="OWASP_VulnerabilityAssessment" data-size="1050x700">
+                                <img src="assets/img/VulnerabilityAss.png" 
+                                     srcset="assets/img/VulnerabilityAss.png 1x, assets/img/VulnerabilityAss.png 2x" alt="">
+                            </a>
+                        </div>
+                        <div class="item-folio__text">
+                            <h4 class="item-folio__title">
+                                OWASP_VulnerabilityAssessment
+                            </h4>
+                        </div>
+                    </div>
+                </div> <!-- end masonry__brick -->
+
+                <div class="masonry__brick" data-aos="fade-up">
+                    <div class="item-folio">
+                            
+                        <div class="item-folio__thumb">
+                            <a href="assets/pdf/Karan_tank_Syslog.pdf" class="thumb-link" title="Syslog" data-size="1050x700">
+                                <img src="assets/img/sec.png"
+                                     srcset="assets/img/sec.png 1x, assets/img/sec.png 2x" alt="">
+                            </a>
+                        </div>
+                        <div class="item-folio__text">
+                            <h4 class="item-folio__title">
+                                Syslog
+                            </h4>
+                        </div>
+                    </div>
+                </div> <!-- end masonry__brick -->
+
+                <div class="masonry__brick" data-aos="fade-up">
+                    <div class="item-folio">
+                        <div class="item-folio__thumb">
+                            <a href="assets/pdf/Web_auth.pdf" class="thumb-link" title="Web Authentication" data-size="1050x700">
+                                <img src="assets/img/authentication.jpeg" 
+                                     srcset="assets/img/authentication.jpeg 1x, assets/img/authentication.jpeg 2x" alt="">
+                            </a>
+                        </div>
+                        <div class="item-folio__text">
+                            <h4 class="item-folio__title">
+                                Web Authentication
+                            </h4>
+                        </div>
+                    </div>
+                
+
+            </div> <!-- end masonry -->
+
+        </div> <!-- end masonry-wrap -->
+
+    </section> <!-- end s-work -->
+
+
+
+
+    <!-- contact
+    ================================================== -->
+    <section id="contact" class="s-contact ss-dark target-section">
+
+        <div class="row heading-block" data-aos="fade-up">
+            <div class="column large-full">
+                <h2 class="section-heading">Get In Touch</h2>
+            </div>
+        </div>
+
+        <div class="row contact-main" data-aos="fade-up">
+            <div class="column large-full">
+                <p class="contact-email">
+                    <a href="mailto:#0">tankkaran89@gmail.com</a>
+                </p>
+
+                <p class="section-desc">
+                I'm happy to connect and work together to build
+                something secure.
+                <a href="mailto:#0">Email Me</a>.
+                </p>
+            </div>
+        </div>
+
+        <div class="row contact-infos" data-aos="fade-up" data-aos-anchor=".contact-main">
+
+
+            <div class="column large-7 medium-full contact-social">
+                <h4>Social</h4>
+                <ul>
+                    <li><a href=https://linkedin.com/in/Karan-Tank>Linkedin</a></li>
+                </ul>
+            </div>
+
+        </div> <!-- end contact-infos -->
+
+    </section> <!-- end s-contact -->
+
+
+    <!-- footer
+    ================================================== -->
+    <footer>
+            <div class="ss-go-top">
+                <a class="smoothscroll" title="Back to Top" href="#top"></a>
+            </div>
+        </div>
+    </footer>
+
+
+
+    <!-- Java Script
+    ================================================== -->
+    <script src="assets/js/jquery-3.2.1.min.js"></script>
+    <script src="assets/js/plugins.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
-</html>
