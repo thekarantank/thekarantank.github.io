@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCPPTv3 Certification: The Good, the Bad, and the Lessons Learned</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117; /* Dark background */
+            color: #c9d1d9; /* Light text color */
+        }
+
+        /* Container Styling */
+        .container {
+            width: 85%;
+            margin: 30px auto;
+            padding: 20px;
+            background: #161b22; /* Slightly lighter dark for container */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header Styling */
+        h1, h2 {
+            color: #4a90e2; /* Softer blue for headings */
+            border-left: 5px solid #4a90e2;
+            padding-left: 10px;
+            text-shadow: 0 0 1px #4a90e2; /* Reduced glow */
+        }
+
+        /* Paragraph Styling */
+        p {
+            margin-bottom: 15px;
+        }
+
+        /* Unordered List Styling */
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        /* Code-style Tool & Wordlist Highlighting */
+        .highlight {
+            color: #ffa657; /* Orange for highlights */
+            font-weight: bold;
+        }
+
+        /* Section Divider */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        /* Footer Styling */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        /* Link Styling */
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Add an animated glow effect to headers */
+        h1, h2 {
+            text-shadow: 0 0 0.5px #58a6ff, 0 0 2px #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>eCPPTv3 Certification: The Good, the Bad, and the Lessons Learned</h1>
+        <p>The <span class="highlight">eLearnSecurity Professional Penetration Tester (eCPPT)</span> certification is a challenging, hands-on examination that puts your penetration testing skills to the ultimate test. With its focus on real-world scenarios and practical application, it’s an exam that demands preparation, strategy, and persistence. Here’s my journey through the certification, including the tools I used, challenges faced, and lessons learned.</p>
+        
+        <div class="section">
+            <h2>The Good</h2>
+            <ul>
+                <li><span class="highlight">Practical Focus:</span> The eCPPT exam isn’t about rote memorization; it’s about applying skills to real scenarios. From enumeration to exploitation, every step mimics what a real-world penetration tester might face.</li>
+                <li><span class="highlight">Flexible Schedule:</span> You get a full 24 hours to complete the exam.(45 Questions)</li>
+                <li><span class="highlight">Complimentary Support:</span> When I failed my first two attempts, eLearnSecurity extended my premium subscription by an additional month. This generosity allowed me to hone my skills further.</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>The Bad</h2>
+            <ul>
+                <li><span class="highlight">Connectivity Issues:</span> The exam is conducted in a virtual environment (Guacamole VM). Unfortunately, I faced constant disconnections during the last six hours of my exam. While the session reconnected automatically without data loss, it broke my flow and forced me to reset the lab multiple times.</li>
+                <li><span class="highlight">Learning Material Gaps:</span> The resources provided by eLearnSecurity alone weren’t sufficient for the exam. To bridge the gap, I had to practice extensively on platforms like <a href="https://tryhackme.com" target="_blank">TryHackMe</a> and <a href="https://www.hackthebox.com" target="_blank">Hack The Box</a>.</li>
+                <li><span class="highlight">Tight Second Attempt Window:</span> If you fail your first attempt, the second must be taken within 14 days. Despite the voucher being valid for over a month, this time constraint adds pressure.</li>
+                <li><span class="highlight">Time Crunch:</span> While the 24-hour exam window sounds sufficient, it left me sleep-deprived and unable to focus properly by the end. I strongly advise taking proper breaks and ensuring enough rest to maintain productivity.</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>My Exam Strategy</h2>
+            <p>I started the exam at 3 PM, dedicating the first day to extensive enumeration. My plan was to work until 2 AM, sleep for a few hours, and resume at 7 AM. While this worked initially, the lack of proper rest became a problem later.</p>
+            <p>One major mistake was spending too much time trying to crack a specific user password on a Linux machine. In hindsight, I should have moved on to other methods or accounts instead of wasting hours on one approach.</p>
+        </div>
+        
+        <div class="section">
+            <h2>Preparation: Beyond the Provided Materials</h2>
+            <ul>
+                <li><span class="highlight">INE</span>
+                    <ul>
+                        <li>Watched all the course videos</li>
+                        <li>Practiced all the Labs provided by INE</li>
+                    </ul>
+                </li>
+                <li><span class="highlight">TryHackMe:</span>
+                    <ul>
+                        <li>Completed the Jr Penetration Tester path.</li>
+                        <li>Finished 80% of the Offensive Pentesting path.</li>
+                        <li>Key rooms: Mr. Robot CTF, GoldenEye, Blue, Game Zone, HackPark, Adventure Time, and more.</li>
+                    </ul>
+                </li>
+                <li><span class="highlight">Hack The Box:</span> Focused on Active Directory Enumeration & Attacks.</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Tools and Wordlists Used</h2>
+            <p><span class="highlight">Tools:</span></p>
+            <div class="two-columns">
+                <ul>
+                    <li>GTFObins</li>
+                    <li>Nmap</li>
+                    <li>fping</li>
+                    <li>WpScan</li>
+                    <li>SearchSploit</li>
+                    <li>John the Ripper</li>
+                    <li>Hydra</li>
+                    <li>kerbrute</li>
+                </ul>
+                <ul>
+                    <li>CrackMapExec</li>
+                    <li>rpcclient</li>
+                    <li>smbclient</li>
+                    <li>bloodhound-python</li>
+                    <li>xfreerdp</li>
+                    <li>Impacket Scripts</li>
+                    <li>exploitdb</li>
+                    <li>Obsidian</li>
+                </ul>
+            </div>
+        </div>
+        
+       
+            <p><span class="highlight">Wordlists:</span></p>
+            <ul>
+                <li>Seasons.txt</li>
+                <li>Months.txt</li>
+                <li>common_corporate_passwords.lst</li>
+                <li>xato-net-10-million-passwords-10000.txt</li>
+                <li>rockyou.txt</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Lessons Learned</h2>
+            <ul>
+                <li><span class="highlight">Prioritize Rest:</span> Sleep deprivation reduces focus and decision-making ability. Ensure you get 4-5 hours of rest to maintain productivity.</li>
+                <li><span class="highlight">Brute Force Strategically:</span> If one path isn’t yielding results, move on to another approach. Avoid tunnel vision.</li>
+                <li><span class="highlight">Test Your Setup:</span> Ensure you’re familiar with the tools and environment (e.g., Guacamole VM) to minimize surprises during the exam.</li>
+                <li><span class="highlight">Diversify Learning:</span> Leverage platforms like TryHackMe and Hack The Box to practice scenarios beyond the official course materials.</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Final Thoughts</h2>
+            <p>The eCPPT exam is an incredible opportunity to test your penetration testing skills in a realistic environment. It’s tough, but with the right preparation and mindset, it’s achievable. While my experience included hurdles like connectivity issues and strategic missteps, it was a deeply rewarding journey that enhanced my skills and resilience.</p>
+            <p>Good luck to anyone embarking on this certification—remember, persistence and preparation are key!</p>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 CyberSec Insights. All Rights Reserved.</p>
+    </footer>
+</body>
+<style>
+    .two-columns {
+        display: flex;
+        gap: 20px;
+    }
+
+    .two-columns ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .two-columns ul li {
+        margin: 5px 0;
+        color: #c9d1d9; /* Match dark theme text color */
+    }
+
+    h2 {
+        color: #58a6ff; /* Match heading theme */
+    }
+
+    .highlight {
+        color: #39d353; /* Match highlight color */
+    }
+
+    body {
+        background-color: #0d1117;
+        font-family: "Courier New", Courier, monospace;
+        margin: 20px;
+    }
+</style>
+</html>
