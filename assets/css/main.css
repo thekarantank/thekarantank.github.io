@@ -1468,7 +1468,6 @@ input::-moz-focus-inner {
   letter-spacing: .5rem;
   margin-top: 0;
   padding-top: 3.2rem;
-  margin-bottom: 8rem;
   position: relative;
 }
 
@@ -2167,7 +2166,7 @@ input::-moz-focus-inner {
  *
  * ------------------------------------------------------------------- */
 .s-about {
-  padding-top: 19.2rem;
+  padding-top: 78px;
   padding-bottom: 16.8rem;
   background-color: #ffffff;
 }
@@ -2177,22 +2176,15 @@ input::-moz-focus-inner {
 }
 
 .s-about > [class*="about-"] {
-  margin-bottom: 15.2rem;
+  margin-bottom: 78px;
 }
 
 .s-about > [class*="about-"]:last-child {
   margin-bottom: 0;
 }
 
-.about-me__text {
-  -webkit-columns: 2 360px;
-  -moz-columns: 2 360px;
-  columns: 2 360px;
-  column-gap: 64px;
-}
-
-.about-me__buttons {
-  margin-top: 4.8rem;
+.about-me__buttons > div {
+  padding-top: 78px;
 }
 
 .about-me__buttons .column:first-child {
@@ -2942,7 +2934,7 @@ input::-moz-focus-inner {
 
 @media screen and (max-width:800px) {
   .s-works {
-    padding-top: 16rem;
+    padding-top: 78px;
   }
 
   .masonry-wrap {
