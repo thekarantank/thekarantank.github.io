@@ -455,7 +455,7 @@ textarea {
 	-webkit-flex: 1 1 0%;
 	-ms-flex: 1 1 0%;
 	flex: 1 1 0%;
-	padding: 0 20px;
+	padding: 19px;
 }
 
 .collapse > .column,
