@@ -1552,7 +1552,7 @@ input::-moz-focus-inner {
     text-align: center;
   }
 
-  .section-heading::before {
+  .section-heading::before {s
     top: auto;
     bottom: 0;
     left: 50%;
@@ -2166,9 +2166,7 @@ input::-moz-focus-inner {
  *
  * ------------------------------------------------------------------- */
 .s-about {
-  padding-top: 78px;
-  padding-bottom: 16.8rem;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
 }
 
 .s-about .row {
@@ -2184,15 +2182,16 @@ input::-moz-focus-inner {
 }
 
 .about-me__buttons > div {
-  padding-top: 78px;
 }
 
 .about-me__buttons .column:first-child {
   padding-right: 32px;
+  padding-top: 78px;
 }
 
 .about-me__buttons .column:last-child {
   padding-left: 32px;
+  padding-top: 78px;
 }
 
 /* -------------------------------------------------------------------
@@ -2274,8 +2273,6 @@ input::-moz-focus-inner {
   position: relative;
   padding-left: 5.6rem;
   padding-bottom: .8rem;
-  margin-top: 2.8rem;
-  min-height: 35.6rem;
 }
 
 .timeline .timeline__block:last-child {
@@ -3264,8 +3261,6 @@ input::-moz-focus-inner {
  *
  * ------------------------------------------------------------------- */
 .s-contact {
-  padding-top: 18.4rem;
-  padding-bottom: 6.4rem;
   background-color: #050505;
 }
 
@@ -3286,7 +3281,6 @@ input::-moz-focus-inner {
   font-size: 40px;
   font-weight: 400;
   line-height: 1;
-  margin: 5.6rem 0 8rem;
 }
 
 .contact-infos {
