@@ -1,119 +1,83 @@
 <!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
-
-    <!--- basic page needs
-    ================================================== -->
     <meta charset="utf-8">
-    <title>Karan Tank</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <!-- mobile specific metas
-    ================================================== -->
+    <title>Karan Tank | Cybersecurity Portfolio</title>
+    <meta name="description" content="Portfolio of Karan Tank, Cybersecurity Engineer specializing in penetration testing, WAF, and threat detection.">
+    <meta name="author" content="Karan Tank">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- CSS
-    ================================================== -->
+    <!-- CSS -->
     <link rel="stylesheet" href="assets/css/base.css">
     <link rel="stylesheet" href="assets/css/main.css">
 
-    <!-- script
-    ================================================== -->
+    <!-- Custom style for background -->
+    <style>
+        .s-experience, .s-certifications {
+            background-color: #fff;
+            color: #111;
+        }
+        .certification-logo {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <!-- Scripts -->
     <script src="assets/js/modernizr.js"></script>
     <script src="assets/js/pace.min.js"></script>
-
-    <!-- favicons
-    ================================================== -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-
 </head>
-
 <body id="top">
 
     <div id="preloader">
         <div id="loader"></div>
     </div>
 
-    <!-- site header
-    ================================================== -->
+    <!-- Header -->
     <header class="s-header">
-
         <div class="header-logo">
             <a class="site-logo" href="index.html">
-                <img src="./assets/img/Logo1.svg" alt="Homepage">
+                <img src="./assets/img/Logo1.svg" alt="Karan Tank Logo">
             </a>
         </div>
 
         <nav class="header-nav-wrap">
             <ul class="header-main-nav">
-                <li class="current"><a class="smoothscroll" href="#intro" title="intro">Intro</a></li>
-                <li><a class="smoothscroll" href="#about" title="about">About</a></li>
-                <li><a class="smoothscroll" href="#writeup" title="writeup">WriteUps</a></li>
-                <li><a class="smoothscroll" href="#Resume" title="Resume">Resume</a></li>
-                <!--
-                <li><a class="smoothscroll" href="#works" title="works">Projects</a></li>
-                -->
-                <li><a class="smoothscroll" href="#works" title="works">Certifications</a></li>
-                <li><a class="smoothscroll" href="#contact" title="contact us">Say Hello</a></li>	
+                <li class="current"><a class="smoothscroll" href="#intro">Intro</a></li>
+                <li><a class="smoothscroll" href="#about">About</a></li>
+                <li><a class="smoothscroll" href="#writeup">WriteUps</a></li>
+                <li><a class="smoothscroll" href="#Resume">Resume</a></li>
+                <li><a class="smoothscroll" href="#works">Certifications</a></li>
+                <li><a class="smoothscroll" href="#contact">Contact</a></li>   
             </ul>
 
             <ul class="header-social">
-                <li><a href="https://linkedin.com/in/Karan-Tank"><i class="fab fa-linkedin" aria-hidden="true"></i></a></li>
+                <li><a href="https://linkedin.com/in/Karan-Tank"><i class="fab fa-linkedin"></i></a></li>
+                <li><a href="https://github.com/thekarantank"><i class="fab fa-github"></i></a></li>
             </ul>
         </nav>
 
         <a class="header-menu-toggle" href="#"><span>Menu</span></a>
+    </header>
 
-    </header> <!-- end s-header -->
-
-
-    <!-- intro
-    ================================================== -->
+    <!-- Intro -->
     <section id="intro" class="s-intro target-section">
-
         <div class="row intro-content">
-    
             <div class="column large-9 mob-full intro-text">
-                <h3>Welcome to My Digital Frontier!</h3>
-                <h1>
-                    I’m Karan Tank,<br>
-                </h1>
-                <h3>a Dedicated Cybersecurity Professional.</h3>
-                <p>
-                </p>
+                <h3>Welcome to My Cybersecurity Portfolio</h3>
+                <h1>I’m Karan Tank</h1>
+                <h3>Security Engineer | Penetration Tester | Threat Hunter</h3>
+                <p>Exploring, testing, and securing the digital world.</p>
             </div>
-    
             <div class="intro-scroll">
-                <a href="#about" class="intro-scroll-link smoothscroll">
-                    Enter the Realm of Possibilities
-                </a>
+                <a href="#about" class="intro-scroll-link smoothscroll">Learn More</a>
             </div>
-    
         </div>
-    
-    </section>
-    
-    
     </section>
 
-            <div class="intro-grid"></div>
-            <div class="intro-pic"></div>
-
-        </div> <!-- end row -->
-
-    </section> <!-- end intro -->
-
-
-    <!-- about
-    ================================================== -->
+    <!-- About -->
     <section id="about" class="s-about target-section">
-
         <div class="about-me">
-
             <div class="row heading-block" data-aos="fade-up">
                 <div class="column large-full">
                     <h2 class="section-heading">About Me</h2>
@@ -122,367 +86,200 @@
 
             <div class="row about-me__content" data-aos="fade-up">
                 <div class="column large-full about-me__text">
-                    <p>Hi, I’m Karan Tank, a Security Engineer at Thales specializing in Web Application Firewalls, DDoS protection, and bot management. I’m certified in eCPPTv3, SANS GCIH, and more, with a strong focus on safeguarding digital systems. In my free time, I dive into TryHackMe and HackTheBox challenges and explore penetration testing to stay ahead of threats and strengthen defenses.</p>
+                    <p>Hi, I’m Karan Tank, a Security Engineer at Thales with expertise in Web Application Firewalls, DDoS protection, and bot management. I hold certifications like <strong>eCPPTv3</strong> and <strong>SANS GCIH</strong>. Outside work, I stay sharp with challenges on TryHackMe and HackTheBox, constantly improving my penetration testing skills.</p>
                 </div>
             </div>
-    
+
             <div class="row about-me__buttons">
                 <div id="writeup" class="column large-half tab-full" data-aos="fade-up">
-                    <a href="WriteUps.html" class="btn btn--stroke full-width">WriteUps</a>
+                    <a href="WriteUps.html" class="btn btn--stroke full-width">Read My WriteUps</a>
                 </div>
                 <div id="Resume" class="column large-half tab-full" data-aos="fade-up">
-                    <a href="assets/pdf/Resume-Karan-Tank.pdf" class="btn btn--primary full-width">Resume</a>
+                    <a href="assets/pdf/Resume-Karan-Tank.pdf" class="btn btn--primary full-width">Download Resume (PDF)</a>
                 </div>
             </div>
+        </div>
+    </section>
 
-        </div> <!-- end about-me -->
-
+    <!-- Experience & Education -->
+    <section class="s-experience target-section">
+        <div class="row heading-block" data-aos="fade-up">
+            <div class="column large-full">
+                <h2 class="section-heading">Experience & Education</h2>
+            </div>
+        </div>
         <div class="row about-experience__timeline">
-
+            <!-- Experience -->
             <div class="column large-half tab-full" data-aos="fade-up">
                 <div class="timeline">
-        
-                    <div class="timeline__icon-wrap">
-                        <span class="timeline__icon timeline__icon--work"></span>
-                    </div>
-        
+                    <div class="timeline__icon-wrap"><span class="timeline__icon timeline__icon--work"></span></div>
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">July 2024 - Present</p>
+                            <p class="timeline__timeframe">July 2024 - Present (1 year 2 months)</p>
                             <h3 class="item-title">Security Engineer</h3>
                             <h5>Thales - Advanced Security Response Team (ASRT)</h5>
                         </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Spearheaded application security initiatives, integrating Web Application Firewall (WAF) and advanced bot protection.
-                                Led DDoS protection efforts to mitigate the impact of malicious attacks.
-                                Utilized Tableau to analyze traffic and created rules to enhance operational security.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">Jan 2024 - July 2024</p>
+                            <p class="timeline__timeframe">Jan 2024 - July 2024 (6 months)</p>
                             <h3 class="item-title">SOC Engineer</h3>
                             <h5>Imperva</h5>
                         </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Implemented strategies for bot detection, account takeover prevention, and CVE analysis.
-                                Analyzed network traffic patterns to identify and respond to incidents across OSI layers 3/4 and 7.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">May 2023 - Dec 2023</p>
+                            <p class="timeline__timeframe">May 2023 - Dec 2023 (7 months)</p>
                             <h3 class="item-title">Senior Security Analyst (SOC)</h3>
                             <h5>SecureOps</h5>
                         </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Conducted advanced analysis, proactive threat hunting, and incident investigations.
-                                Utilized the MITRE ATT&CK framework to enhance client security use cases.
-                                Provided recommendations and resolved complex security incidents.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">May 2022 - Apr 2023</p>
+                            <p class="timeline__timeframe">May 2022 - Apr 2023 (11 months)</p>
                             <h3 class="item-title">Security Analyst (SOC)</h3>
                             <h5>SecureOps</h5>
                         </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Performed threat hunting, analyzed security alerts, and reviewed escalations through SIEM.
-                                Maintained clear communication with stakeholders to ensure effective resolution of incidents.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        <!---->
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">Jan 2021 - Nov 2021</p>
+                            <p class="timeline__timeframe">Jan 2021 - Nov 2021 (10 months)</p>
                             <h3 class="item-title">Technical Support Specialist</h3>
                             <h5>Vox Mobile</h5>
                         </div>
-                        <div class="timeline__desc">
-                           <!--
-                            <p>
-                                Delivered end-user support and managed devices using BlackBerry UEM, VMware Workspace ONE, and Microsoft Intune MDM.
-                                Handled procurement requests and optimized mobility support workflows.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        
-                </div>
-            </div>
-        
-            <div class="column large-half tab-full" data-aos="fade-up">
-                <div class="timeline">
-        
-                    <div class="timeline__icon-wrap">
-                        <span class="timeline__icon timeline__icon--education"></span>
-                    </div>
-        
-        
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">July 2022 - Jan 2023</p>
-                            <h3 class="item-title">Cybersecurity Training Program</h3>
-                            <h5>Toronto Metropolitan University</h5>
-                        </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Completed comprehensive training in cybersecurity fundamentals and advanced practices.
-                            </p>
-                        -->
-                        </div>
-                    </div>
-                    <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
-                        <div class="timeline__header">
-                            <p class="timeline__timeframe">Jan 2022 - April 2022</p>
-                            <h3 class="item-title">Junior QA and Security Analyst Program</h3>
-                            <h5>NPower Canada</h5>
-                        </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Completed intensive training in cybersecurity fundamentals, focusing on threat analysis, incident response, and security best practices.
-                                Gained hands-on experience with tools and techniques for vulnerability assessment, risk management, and system hardening.
-                            </p>
-                            -->
-                        </div>
-                    </div>
-                    <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
-                        <div class="timeline__header">
-                            <p class="timeline__timeframe">Jan 2020 - April 2020</p>
+                            <p class="timeline__timeframe">Jan 2020 - Apr 2020 (3 months)</p>
                             <h3 class="item-title">Internship - IT Security Analyst</h3>
                             <h5>Corporation of City of Brampton</h5>
                         </div>
-                        <div class="timeline__desc">
-                            <!--
-                            <p>
-                                Streamlined workflows by implementing PowerShell scripts for automation, enhancing efficiency and accuracy.
-                                Managed user onboarding/offboarding, ensured secure access controls, and conducted Active Directory assessments to strengthen organizational security.
-                            </p>
-                            -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div class="column large-half tab-full" data-aos="fade-up">
+                <div class="timeline">
+                    <div class="timeline__icon-wrap"><span class="timeline__icon timeline__icon--education"></span></div>
+
+                    <div class="timeline__block">
+                        <div class="timeline__header">
+                            <p class="timeline__timeframe">July 2025 - Oct 2025 (3 months)</p>
+                            <h3 class="item-title">Advanced Cyber Education Course</h3>
+                            <h5>Toronto Metropolitan University</h5>
                         </div>
                     </div>
+
                     <div class="timeline__block">
-                        <div class="timeline__bullet"></div>
                         <div class="timeline__header">
-                            <p class="timeline__timeframe">Jan 2018 - April 2020</p>
+                            <p class="timeline__timeframe">July 2022 - Jan 2023 (6 months)</p>
+                            <h3 class="item-title">Cybersecurity Training Program</h3>
+                            <h5>Toronto Metropolitan University</h5>
+                        </div>
+                    </div>
+
+                    <div class="timeline__block">
+                        <div class="timeline__header">
+                            <p class="timeline__timeframe">Jan 2022 - Apr 2022 (3 months)</p>
+                            <h3 class="item-title">Junior QA and Security Analyst Program</h3>
+                            <h5>NPower Canada</h5>
+                        </div>
+                    </div>
+
+                    <div class="timeline__block">
+                        <div class="timeline__header">
+                            <p class="timeline__timeframe">Jan 2018 - Apr 2020 (2 years 3 months)</p>
                             <h3 class="item-title">Advanced Diploma in Computer Security and Investigations (CSI)</h3>
                             <h5>Sir Sandford Fleming College</h5>
                         </div>
-                        <div class="timeline__desc">
-                           <!-- 
-                            <p>
-                                Focused on ethical hacking, incident response, vulnerability analysis, and advanced forensics.
-                            </p>
-                            -->
-                        </div>
                     </div>
-        
                 </div>
             </div>
         </div>
+    </section>
 
-
-    <!-- services
-    ================================================== -->
-    <div class="row heading-block heading-block--center" data-aos="fade-up">
-        <div class="column large-full">
-            <h2 id = works class="section-heading section-heading--centerbottom">Certifications</h2>
-            <p class="section-desc">
-                Showcase of my professional achievements and industry-recognized certifications.
-            </p>
-        </div>
-    </div> <!-- end heading-block -->
-    
-    <div class="row certifications-list block-large-1-5 block-medium-1-5 block-tab-1-5 text-center">
-    
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/ecppt.png" alt="ecppt" class="certification-logo">
-                <strong>elearnSecurity eCPPTv3</strong>
-            </div>
-        </div>
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/tryhackme.png" alt="TryHackMe" class="certification-logo">
-                <strong>TryHackMe Jr. Penetration Tester</strong>
-            </div>
-        </div>
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/GCIH.png" alt="SANS GCIH" class="certification-logo">
-                <strong>SANS GCIH</strong>
-            </div>
-        </div>
-
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/GSEC.png" alt="CompTIA Security+" class="certification-logo">
-                <strong>SANS GSEC</strong>
-            </div>
-        </div>
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/GFACT.png" alt="CompTIA Security+" class="certification-logo">
-                <strong>SANS GFACT</strong>
-            </div>
-        </div>
-
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/SecurityPlus.png" alt="CompTIA Security+" class="certification-logo">
-                <strong>CompTIA Security+</strong>
-            </div>
-        </div>
-    
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/CHFI.png" alt="EC-Council CHFI" class="certification-logo">
-                <strong>EC-Council CHFI</strong>
-            </div>
-        </div>
-        <div class="column item-certification" data-aos="fade-up">
-            <div class="item-certification__content">
-                <img src="assets/img/pristine.webp" alt="Pritine" class="certification-logo">
-                <strong>Pristine Certified Information Security and Ethical Hacker (CISEH)</strong>
-            </div>
-        </div>
-    
-            </div>
-        </div>
-    
-    </div> <!-- end certifications-list -->
-
-
-
-    <!-- works
-    ================================================== -->
-<!--
-    <section id="works" class="s-works target-section">
-
+    <!-- Certifications -->
+    <section id="works" class="s-certifications target-section">
         <div class="row heading-block heading-block--center" data-aos="fade-up">
             <div class="column large-full">
-                <h2 class="section-heading section-heading--centerbottom">Selected Works</h2>
-                <p class="section-desc">
-                    Here are some of my selected works I have done lately. Feel free to 
-                    check them out.
-                </p>
+                <h2 class="section-heading section-heading--centerbottom">Certifications</h2>
+                <p class="section-desc">A showcase of my professional achievements.</p>
             </div>
-        </div> <!-- end heading-block -->
-<!--
-        <div class="masonry-wrap">
+        </div>
 
-            <div class="masonry">
-                <div class="grid-sizer"></div>
-    
-                <div class="masonry__brick" data-aos="fade-up">
-                    <div class="item-folio">
-                        <div class="item-folio__thumb">
-                            <a href="assets/pdf/Wifi_Attacks.pdf" class="thumb-link" title="Shutterbug" data-size="1050x700">
-                                <img src="assets/img/wifi-security.png" 
-                                     srcset="assets/img/wifi-security.png 1x, assets/img/wifi-security.png 2x" alt="">
-                            </a>    
-                        </div>
-    
-                        <div class="item-folio__text">
-                            <h4 class="item-folio__title">
-                                Wifi Attacks
-                            </h4>
-                        </div>
-                    </div>
-                </div> <!-- end masonry__brick -->
-<!--    
-                <div class="masonry__brick" data-aos="fade-up">
-                    <div class="item-folio">
-                        <div class="item-folio__thumb">
-                            <a href="assets/pdf/OWASP_VulnerabilityAssessment.pdf" class="thumb-link" title="OWASP_VulnerabilityAssessment" data-size="1050x700">
-                                <img src="assets/img/VulnerabilityAss.png" 
-                                     srcset="assets/img/VulnerabilityAss.png 1x, assets/img/VulnerabilityAss.png 2x" alt="">
-                            </a>
-                        </div>
-                        <div class="item-folio__text">
-                            <h4 class="item-folio__title">
-                                OWASP_VulnerabilityAssessment
-                            </h4>
-                        </div>
-                    </div>
-                </div> <!-- end masonry__brick -->
-<!--
-                <div class="masonry__brick" data-aos="fade-up">
-                    <div class="item-folio">
-                            
-                        <div class="item-folio__thumb">
-                            <a href="assets/pdf/Karan_tank_Syslog.pdf" class="thumb-link" title="Syslog" data-size="1050x700">
-                                <img src="assets/img/sec.png"
-                                     srcset="assets/img/sec.png 1x, assets/img/sec.png 2x" alt="">
-                            </a>
-                        </div>
-                        <div class="item-folio__text">
-                            <h4 class="item-folio__title">
-                                Syslog
-                            </h4>
-                        </div>
-                    </div>
-                </div> <!-- end masonry__brick -->
-<!--
-                <div class="masonry__brick" data-aos="fade-up">
-                    <div class="item-folio">
-                        <div class="item-folio__thumb">
-                            <a href="assets/pdf/Web_auth.pdf" class="thumb-link" title="Web Authentication" data-size="1050x700">
-                                <img src="assets/img/authentication.jpeg" 
-                                     srcset="assets/img/authentication.jpeg 1x, assets/img/authentication.jpeg 2x" alt="">
-                            </a>
-                        </div>
-                        <div class="item-folio__text">
-                            <h4 class="item-folio__title">
-                                Web Authentication
-                            </h4>
-                        </div>
-                    </div>
-                
+        <div class="row certifications-list block-large-1-5 block-medium-1-5 block-tab-1-5 text-center">
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/gpen.png" alt="GIAC GPEN (In Progress)">
+                    <strong>GIAC GPEN (In Progress)</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/ecppt.png" alt="eCPPTv3">
+                    <strong>eLearnSecurity eCPPTv3</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/TCM.png" alt="TCM Security">
+                    <strong>TCM Security: Practical Web Application Security and Testing</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/tryhackme.png" alt="TryHackMe">
+                    <strong>TryHackMe Jr. Penetration Tester</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/GCIH.png" alt="SANS GCIH">
+                    <strong>SANS GCIH</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/GSEC.png" alt="SANS GSEC">
+                    <strong>SANS GSEC</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/GFACT.png" alt="SANS GFACT">
+                    <strong>SANS GFACT</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/SecurityPlus.png" alt="CompTIA Security+">
+                    <strong>CompTIA Security+</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/CHFI.png" alt="EC-Council CHFI">
+                    <strong>EC-Council CHFI</strong>
+                </div>
+            </div>
+            <div class="column item-certification" data-aos="fade-up">
+                <div class="item-certification__content">
+                    <img src="assets/img/pristine.webp" alt="Pristine CISEH">
+                    <strong>Pristine CISEH</strong>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            </div> <!-- end masonry -->
-<!--
-        </div> <!-- end masonry-wrap -->
-<!--
-    </section> <!-- end s-work -->
-
-
-
-
-    <!-- contact
-    ================================================== -->
+    <!-- Contact -->
     <section id="contact" class="s-contact ss-dark target-section">
-
         <div class="row heading-block" data-aos="fade-up">
             <div class="column large-full">
                 <h2 class="section-heading">Get In Touch</h2>
@@ -491,52 +288,33 @@
 
         <div class="row contact-main" data-aos="fade-up">
             <div class="column large-full">
-                <p class="contact-email">
-                    <a href="mailto:tankkaran89@gmail.com">tankkaran89@gmail.com</a>
-                </p>
-                
-                <p class="section-desc">
-                I'm happy to connect and work together to build
-                something secure.
-                </p>
+                <p class="contact-email"><a href="mailto:tankkaran89@gmail.com">tankkaran89@gmail.com</a></p>
+                <p class="section-desc">Let’s connect and collaborate on building secure solutions.</p>
             </div>
         </div>
 
-        <div class="row contact-infos" data-aos="fade-up" data-aos-anchor=".contact-main">
-
-
+        <div class="row contact-infos" data-aos="fade-up">
             <div class="column large-7 medium-full contact-social">
-                <h4>Social</h4>
+                <h4>Social Links</h4>
                 <ul>
-                    <li><a href=https://linkedin.com/in/Karan-Tank>Linkedin</a></li>
-                </ul>
-                <ul>
-                    <li><a href=https://github.com/thekarantank/>GitHub</a></li>
-                </ul>
-                <ul>
-                    <li><a href=https://www.credly.com/users/karan-tank/>Credly</a></li>
+                    <li><a href="https://linkedin.com/in/Karan-Tank">LinkedIn</a></li>
+                    <li><a href="https://github.com/thekarantank">GitHub</a></li>
+                    <li><a href="https://www.credly.com/users/karan-tank/">Credly</a></li>
                 </ul>
             </div>
+        </div>
+    </section>
 
-        </div> <!-- end contact-infos -->
-
-    </section> <!-- end s-contact -->
-
-
-    <!-- footer
-    ================================================== -->
-  <!---->  <footer>
-            <div class="ss-go-top">
-                <a class="smoothscroll" title="Back to Top" href="#top"></a>
-            </div>
+    <!-- Footer -->
+    <footer>
+        <div class="ss-go-top">
+            <a class="smoothscroll" href="#top">Back to Top</a>
         </div>
     </footer>
 
-
-
-    <!-- Java Script
-    ================================================== -->
+    <!-- Scripts -->
     <script src="assets/js/jquery-3.2.1.min.js"></script>
     <script src="assets/js/plugins.js"></script>
     <script src="assets/js/main.js"></script>
 </body>
+</html>
