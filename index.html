@@ -29,7 +29,7 @@
       color: #f0f0f0;
       overflow-x: hidden;
     }
-    .section { min-height: 80vh; padding: 100px 20px; position: relative; }
+    .section { min-height: 100vh; padding: 100px 20px; position: relative; }
     header { position: sticky; top: 0; z-index: 1000; background: rgba(15,23,36,0.8); backdrop-filter: blur(10px); }
     .nav-link { color: #f0f0f0; margin-left: 20px; font-weight: 600; transition: color 0.3s; }
     .nav-link:hover { color: #facc15; }
@@ -52,6 +52,34 @@
     /* Certification Cards */
     .cert-card { background: rgba(15,23,36,0.7); border-radius: 10px; padding: 20px; transition: all 0.3s; cursor: pointer; }
     .cert-card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(250,204,21,0.4); }
+
+    /* Responsive certification images */
+    .cert-card img {
+      width: 100%;
+      max-width: 120px;
+      height: auto;
+    }
+
+    @media (max-width: 1024px) {
+      .grid.md\:grid-cols-5 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .cert-card img {
+        max-width: 80px;
+      }
+      .grid.md\:grid-cols-5 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @keyframes sparkAnim {
+      0% {transform: translateY(0) translateX(0);}
+      50% {transform: translateY(-10px) translateX(-2px);}
+      100% {transform: translateY(0) translateX(0);}
+    }
   </style>
 </head>
 <body onload="window.scrollTo(0,0)">
@@ -76,49 +104,29 @@
   <a href="#about" class="btn">Learn More</a>
 </section>
 
-<!-- <section id="about" class="section relative bg-gray-900 overflow-hidden">
-  <canvas id="about-sparks" class="absolute inset-0 w-full h-full z-0"></canvas>
-  <div class="max-w-4xl mx-auto fade-in text-center relative z-10">
-    <h2 class="text-4xl font-bold text-yellow-400 mb-8">About Me</h2>
-    <p class="mb-4">
-      Hi, I’m <strong>Karan Tank</strong>, a Security Engineer at Thales specializing in penetration testing, threat hunting, and SOC operations. I hold certifications like <strong>SANS GPEN, eCPPTv3, SANS GCIH, CompTIA Security+</strong>, and more.
-    </p>
-    <p class="mb-4">
-      Over the past 2+ years, I’ve monitored, detected, and responded to cybersecurity threats using tools such as <strong>Azure, SentinelOne, CrowdStrike, Splunk, Wireshark, Mimecast, Microsoft 365 Defender, RiskIQ</strong>, etc.
-    </p>
-    <p class="mb-4">
-      I actively improve my skills through hands-on labs and challenges on <strong>TryHackMe</strong> and <strong>HackTheBox</strong>.
-    </p>
-  </div>
-</section> -->
 <section id="about" class="section">
-    <canvas id="about-sparks" class="section-overlay"></canvas>
-    <div class="relative z-10 max-w-4xl mx-auto text-center fade-in">
-      <h2 class="text-4xl font-bold text-yellow-400 mb-6">About Me</h2>
-      <p class="mb-4">
-        I’m <strong>Karan Tank</strong>, a Security Engineer at Thales (Advanced Security Response Team). I specialize in incident response, threat detection, application defense, and penetration testing. My work spans web application testing, bot protection, DDoS emulation, and automating security testing to reduce manual effort.
-      </p>
-      <p class="mb-4">
-        I have hands-on experience in offensive security operations, conducting SQL injection, XSS, and RCE testing, building automated payload scripts, and authoring detailed vulnerability reports. I have trained and mentored interns, contributing to a stronger team and higher retention rates.
-      </p>
-      <p class="mb-4">
-        I hold certifications including <strong>SANS GPEN, eCPPTv3, SANS GCIH, SANS GSEC, SANS GFACT, CompTIA Security+, EC-Council CHFI</strong>, and constantly expand my knowledge through platforms like TryHackMe and HackTheBox. My passion lies in penetration testing, red teaming, and improving defenses against evolving cyber threats.
-      </p>
-      <p class="mb-6">
-        I am driven to apply my skills to real-world challenges, deliver actionable security insights, and continuously grow as a cybersecurity professional.
-      </p>
-      <div class="flex justify-center gap-6 mt-6">
-        <a href="WriteUps.html" class="btn">Read My WriteUps</a>
-        <a href="assets/pdf/Resume-Karan-Tank.pdf" class="btn">Download Resume</a>
-      </div>
+  <div class="relative z-10 max-w-4xl mx-auto text-center fade-in">
+    <h2 class="text-4xl font-bold text-yellow-400 mb-6">About Me</h2>
+    <p class="mb-4">
+      I’m <strong>Karan Tank</strong>, a Security Engineer at Thales (Advanced Security Response Team). I specialize in incident response, threat detection, application defense, and penetration testing. My work spans web application testing, bot protection, DDoS emulation, and automating security testing to reduce manual effort.
+    </p>
+    <p class="mb-4">
+      I have hands-on experience in offensive security operations, conducting SQL injection, XSS, and RCE testing, building automated payload scripts, and authoring detailed vulnerability reports. I have trained and mentored interns, contributing to a stronger team and higher retention rates.
+    </p>
+    <p class="mb-4">
+      I hold certifications including <strong>SANS GPEN, eCPPTv3, SANS GCIH, SANS GSEC, SANS GFACT, CompTIA Security+, EC-Council CHFI</strong>, and constantly expand my knowledge through platforms like TryHackMe and HackTheBox.
+    </p>
+    <div class="flex justify-center gap-6 mt-6">
+      <a href="WriteUps.html" class="btn">Read My WriteUps</a>
+      <a href="assets/pdf/Resume-Karan-Tank.pdf" class="btn">Download Resume</a>
     </div>
-  </section>
-  
+  </div>
+</section>
+
 <section id="timeline" class="section">
   <div class="max-w-6xl mx-auto fade-in">
     <h2 class="text-4xl font-bold text-yellow-400 mb-12 text-center">Experience & Education</h2>
     <div class="timeline relative">
-      <!-- Timeline Items in reverse chronological, interleaved -->
       <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">July 2024 - Present</p><h3>Security Engineer</h3><p>Thales - Advanced Security Response Team (ASRT)</p></div>
       <div class="timeline-item timeline-item-right fade-in"><p class="font-semibold">July 2025 - Oct 2025</p><h3>Advance Cyber Education</h3><p>Toronto Metropolitan University</p></div>
       <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">Jan 2024 - July 2024</p><h3>SOC Engineer</h3><p>Imperva</p></div>
@@ -155,11 +163,19 @@
 <section id="contact" class="section">
   <div class="max-w-4xl mx-auto text-center fade-in">
     <h2 class="text-4xl font-bold text-yellow-400 mb-6">Get In Touch</h2>
-    <p class="mb-2"><a href="mailto:tankkaran89@gmail.com" class="text-yellow-400 underline">tankkaran89@gmail.com</a></p>
-    <p class="mb-4">Let’s connect and collaborate on building secure solutions.</p>
+    <p class="mb-2">
+      <a href="mailto:tankkaran89@gmail.com" class="text-yellow-400 underline">tankkaran89@gmail.com</a>
+    </p>
+    <p class="mb-4">
+      Let’s build something secure together — reach out via email or LinkedIn.
+    </p>
+
+    <div class="flex justify-center gap-6 mb-6">
+      <a href="https://linkedin.com/in/karan-tank" target="_blank" class="btn">Connect on LinkedIn</a>
+    </div>
+
     <div class="flex justify-center gap-6">
-      <a href="https://linkedin.com/in/Karan-Tank" target="_blank"><i class="fab fa-linkedin fa-2x text-yellow-400"></i></a>
-      <a href="https://github.com/thekarantank" target="_blank"><i class="fab fa-github fa-2x text-yellow-400"></i></a>
+      <a href="https://linkedin.com/in/karan-tank" target="_blank"><i class="fab fa-linkedin fa-2x text-yellow-400"></i></a
     </div>
   </div>
 </section>
@@ -167,60 +183,45 @@
 <footer class="text-center py-6 bg-gray-900">© 2025 Karan Tank</footer>
 
 <script>
-  // Typewriter
-  const typewriter = document.getElementById("typewriter");
-  const words = ["Security Engineer", "Penetration Tester", "Threat Hunter"];
-  let i = 0, currentWord = "", isDeleting = false;
-  function type() {
-    const fullWord = words[i];
-    if (isDeleting) { currentWord = fullWord.substring(0, currentWord.length - 1); }
-    else { currentWord = fullWord.substring(0, currentWord.length + 1); }
-    typewriter.innerHTML = currentWord;
-    if (!isDeleting && currentWord === fullWord) setTimeout(() => isDeleting=true,2000);
-    else if (isDeleting && currentWord==="") { isDeleting=false;i=(i+1)%words.length; }
-    setTimeout(type, isDeleting?100:200);
-  }
-  type();
+const typewriter = document.getElementById("typewriter");
+const words = ["Security Engineer", "Penetration Tester", "Threat Hunter"];
+let i = 0, currentWord = "", isDeleting = false;
 
-  // GSAP fade-ins
-  gsap.utils.toArray('.fade-in').forEach(el=>{
-    gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,scrollTrigger:{trigger:el,start:"top 80%"},duration:1});
-  });
-
-  // Particles.js
-  particlesJS("particles-js",{
-    "particles":{
-      "number":{"value":80,"density":{"enable":true,"value_area":800}},
-      "color":{"value":"#facc15"},
-      "shape":{"type":"circle"},
-      "opacity":{"value":0.4},
-      "size":{"value":3},
-      "line_linked":{"enable":true,"distance":150,"color":"#facc15","opacity":0.2,"width":1},
-      "move":{"enable":true,"speed":2,"direction":"none","random":false,"straight":false,"out_mode":"out"}
-    },
-    "interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}}}
-  });
-
-  // Timeline sparks
-  const timeline = document.querySelector('.timeline');
-  for(let i=0;i<30;i++){
-    let spark=document.createElement('div');
-    spark.classList.add('timeline-spark');
-    spark.style.top=Math.random()*timeline.offsetHeight+'px';
-    spark.style.left='50%';
-    spark.style.opacity=Math.random()*0.8+0.2;
-    spark.style.animation=`sparkAnim ${2+Math.random()*2}s linear infinite`;
-    timeline.appendChild(spark);
-  }
-</script>
-
-<style>
-@keyframes sparkAnim {
-  0% {transform: translateY(0) translateX(0);}
-  50% {transform: translateY(-10px) translateX(-2px);}
-  100% {transform: translateY(0) translateX(0);}
+function type() {
+  const fullWord = words[i];
+  if (isDeleting) currentWord = fullWord.substring(0, currentWord.length - 1);
+  else currentWord = fullWord.substring(0, currentWord.length + 1);
+  typewriter.innerHTML = currentWord;
+  let typingSpeed = isDeleting ? 100 : 150;
+  if (!isDeleting && currentWord === fullWord) { setTimeout(() => { isDeleting = true; type(); }, 1500); return; }
+  else if (isDeleting && currentWord === "") { isDeleting = false; i = (i + 1) % words.length; }
+  setTimeout(type, typingSpeed);
 }
-</style>
+type();
+
+gsap.utils.toArray('.fade-in').forEach(el=>{
+  gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,scrollTrigger:{trigger:el,start:"top 80%"},duration:1});
+});
+
+particlesJS("particles-js",{
+  "particles":{"number":{"value":80,"density":{"enable":true,"value_area":800}},
+  "color":{"value":"#facc15"},"shape":{"type":"circle"},"opacity":{"value":0.4},
+  "size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#facc15",
+  "opacity":0.2,"width":1},"move":{"enable":true,"speed":2,"direction":"none","random":false,"straight":false,"out_mode":"out"}},
+  "interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}}}
+});
+
+const timeline = document.querySelector('.timeline');
+for(let i=0;i<30;i++){
+  let spark=document.createElement('div');
+  spark.classList.add('timeline-spark');
+  spark.style.top=Math.random()*timeline.offsetHeight+'px';
+  spark.style.left='50%';
+  spark.style.opacity=Math.random()*0.8+0.2;
+  spark.style.animation=`sparkAnim ${2+Math.random()*2}s linear infinite`;
+  timeline.appendChild(spark);
+}
+</script>
 
 </body>
 </html>
