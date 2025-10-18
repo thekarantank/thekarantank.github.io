@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>eCPPTv3 Certification — The Good, the Bad, and Lessons Learned</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;}
+    h1{margin:0;font-size:22px;color:#fff}
+    p.lead{color:var(--muted);margin:8px 0 18px}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <div>
+        <h1>eCPPTv3 Certification — The Good, the Bad, and Lessons Learned</h1>
+        <p class="lead">A detailed, easy-to-read reflection on the eCPPT exam: strategies, challenges, tools, and key takeaways.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>The Good</h2>
+      <ul>
+        <li><strong>Practical Focus:</strong> The eCPPT emphasizes real-world scenarios rather than memorization. Every step, from enumeration to exploitation, simulates what a professional penetration tester might face.</li><br>
+        <li><strong>Flexible Schedule:</strong> You have a full 24-hour window to complete the exam (45 questions).</li><br>
+        <li><strong>Complimentary Support:</strong> When I failed my first two attempts, eLearnSecurity extended my premium subscription by an additional month. This generosity allowed me to hone my skills further.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>The Bad</h2>
+      <ul>
+        <li><strong>Connectivity Issues:</strong> The exam is conducted in a virtual environment (Guacamole VM). Unfortunately, I faced constant disconnections during the last six hours of my exam. While the session reconnected automatically without data loss, it broke my flow and forced me to reset the lab multiple times. </li><br>
+        <li><strong>Learning Material Gaps:</strong> The resources provided by eLearnSecurity alone weren’t sufficient for the exam. To bridge the gap, I had to practice extensively on platforms like TryHackMe and Hack The Box.</li><br>
+        <li><strong>Tight Second Attempt Window:</strong> If you fail your first attempt, the second must be taken within 14 days. Despite the voucher being valid for over a month, this time constraint adds pressure.</li><br>
+        <li><strong>Time Crunch:</strong> While the 24-hour exam window sounds sufficient, it left me sleep-deprived and unable to focus properly by the end. I strongly advise taking proper breaks and ensuring enough rest to maintain productivity.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>My Exam Strategy</h2>
+      <p>I started the exam at 3 PM, dedicating the first day to extensive enumeration. My plan was to work until 2 AM, sleep for a few hours, and resume at 7 AM. While this worked initially, the lack of proper rest became a problem later. <br><br>
+
+        One major mistake was spending too much time trying to crack a specific user password on a Linux machine. In hindsight, I should have moved on to other methods or accounts instead of wasting hours on one approach.</p>
+    </section>
+
+    <section class="card">
+      <h2>Preparation Beyond Provided Materials</h2>
+      <ul>
+        <li><strong>INE:</strong> Watched all course videos and completed labs.</li><br>
+        <li><strong>TryHackMe:</strong> Completed Jr Penetration Tester path and 80% of Offensive Pentesting path; key rooms: Mr. Robot CTF, GoldenEye, Blue, Game Zone, HackPark, Adventure Time.</li><br>
+        <li><strong>Hack The Box:</strong> Focused on Active Directory enumeration and attacks.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Tools and Wordlists Used</h2>
+      <p><strong>Tools:</strong> GTFObins, Nmap, fping, WpScan, SearchSploit, John the Ripper, Hydra, kerbrute, CrackMapExec, rpcclient, smbclient, bloodhound-python, xfreerdp, Impacket scripts, exploitdb, Obsidian.</p>
+      <p><strong>Wordlists:</strong> Seasons.txt, Months.txt, common_corporate_passwords.lst, xato-net-10-million-passwords-10000.txt, rockyou.txt.</p>
+    </section>
+
+    <section class="card">
+      <h2>Lessons Learned</h2>
+      <ul>
+        <li><strong>Prioritize Rest:</strong> Even a few hours of sleep help maintain focus and decision-making.</li><br>
+        <li><strong>Brute Force Strategically:</strong> Avoid tunnel vision; move to alternative approaches if one path stalls.</li><br>
+        <li><strong>Test Your Setup:</strong> Familiarity with tools and virtual environment reduces surprises during the exam.</li><br>
+        <li><strong>Diversify Learning:</strong> Practice on external platforms beyond official materials to cover a broader set of scenarios.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Final Thoughts</h2>
+      <p>The eCPPT exam is an incredible opportunity to test your penetration testing skills in a realistic environment. It’s tough, but with the right preparation and mindset, it’s achievable. While my experience included hurdles like connectivity issues and strategic missteps, it was a deeply rewarding journey that enhanced my skills and resilience.</p>
+      <p>Good luck to anyone attempting the eCPPT — remember, preparation and mindset are key!</p>
+    </section>
+
+    <footer>
+      <div>Karan Tank</div>
+    </footer>
+  </div>
+</body>
+</html>
