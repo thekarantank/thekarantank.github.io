@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vulnerable and Outdated Components — OWASP A06:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Vulnerable and Outdated Components — OWASP A06:2021</h1>
+      <p class="lead">A detailed guide on the risks posed by vulnerable and outdated software components, with examples and mitigation strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Vulnerable and Outdated Components</h2>
+      <h3>What Are Vulnerable and Outdated Components?</h3>
+      <p>Modern applications rely heavily on third-party components such as libraries, frameworks, operating systems, and other dependencies. Vulnerable and outdated components introduce security risks because they may contain known flaws or are no longer actively maintained.</p>
+      <p><b>Vulnerable Components:</b> These components have known security flaws (often documented as CVEs) that attackers can exploit.</p>
+      <p><b>Outdated Components:</b> These components are unsupported or no longer maintained, meaning they will not receive patches for new vulnerabilities, leaving the application perpetually exposed.</p>
+
+      <h3>Key Risks and Impact</h3>
+      <ul>
+        <li><b>Known Exploitability:</b> Attackers actively scan for popular libraries with known CVEs using automated tools, which can result in Remote Code Execution (RCE), data breaches, or system compromise.</li>
+        <li><b>Lack of Updates:</b> Outdated components don’t receive security patches, creating an extended window of opportunity for attackers to exploit vulnerabilities.</li>
+        <li><b>Inherited Flaws:</b> Vulnerable components used as dependencies by other components can propagate flaws throughout the application, leading to cascading failures.</li>
+      </ul>
+      <p>A famous example is the Equifax breach in 2017, where attackers exploited a known vulnerability in an outdated version of the Apache Struts framework, leading to massive data exposure.</p>
+
+      <h3>Prevention and Mitigation Strategies</h3>
+      <ul>
+        <li><b>Maintain an Inventory (SBOM):</b> Keep a continuous Software Bill of Materials (SBOM) for all client-side and server-side components and their dependencies. Remove unused libraries and features to minimize attack surfaces.</li>
+        <li><b>Continuous Monitoring and Scanning:</b> Use Software Composition Analysis (SCA) tools to detect known CVEs automatically. Monitor public CVE databases and security advisories for components in use.</li>
+        <li><b>Patch Management:</b> Upgrade or patch components to the latest secure versions promptly. If immediate patching is not feasible, consider virtual patching or compensating controls to block exploit attempts.</li>
+        <li><b>Trusted Sources:</b> Only obtain components from official sources and prefer signed packages to prevent inclusion of malicious code.</li>
+        <li><b>Testing Compatibility:</b> Ensure that patched or updated components are tested for compatibility to avoid introducing new bugs or breaking functionality.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Server-Side Request Forgery (SSRF) — OWASP A10:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Server-Side Request Forgery (SSRF) — OWASP A10:2021</h1>
+      <p class="lead">A detailed guide on understanding, exploiting, and mitigating SSRF vulnerabilities in web applications.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Server-Side Request Forgery (SSRF)</h2>
+      <h3>What is SSRF?</h3>
+      <p>Server-Side Request Forgery occurs when an attacker manipulates a vulnerable web application to make HTTP requests to an unintended destination. These requests originate from the server itself, allowing attackers to access internal resources that are typically inaccessible externally.</p>
+
+      <h3>How SSRF Works</h3>
+      <ul>
+        <li><b>Vulnerable Feature:</b> The application accepts user-supplied URLs for resources like images, data feeds, or webhooks.</li>
+        <li><b>Attacker Input:</b> The attacker submits a malicious URL targeting internal resources, loopback addresses (127.0.0.1), or private IP ranges.</li>
+        <li><b>Server Executes:</b> The server initiates the request, bypassing external network restrictions and firewall rules.</li>
+        <li><b>Information Leak/Action:</b> The server's response may include sensitive internal data or enable further actions against internal services.</li>
+      </ul>
+
+      <h3>Common SSRF Targets</h3>
+      <ul>
+        <li><b>Cloud Metadata Services:</b> AWS, Azure, and Google Cloud metadata endpoints can expose temporary credentials (e.g., AWS 169.254.169.254).</li>
+        <li><b>Local System Files:</b> Using file:// or other URL schemes to access server configuration or sensitive files.</li>
+        <li><b>Internal Services:</b> Admin interfaces, internal REST APIs, or HTTP-enabled databases accessible only internally.</li>
+        <li><b>Internal Port Scanning:</b> Determine open ports on internal hosts by analyzing responses to SSRF requests.</li>
+      </ul>
+
+      <h3>Common SSRF Attack Payloads</h3>
+      <ul>
+        <li><b>Targeting Local Server:</b> <code>http://127.0.0.1/admin</code> or obfuscated IP like <code>http://2130706433/</code>.</li>
+        <li><b>Accessing Cloud Metadata:</b> AWS EC2 <code>http://169.254.169.254/latest/meta-data/iam/security-credentials/ROLE_NAME</code> to steal temporary IAM credentials.</li>
+        <li><b>Local File Inclusion:</b> <code>file:///etc/passwd</code> or <code>dict://localhost:6379</code> to read sensitive files or interact with local services.</li>
+      </ul>
+
+      <h3>Mitigation Strategies</h3>
+      <ul>
+        <li><b>Allow List:</b> Permit only specific hosts, protocols, and ports. Reject all others by default.</li>
+        <li><b>Input Validation:</b> Strictly validate URLs and schemes (only https/http), avoiding reliance on IP blacklists.</li>
+        <li><b>Disable Unused URL Schemes:</b> Prevent risky protocols like file://, gopher://, ftp://, dict://.</li>
+        <li><b>Restrict Response Handling:</b> Never return raw server responses directly to users; sanitize data first.</li>
+        <li><b>Disable Redirections:</b> Do not follow HTTP redirects automatically to prevent bypassing allow lists.</li>
+        <li><b>Network Segmentation:</b> Isolate servers making outbound requests, enforce firewall rules, and apply least privilege principles.</li>
+      </ul>
+
+      <h3>Securing AWS Against SSRF</h3>
+      <p>Implement Instance Metadata Service Version 2 (IMDSv2) to mitigate SSRF risks:</p>
+      <ol>
+        <li><b>Step 1: Get Token (PUT Request):</b> <code>PUT /latest/api/token</code> with header <code>X-aws-ec2-metadata-token-ttl-seconds</code>.</li>
+        <li><b>Step 2: Access Metadata (GET Request):</b> <code>GET /latest/meta-data/iam/security-credentials/</code> with header <code>X-aws-ec2-metadata-token</code> containing the token from Step 1.</li>
+      </ol>
+      <p>This prevents simple SSRF GET attacks by requiring a session-based token, making exploitation significantly harder.</p>
+      <ul>
+        <li><b>Enforce IMDSv2:</b> Require all EC2 instances to use IMDSv2.</li>
+        <li><b>Network Controls:</b> Block all unnecessary outbound traffic to private IP ranges, including metadata service addresses.</li>
+        <li><b>Use Workload Identity:</b> Prefer IAM roles for service accounts (IRSA) for containers to separate credentials from instance network paths.</li>
+      </ul>
+
+      <h3>Key Takeaway</h3>
+      <p>SSRF is a high-risk vulnerability that can expose internal resources and cloud credentials. Proper input validation, strict allow lists, network segmentation, and cloud-specific protections like IMDSv2 are essential for defense-in-depth against SSRF attacks.</p>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Broken Access Control — OWASP A01:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Broken Access Control — OWASP A01:2021</h1>
+      <p class="lead">Detailed explanation, examples, and prevention strategies for Broken Access Control vulnerabilities.</p>
+    </header>
+
+    <section class="card">
+      <h2>1. Broken Access Control</h2>
+      <h3>Explanation:</h3>
+      <p>Broken Access Control refers to security vulnerabilities where an attacker can bypass authorization to perform actions or access resources they are not supposed to. Simply put, the application fails to enforce the user's intended permissions.</p>
+      <p>Access control determines what an authenticated user is allowed to do. When broken, attackers can act as higher-privileged users or access other users’ private data.</p>
+
+      <h3>Types and Examples</h3>
+      <ul>
+        <li>
+          <h4>1. Insecure Direct Object Reference (IDOR)</h4>
+          <p>Occurs when an internal object (file, ID, database key) is exposed and manipulable by attackers.</p>
+          <p><b>Example:</b> A user views their bank statement at <code>https://example.com/api/get_statement?id=1001</code>. Changing the ID to <code>1002</code> exposes another customer’s statement.</p>
+        </li>
+        <li>
+          <h4>2. Vertical Privilege Escalation</h4>
+          <p>A user gains access to functionality or data restricted to higher privilege levels (admin, manager).</p>
+          <p><b>Example:</b> A standard user accesses <code>/admin/delete_user</code> due to missing server-side role checks.</p>
+        </li>
+        <li>
+          <h4>3. Horizontal Privilege Escalation</h4>
+          <p>A user accesses resources belonging to another user of the same privilege level.</p>
+          <p><b>Example:</b> Modifying an API request to change the user ID in a profile update endpoint to another user's ID successfully updates their information.</p>
+        </li>
+        <li>
+          <h4>4. Bypassing Access Checks</h4>
+          <p>Attackers circumvent access control via:</p>
+          <ul>
+            <li><b>URL/Parameter Tampering:</b> Changing hidden fields, cookies, or query strings to elevate privileges.</li>
+            <li><b>Force Browsing:</b> Directly accessing restricted pages like <code>/admin</code> without proper redirects.</li>
+            <li><b>Missing API Access Controls:</b> Public API endpoints performing sensitive actions without role validation.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Key Prevention Strategies</h3>
+      <ul>
+        <li><b>Deny-by-Default Policy:</b> Deny access to all resources unless explicitly allowed for roles or users.</li>
+        <li><b>Principle of Least Privilege (PoLP):</b> Grant users only the minimum necessary access to perform their tasks.</li>
+        <li><b>Centralize Access Control Logic:</b> Reuse validation code across the application to avoid missing checks.</li>
+        <li><b>Use Indirect Object References:</b> Avoid exposing internal IDs; use non-predictable tokens for resources.</li>
+        <li><b>Validate User Roles and Ownership:</b>
+          <ul>
+            <li>User is authenticated.</li>
+            <li>User is authorized or is the resource owner.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Injection — OWASP A03:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Injection — OWASP A03:2021</h1>
+      <p class="lead">A comprehensive, detailed guide on Injection vulnerabilities with real-world examples and in-depth mitigation strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Injection</h2>
+      <h3>What is Injection?</h3>
+      <p>Injection is a critical security vulnerability and is listed as A03:2021-Injection in the OWASP Top 10, a standard awareness document for developers and web application security professionals. An Injection flaw occurs when an attacker can send hostile data to a web application, and the application's interpreter (such as a database engine, operating system shell, or programming language evaluator) mistakenly interprets that hostile data as part of a command or query rather than as simple, safe user input.</p>
+      <p>This flaw can trick the application into executing unintended commands or accessing sensitive data without proper authorization, potentially leading to severe consequences such as data loss, denial of service, or full system compromise.</p>
+
+      <h3>How it Happens</h3>
+      <p>A vulnerable application typically exhibits one or more of the following behaviors:</p>
+      <ul>
+        <li>It does not validate, filter, or sanitize user-supplied data, allowing attackers to inject malicious input directly.</li>
+        <li>It uses dynamic queries or non-parameterized calls where hostile data is directly concatenated into commands, enabling execution of unintended instructions.</li>
+      </ul>
+
+      <h3>Common Types of Injection Attacks</h3>
+      <ul>
+        <li>
+          <h4>SQL Injection (SQLi)</h4>
+          <p>Attackers insert malicious SQL statements into input fields (like login or search forms). If the application executes these inputs directly without proper handling, the database may reveal, alter, or delete sensitive data, potentially compromising entire systems.</p>
+        </li>
+        <li>
+          <h4>Cross-Site Scripting (XSS)</h4>
+          <p>This occurs when attackers inject malicious client-side scripts (commonly JavaScript) into web pages. Users viewing the page will execute the script unknowingly, leading to session hijacking, credential theft, or UI manipulation. In OWASP Top 10:2021, XSS is consolidated under the broader Injection category due to its shared root cause of command/data confusion.</p>
+        </li>
+        <li>
+          <h4>OS Command Injection</h4>
+          <p>Attackers execute arbitrary operating system commands on the server hosting the application. This can provide full administrative access to the system, allowing attackers to read files, modify system configurations, or deploy malware.</p>
+        </li>
+        <li>
+          <h4>LDAP Injection</h4>
+          <p>Flaws in Lightweight Directory Access Protocol (LDAP) queries are exploited by injecting malicious input, enabling attackers to access, modify, or delete sensitive directory information that they should not have permissions for.</p>
+        </li>
+      </ul>
+
+      <h3>Prevention and Mitigation</h3>
+      <p>Preventing Injection vulnerabilities requires careful separation of data and commands, employing multiple layers of security:</p>
+      <ul>
+        <li><b>Use Safe APIs with Parameterized Queries (Preferred):</b> Utilize APIs that inherently avoid interpretation of input as commands, or employ parameterized interfaces like Prepared Statements or ORM tools. This ensures that user input is always treated strictly as data and never executed as part of a command.</li>
+        <li><b>Positive Server-Side Input Validation (Allowlisting):</b> Explicitly define acceptable inputs for each field, including allowed types, lengths, and formats. Reject any input that falls outside this strict definition to minimize attack vectors.</li>
+        <li><b>Context-Aware Escaping:</b> When dynamic queries are unavoidable, properly escape special characters specific to the interpreter in use. This prevents the interpreter from misinterpreting input as executable commands.</li>
+        <li><b>Least Privilege Principle:</b> Restrict database accounts and system permissions so that the application only has the minimum access necessary for its functionality. For example, a web application should not have permission to delete an entire database just to read user profile information.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

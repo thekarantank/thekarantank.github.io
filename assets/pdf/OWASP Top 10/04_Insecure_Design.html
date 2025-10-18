@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Insecure Design — OWASP A04:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Insecure Design — OWASP A04:2021</h1>
+      <p class="lead">A detailed guide on Insecure Design vulnerabilities with examples and comprehensive prevention strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Insecure Design</h2>
+      <h3>What is Insecure Design?</h3>
+      <p>Insecure Design is a new category introduced in the OWASP Top 10:2021 that focuses on security weaknesses arising from design flaws rather than implementation bugs. It represents a broad range of vulnerabilities caused by missing or ineffective security controls in an application's architecture or business logic.</p>
+      <p>Unlike typical coding errors, these issues exist because necessary security controls were never planned or integrated. Even flawless implementation cannot compensate for an insecure design. In other words, if the architecture itself lacks proper security considerations, the system is fundamentally vulnerable.</p>
+
+      <h3>Key Concepts</h3>
+      <ul>
+        <li><b>Focus:</b> Insecure Design emphasizes root causes in the application's design, architecture, or business logic. <i>Analogy:</i> Building a house with no door or window frames leaves it fundamentally exposed, regardless of the quality of materials used.</li>
+        <li><b>Flaw vs. Bug:</b> This is a design flaw, not a bug. A bug is a coding mistake, whereas a design flaw is an issue in the blueprint that cannot be fixed by patching the implementation alone.</li>
+        <li><b>Prevention:</b> Secure design requires integrating practices like Threat Modeling and Secure Design Patterns early in the Software Development Lifecycle (SDLC). Consider hiring a security architect at the planning stage to incorporate controls before coding begins.</li>
+      </ul>
+
+      <h3>Examples of Insecure Design Flaws</h3>
+      <ul>
+        <li><b>Insecure Workflows:</b> Using easily guessable information for critical functions, such as relying solely on "What was your childhood street name?" for password recovery. These answers are often public or easily researched, making the design inherently insecure.</li>
+        <li><b>Client-Side Security Enforcement:</b> Relying only on front-end input validation to enforce security rules. Attackers can bypass these by sending modified requests directly to the server, completely circumventing client-side checks.</li>
+        <li><b>Lack of Resource Limits:</b> Designs that fail to limit resource consumption (e.g., requests per minute on a password reset function) can lead to account enumeration or Denial of Service (DoS) attacks.</li>
+        <li><b>Improper Data Segmentation:</b> Failing to properly segregate data between users or tenants in multi-tenant systems can allow one user to access another's sensitive data.</li>
+      </ul>
+
+      <h3>Prevention and Mitigation</h3>
+      <p>Preventing insecure design requires proactive security planning at the earliest stages of development. Key strategies include:</p>
+      <ul>
+        <li><b>Threat Modeling:</b> Conduct mandatory threat modeling for all critical features, authentication flows, and business logic before coding. This identifies potential design flaws early and guides mitigation strategies.</li>
+        <li><b>Secure Design Patterns:</b> Utilize established secure design patterns and reference architectures to ensure that essential security controls (authentication, authorization, logging) are built-in from the start.</li>
+        <li><b>Security Requirements Integration:</b> Incorporate security and privacy requirements into user stories, specifying necessary controls for each feature to ensure protection is considered throughout development.</li>
+        <li><b>Principle of Least Privilege:</b> Design all components and user roles with minimum required permissions to perform their tasks, minimizing potential damage if a component is compromised.</li>
+        <li><b>Plausibility Checks:</b> Implement server-side validation at every tier to ensure that data makes sense and is consistent, even if client-side checks are bypassed for user experience or convenience.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

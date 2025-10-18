@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Security Misconfiguration — OWASP A05:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Security Misconfiguration — OWASP A05:2021</h1>
+      <p class="lead">A comprehensive guide on Security Misconfiguration vulnerabilities, with examples and prevention strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Security Misconfiguration</h2>
+      <h3>What is Security Misconfiguration?</h3>
+      <p>Security Misconfiguration occurs when an application, server, database, framework, or operating system component is improperly configured, leaving it vulnerable to attack. It is one of the most common and critical issues in web application security.</p>
+      <p>In simple terms, it means that the application stack—from network to code—was deployed with insecure default settings, or essential security controls were disabled, missing, or mismanaged. This vulnerability is often introduced during deployment, configuration, and maintenance stages, rather than during coding or design.</p>
+
+      <h3>Root Causes</h3>
+      <ul>
+        <li>Default or weak credentials left unchanged (e.g., admin/admin).</li>
+        <li>Unnecessary features or services enabled, increasing the attack surface.</li>
+        <li>Exposed error messages revealing internal details.</li>
+        <li>Overly permissive file, directory, or cloud storage permissions.</li>
+        <li>Failure to patch outdated software, libraries, or components.</li>
+        <li>Directory listing enabled, exposing sensitive files or source code.</li>
+      </ul>
+
+      <h3>Common Examples and Attack Scenarios</h3>
+      <ul>
+        <li><b>Default/Weak Credentials:</b> Attackers often try default accounts and passwords first. For example, leaving admin/admin credentials for a database can allow immediate unauthorized access.</li>
+        <li><b>Unnecessary Features:</b> Sample applications, unused HTTP methods, or open development consoles can increase the attack surface and provide attackers more vectors.</li>
+        <li><b>Exposed Error Messages:</b> Showing stack traces, database dumps, or component versions to end users can leak critical information for further attacks.</li>
+        <li><b>Improper Permissions:</b> Open cloud buckets or overly permissive directories can allow attackers to read or modify sensitive data.</li>
+        <li><b>Lack of Hardening:</b> Unpatched software, missing security headers, or unsupported TLS/SSL versions make the system vulnerable to exploitation.</li>
+        <li><b>Directory Listing:</b> Allowing users to view a directory's contents when no index file is present can expose sensitive source code or configuration files.</li>
+      </ul>
+
+      <h3>Prevention Strategies</h3>
+      <ul>
+        <li><b>Implement Repeatable Hardening:</b> Use Infrastructure as Code (IaC) or automated scripts to configure environments consistently across development, QA, and production, with different credentials but identical security settings.</li>
+        <li><b>Minimal Platform:</b> Deploy only necessary components and disable or remove unused services, features, and documentation before going live.</li>
+        <li><b>Patch and Update:</b> Maintain a robust patch management process to keep all software, libraries, and OS components up-to-date with security fixes.</li>
+        <li><b>Change Defaults:</b> Immediately update default credentials and enforce strong password policies with Multi-Factor Authentication (MFA) where possible.</li>
+        <li><b>Principle of Least Privilege:</b> Apply strict access controls and permissions for all resources, ensuring users and system accounts have only what is necessary for their tasks.</li>
+        <li><b>Secure Error Handling:</b> Display generic error messages to users and log detailed errors securely on the back-end for system administrators to avoid information leakage.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Identification and Authentication Failures — OWASP A07:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Identification and Authentication Failures — OWASP A07:2021</h1>
+      <p class="lead">A detailed guide on identification and authentication risks, common failures, examples, and mitigation strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Identification and Authentication Failures</h2>
+      <h3>What Are Identification and Authentication Failures?</h3>
+      <p>Identification and Authentication Failures, previously known as Broken Authentication, occur when web applications improperly implement mechanisms for confirming user identities and managing sessions. Such flaws allow attackers to impersonate legitimate users or access sensitive data without proper authorization.</p>
+      <p>These failures impact how users prove their identity, how credentials are stored and verified, and how sessions are maintained.</p>
+
+      <h3>Common Types of Failures</h3>
+      <ul>
+        <li><b>Weak or Default Credentials:</b> Using easy-to-guess passwords or leaving default accounts/passwords unchanged can lead to account takeover via simple guessing attacks.</li>
+        <li><b>Credential Stuffing/Brute Force:</b> Lack of rate limiting allows automated attacks, such as using breached username/password lists or attempting every possible password, leading to rapid unauthorized access.</li>
+        <li><b>Missing or Weak Multi-Factor Authentication (MFA):</b> Not implementing MFA or relying on easily bypassed mechanisms leaves accounts highly vulnerable to credential theft.</li>
+        <li><b>Insecure Session Management:</b> Flaws like session IDs in URLs, session fixation, or improper invalidation on logout/password change enable attackers to hijack sessions without needing the password.</li>
+        <li><b>Vulnerable Account Recovery:</b> Weak "forgot password" flows can allow attackers to reset passwords without proper verification, leading to unauthorized account access.</li>
+        <li><b>Insecure Credential Storage:</b> Storing passwords in plaintext or using weak hashing algorithms (MD5/SHA-1) without salting enables attackers to compromise credentials if the database is breached.</li>
+      </ul>
+
+      <h3>Prevention and Mitigation Strategies</h3>
+      <ul>
+        <li><b>Implement Multi-Factor Authentication (MFA):</b> Enforce MFA for all users, prioritizing those with privileged access.</li>
+        <li><b>Enforce Strong Passwords:</b> Require complex passwords and check against lists of commonly used or weak passwords.</li>
+        <li><b>Secure Credential Storage:</b> Use salted, adaptive hashing algorithms like Argon2, bcrypt, or scrypt to store passwords securely.</li>
+        <li><b>Rate Limiting:</b> Apply throttling on login, registration, and password reset endpoints to prevent brute-force or credential stuffing attacks.</li>
+        <li><b>Secure Session Management:</b> Use high-entropy session tokens over HTTPS, invalidate sessions on logout, idle timeout, or password change, and never expose session IDs in URLs.</li>
+        <li><b>Disable Default Credentials:</b> Remove or change all default accounts and enforce strong password policies.</li>
+      </ul>
+
+      <h3>Key Takeaway</h3>
+      <p>Properly implementing and managing identification and authentication mechanisms is critical for web application security. Combining strong credentials, MFA, secure session handling, and careful recovery processes helps protect users and prevent unauthorized access.</p>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>

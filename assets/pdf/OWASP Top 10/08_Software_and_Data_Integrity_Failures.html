@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Software and Data Integrity Failures — OWASP A08:2021</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#f59e0b;--mono:#d1d5db}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--mono);background:linear-gradient(180deg,#071028 0%, #071525 100%);}    
+    .wrap{max-width:960px;margin:40px auto;padding:28px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7);}    
+    header{display:flex;align-items:center;gap:16px;flex-direction:column;}
+    .logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042;margin-bottom:10px;}
+    h1{margin:0;font-size:22px;color:#fff;text-align:center;}
+    p.lead{color:var(--muted);margin:8px 0 18px;text-align:center}
+    section{margin:20px 0}
+    h2{font-size:18px;color:var(--accent);margin-bottom:8px}
+    h3{color:#fbbf24;margin-top:12px}
+    h4{color:#f59e0b;margin-top:8px}
+    ul,ol{padding-left:18px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{border-top:1px solid rgba(255,255,255,0.02);margin-top:28px;padding-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    .card{background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    pre{background:#021025;padding:12px;border-radius:8px;overflow:auto;color:#cbd5e1}
+    @media (max-width:880px){.wrap{margin:20px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">KT</div>
+      <h1>Software and Data Integrity Failures — OWASP A08:2021</h1>
+      <p class="lead">A detailed guide on software and data integrity risks, common vulnerabilities, real-world examples, and prevention strategies.</p>
+    </header>
+
+    <section class="card">
+      <h2>Understanding Software and Data Integrity Failures</h2>
+      <h3>What Are Software and Data Integrity Failures?</h3>
+      <p>Software and Data Integrity Failures occur when an application fails to ensure the authenticity and integrity of its software components, critical data, or development processes. Attackers can exploit these flaws to inject malicious code, tamper with data, or compromise the system through unverified updates or unsafe dependencies.</p>
+      <p>These failures are particularly relevant in modern applications that depend on external libraries, public repositories, and automated CI/CD pipelines.</p>
+
+      <h3>Common Vulnerabilities and Examples</h3>
+      <ul>
+        <li><b>Insecure Deserialization:</b> Deserializing untrusted data without validation can allow attackers to execute arbitrary code or manipulate application logic. <br><i>Example:</i> An attacker crafts a malicious payload for a serialized object passed in a request, gaining control of the application server.</li>
+        <li><b>Unverified Updates/Dependencies:</b> Downloading and installing software updates or libraries without cryptographic signature checks or hash validation. <br><i>Example:</i> The SolarWinds Orion supply chain attack, where malicious code was injected into a legitimate software update.</li>
+        <li><b>Compromised CI/CD Pipelines:</b> Misconfigured build or deployment pipelines allow injection of unauthorized code or modified artifacts into production. <br><i>Example:</i> A misconfigured build script allows a malicious dependency to exfiltrate data from the application.</li>
+        <li><b>Data Authenticity Failures:</b> Failing to validate the integrity or source of data, especially when used in security decisions. <br><i>Example:</i> A cookie storing user privilege levels without verification can be altered to gain elevated access.</li>
+      </ul>
+
+      <h3>Prevention and Mitigation Strategies</h3>
+      <ul>
+        <li><b>Verify Software Integrity:</b> Use digital signatures for updates, packages, and libraries; validate hashes (SHA-256) of downloaded code or container images; employ Software Composition Analysis (SCA) tools to vet dependencies for vulnerabilities.</li>
+        <li><b>Secure Data Handling:</b> Implement HMAC or digital signature checks for serialized or sensitive data; avoid deserializing untrusted data, or validate it thoroughly using safe formats like JSON.</li>
+        <li><b>Harden CI/CD Pipelines:</b> Apply strict access controls and Multi-Factor Authentication to all repositories, build servers, and deployment environments; ensure build artifacts are immutable once created.</li>
+        <li><b>Continuous Monitoring:</b> Regularly scan for tampered dependencies and ensure updates come from verified, trusted sources.</li>
+        <li><b>Immutable Artifacts:</b> Ensure that once software artifacts are produced, they cannot be modified before deployment, maintaining integrity across environments.</li>
+      </ul>
+
+      <h3>Key Takeaway</h3>
+      <p>Implementing a "never trust, always verify" approach for software components, data, and deployment processes is essential. By enforcing integrity checks, validating sources, securing pipelines, and monitoring dependencies, organizations can mitigate the risk of software and data integrity failures and protect against tampering or supply chain attacks.</p>
+    </section>
+
+    <footer>
+      <div>© 2025 CyberSec Insights. All Rights Reserved.</div>
+    </footer>
+  </div>
+</body>
+</html>
