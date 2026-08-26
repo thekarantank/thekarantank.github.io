@@ -1,0 +1,859 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates leveraging leaked credentials to access an email server and send a malicious spreadsheet containing a LibreOffice macro payload. Learners will use the payload to establish a reverse shell and escalate privileges by exploiting a writable service binary for the Veyon Service, ultimately achieving SYSTEM-level access. This lab emphasizes email server exploitation, social engineering, and privilege escalation through service misconfigurations."><title>Proving Grounds: Hepet</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Windows</span><h1>Proving Grounds: Hepet</h1><p>This lab demonstrates leveraging leaked credentials to access an email server and send a malicious spreadsheet containing a LibreOffice macro payload. Learners will use the payload to establish a reverse shell and escalate privileges by exploiting a writable service binary for the Veyon Service, ultimately achieving SYSTEM-level access. This lab emphasizes email server exploitation, social engineering, and privilege escalation through service misconfigurations.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#overview">Overview</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#scenario">Scenario</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>In this lab, you will exploit the target by uncovering important information in emails accessed through leaked credentials. You will utilize this information to send a spreadsheet containing a malicious macro, granting you a low-privileged shell. Finally, you will escalate your privileges by exploiting a misconfigured service.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate services to identify the email server and associated credentials.</li>
+<li>Access emails to uncover sensitive details about spreadsheet processing.</li>
+<li>Craft a LibreOffice macro payload and send it via email to exploit the target system.</li>
+<li>Replace the writable binary for the Veyon Service with a malicious payload.</li>
+<li>Reboot the target machine to execute the malicious binary and gain SYSTEM access.</li>
+</ul>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates leveraging leaked credentials to access an email server and send a malicious spreadsheet containing a LibreOffice macro payload. Learners will use the payload to establish a reverse shell and escalate privileges by exploiting a writable service binary for the Veyon Service, ultimately achieving SYSTEM-level access. This lab emphasizes email server exploitation, social engineering, and privilege escalation through service misconfigurations.</p>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ smtp-user-enum -M VRFY -U users.txt -t 192.168.185.140 
+Starting smtp-user-enum v1.2 ( http://pentestmonkey.net/tools/smtp-user-enum )
+
+ ----------------------------------------------------------
+|                   Scan Information                       |
+ ----------------------------------------------------------
+
+Mode ..................... VRFY
+Worker Processes ......... 5
+Usernames file ........... users.txt
+Target count ............. 1
+Username count ........... 6
+Target TCP port .......... 25
+Query timeout ............ 5 secs
+Target domain ............ 
+
+######## Scan started at Wed Jun 24 20:04:47 2026 #########
+192.168.185.140: agnes exists
+192.168.185.140: martha exists
+192.168.185.140: magnus exists
+192.168.185.140: jonas exists
+192.168.185.140: charlotte exists
+######## Scan completed at Wed Jun 24 20:04:48 2026 #########
+5 results.
+
+6 queries in 1 seconds (6.0 queries / sec)</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/Hepet]
+# Create the network connection required for this lab step.
+
+└─$ nc 192.168.185.140 143
+* OK localhost IMAP4rev1 Mercury/32 v4.62 server ready.
+a1 login jonas SicMundusCreatusEst
+a1 OK LOGIN completed.
+a1 LIST    
+a1 BAD Syntax error in LIST command.
+a1 LIST &quot;&quot; *
+* LIST (\NoInferiors) &quot;/&quot; INBOX
+a1 OK LIST completed.
+a1 SELECT INBOX 
+* 5 EXISTS
+* 0 RECENT
+* FLAGS (\Deleted \Draft \Seen \Answered)
+* OK [UIDVALIDITY 1782328104] UID Validity
+* OK [UIDNEXT 6] Predicted next UID
+* OK [PERMANENTFLAGS (\Deleted \Draft \Seen \Answered)] Settable message flags
+a1 OK [READ-WRITE] SELECT completed.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>a1 FETCH 1 BODY []
+* 1 FETCH (BODY[] {1092}
+Received: from spooler by localhost (Mercury/32 v4.62); 19 Oct 2020 12:28:52 -0700
+X-Envelope-To: &lt;jonas@localhost&gt;
+Return-path: &lt;mailadmin@localhost&gt;
+Received: from kali (192.168.118.8) by localhost (Mercury/32 v4.62) with ESMTP ID MG000008;
+   19 Oct 2020 12:28:51 -0700
+Message-ID: &lt;841577.174232469-sendEmail@kali&gt;
+From: &quot;mailadmin@localhost&quot; &lt;mailadmin@localhost&gt;
+To: &quot;jonas@localhost&quot; &lt;jonas@localhost&gt;
+Subject: Weak Password
+Date: Mon, 19 Oct 2020 19:28:50 +0000
+X-Mailer: sendEmail-1.56
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary=&quot;----MIME delimiter for sendEmail-502425.856729136&quot;
+
+This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
+
+------MIME delimiter for sendEmail-502425.856729136
+Content-Type: text/plain;
+        charset=&quot;iso-8859-1&quot;
+Content-Transfer-Encoding: 7bit
+
+Hey Jonas,
+
+Please change your password, you cannot use the same password as your one liner description, just dont.
+
+Thanks!
+
+
+------MIME delimiter for sendEmail-502425.856729136--
+
+)
+* 1 FETCH (FLAGS (\SEEN))
+a1 OK FETCH complete.
+a1 FETCH 2 BODY []
+* 2 FETCH (BODY[] {1347}
+Received: from spooler by localhost (Mercury/32 v4.62); 19 Oct 2020 12:28:41 -0700
+X-Envelope-To: &lt;jonas@localhost&gt;
+Return-path: &lt;mailadmin@localhost&gt;
+Received: from kali (192.168.118.8) by localhost (Mercury/32 v4.62) with ESMTP ID MG000001;
+   19 Oct 2020 12:28:40 -0700
+Message-ID: &lt;359094.447081105-sendEmail@kali&gt;
+From: &quot;mailadmin@localhost&quot; &lt;mailadmin@localhost&gt;
+To: &quot;agnes@localhost&quot; &lt;agnes@localhost&gt;
+Cc: &quot;jonas@localhost&quot; &lt;jonas@localhost&gt;,
+ &quot;magnus@localhost&quot; &lt;magnus@localhost&gt;
+Subject: Important
+Date: Mon, 19 Oct 2020 19:28:39 +0000
+X-Mailer: sendEmail-1.56
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary=&quot;----MIME delimiter for sendEmail-808784.915440814&quot;
+
+This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
+
+------MIME delimiter for sendEmail-808784.915440814
+Content-Type: text/plain;
+        charset=&quot;iso-8859-1&quot;
+Content-Transfer-Encoding: 7bit
+
+Team,
+
+We will be changing our office suite to LibreOffice. For the moment, all the spreadsheets and documents will be first procesed in the mail server directly to check the compatibility. 
+
+I will forward all the documents after checking everything is working okay. 
+
+Sorry for the inconveniences.
+
+
+------MIME delimiter for sendEmail-808784.915440814--
+
+)
+* 2 FETCH (FLAGS (\SEEN))
+a1 OK FETCH complete.
+a1 FETCH 3 BODY []
+* 3 FETCH (BODY[] {963}
+Received: from spooler by localhost (Mercury/32 v4.62); 19 Oct 2020 12:28:52 -0700
+X-Envelope-To: &lt;jonas@localhost&gt;
+Return-path: &lt;martha@localhost&gt;
+Received: from kali (192.168.118.8) by localhost (Mercury/32 v4.62) with ESMTP ID MG000006;
+   19 Oct 2020 12:28:48 -0700
+Message-ID: &lt;898523.650921078-sendEmail@kali&gt;
+From: &quot;martha@localhost&quot; &lt;martha@localhost&gt;
+To: &quot;jonas@localhost&quot; &lt;jonas@localhost&gt;
+Subject: Love
+Date: Mon, 19 Oct 2020 19:28:47 +0000
+X-Mailer: sendEmail-1.56
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary=&quot;----MIME delimiter for sendEmail-159605.589303286&quot;
+
+This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
+
+------MIME delimiter for sendEmail-159605.589303286
+Content-Type: text/plain;
+        charset=&quot;iso-8859-1&quot;
+Content-Transfer-Encoding: 7bit
+
+Forever and ever?
+
+
+------MIME delimiter for sendEmail-159605.589303286--
+
+)
+* 3 FETCH (FLAGS (\SEEN))
+a1 OK FETCH complete.
+a1 FETCH 4 BODY []
+* 4 FETCH (BODY[] {1342}
+Received: from spooler by localhost (Mercury/32 v4.62); 19 Oct 2020 12:29:03 -0700
+X-Envelope-To: &lt;jonas@localhost&gt;
+Return-path: &lt;agnes@localhost&gt;
+Received: from kali (192.168.118.8) by localhost (Mercury/32 v4.62) with ESMTP ID MG00000A;
+   19 Oct 2020 12:28:54 -0700
+Message-ID: &lt;135985.54474035-sendEmail@kali&gt;
+From: &quot;agnes@localhost&quot; &lt;agnes@localhost&gt;
+To: &quot;mailadmin@localhost&quot; &lt;mailadmin@localhost&gt;
+Cc: &quot;jonas@localhost&quot; &lt;jonas@localhost&gt;,
+ &quot;magnus@localhost&quot; &lt;magnus@localhost&gt;
+Subject: Contacts Information
+Date: Mon, 19 Oct 2020 19:28:53 +0000
+X-Mailer: sendEmail-1.56
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary=&quot;----MIME delimiter for sendEmail-678721.390272589&quot;
+
+This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
+
+------MIME delimiter for sendEmail-678721.390272589
+Content-Type: text/plain;
+        charset=&quot;iso-8859-1&quot;
+Content-Transfer-Encoding: 7bit
+
+Hi team!
+
+I&#39;m new here, will be doing PR for the company. 
+Its a pleasure to work with all of you!
+
+If you can please send to mailadmin the spreadsheet for printing with all the company contacts will be really apreciated .
+
+Ela, can you install the office suite on my machine?
+
+Cheers!
+
+
+------MIME delimiter for sendEmail-678721.390272589--
+
+)
+* 4 FETCH (FLAGS (\SEEN))
+a1 OK FETCH complete.
+a1 FETCH 5 BODY []
+* 5 FETCH (BODY[] {35243}
+Received: from spooler by persephone.pmail.gen.nz (Mercury/32 v4.62); 8 Aug 2008 15:26:19 +1200
+X-Envelope-To: David.harris@pmail.gen.nz
+From: &quot;David Harris&quot; &lt;David.Harris@pmail.gen.nz&gt;
+Organization: Pegasus Mail, Dunedin, New Zealand
+To: David.harris@pmail.gen.nz
+Date: Thu, 27 Jan 2011 15:00:00 +1200
+MIME-Version: 1.0
+Subject: Welcome to Pegasus Mail!
+Message-ID: &lt;489BBDAC.24975.43E28F31@David.Harris.pmail.gen.nz&gt;
+Priority: normal
+X-mailer: Pegasus Mail for Windows (4.61 wb1)
+Content-type: Multipart/Related; boundary=&quot;Message-Boundary-20828&quot;
+X-PMFLAGS: 573075584 0 1 Y6FSIJKV.CNM
+
+--Message-Boundary-20828
+Content-type: Multipart/Alternative; boundary=&quot;Alt-Boundary-10616.1138921265&quot;
+
+--Alt-Boundary-10616.1138921265
+Content-type: text/plain; charset=US-ASCII
+Content-transfer-encoding: 7BIT
+Content-description: Mail message body
+
+Welcome to Pegasus Mail!
+
+This message has been placed in your new mail folder as part of the
+Pegasus Mail installation process.
+
+To see what&#39;s new in this version of Pegasus Mail, please go to the
+&quot;Help&quot; menu and choose &quot;What&#39;s new in this version&quot;.
+
+Pegasus Mail has a very rich help system, accessible from the &quot;Help&quot;
+menu above. As well as the help system, a full manual for Pegasus
+Mail has been installed in the same directory as the program - it is
+called &quot;manual.pdf&quot; and can be viewed using Adobe Acrobat or any
+other program that can display PDF files.
+
+If you need technical support or information and cannot find what
+you need in the help system or manual, please visit the Pegasus Mail
+user community at http://community.pmail.com
+
+We hope you enjoy using Pegasus Mail!
+
+David Harris
+and the Pegasus Mail test team.
+
+
+--Alt-Boundary-10616.1138921265
+Content-type: text/html; charset=US-ASCII
+Content-transfer-encoding: 7BIT
+Content-description: Mail message body
+
+&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot;
+          &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
+&lt;html  xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;&lt;head&gt;
+&lt;title&gt;&lt;/title&gt;
+&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html;charset=utf-8&quot;/&gt;
+&lt;meta http-equiv=&quot;Content-Style-Type&quot; content=&quot;text/css&quot;/&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;br&gt;
+&lt;table width=&quot;436&quot; cellpadding=&quot;4&quot; cellspacing=&quot;0&quot; style=&quot;border-collapse: collapse; border: none&quot;&gt;
+    &lt;tr&gt;
+    &lt;td align=&quot;center&quot; valign=&quot;top&quot; width=&quot;76&quot; style=&quot;border: solid #010101 0px;&quot;&gt;
+    &lt;div align=&quot;center&quot;&gt;&lt;img src=&quot;cid:1138921296.1218166188.31758&quot; width=&quot;50&quot; height=&quot;388&quot; border=&quot;0&quot; alt=&quot;graphic&quot;/&gt;&lt;/div&gt;
+    &lt;/td&gt;
+    &lt;td valign=&quot;top&quot; width=&quot;360&quot; style=&quot;border: solid #010101 0px;&quot;&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;b&gt;Welcome to Pegasus Mail!&lt;/b&gt;&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;This message has been placed in your new mail folder as
+    part of the Pegasus Mail installation process.&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;To see what&#39;s new in this version of Pegasus Mail, please
+    go to the &amp;quot;Help&amp;quot; menu and choose &amp;quot;What&#39;s new in this
+    version&amp;quot;.&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;Pegasus Mail has a very rich help system, accessible from
+    the &amp;quot;Help&amp;quot; menu above. As well as the help system, a full
+    manual for Pegasus Mail has been installed in the same
+    directory as the program - it is called &amp;quot;manual.pdf&amp;quot; and
+    can be viewed using Adobe Acrobat or any other program
+    that can display PDF files.&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;If you need technical support or information and cannot
+# Search the filesystem for files relevant to escalation or access.
+
+    find what you need in the help system or manual, please
+    visit the &lt;/span&gt;&lt;/font&gt;&lt;a href=&quot;http://community.pmail.com&quot;&gt;&lt;font face=&quot;Verdana&quot; color=&quot;#0000ff&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;Pegasus Mail user community&lt;/span&gt;&lt;/font&gt;&lt;/a&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;.&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;We hope you enjoy using Pegasus Mail!&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;&lt;br /&gt;
+    &lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;David Harris&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;div align=&quot;left&quot;&gt;&lt;font face=&quot;Verdana&quot; size=&quot;1&quot;&gt;&lt;span style=&quot; font-size:9pt&quot;&gt;and the Pegasus Mail test team.&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;div align=&quot;left&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+--Alt-Boundary-10616.1138921265--
+
+--Message-Boundary-20828
+Content-type: text/plain; charset=US-ASCII
+Content-disposition: inline
+Content-description: Attachment information.
+
+The following section of this message contains a file attachment
+prepared for transmission using the Internet MIME message format.
+If you are using Pegasus Mail, or any other MIME-compliant system,
+you should be able to save it or view it from within your mailer.
+If you cannot, please ask your system administrator for assistance.
+
+   ---- File information -----------
+     File:  820.bmp
+     Date:  24 Oct 2001, 17:14
+     Size:  21164 bytes.
+     Type:  Unknown
+
+--Message-Boundary-20828
+Content-type: Application/Octet-stream; name=&quot;820.bmp&quot;
+Content-ID: &lt;1138921296.1218166188.31758&gt;
+Content-disposition: attachment; filename=&quot;820.bmp&quot;
+Content-transfer-encoding: BASE64
+
+Qk2sUgAAAAAAANoDAAAoAAAAMgAAAIQBAAABAAgAAAAAAAAAAAASCwAAEgsAAOkAAADpAAAA
+AAAAAP///wDCkHoAwo95AK2lxgC1pc4AtaXGAO+9/wDGrc4A57XvAN6t3gD/zv8A1q3WAP/W
+/wD/5/8A/+//AN6t1gAxKSkAOTExANZ7awB7SkIAhFJKAP/GvQD/zsYAvWtaAMZ7awD/1s4A
+zmtSAOd7YwDvhGsA3ntjAOeEawCtY1IAnFpKAO+McwD3lHsAa0pCAPetnAD/va0AvWNKAM5z
+WgDOe2MAlFpKAO+UewD3nIQA/6WMAGNCOQDX0M4AnGNSAP+tlAD/xrUA53NKALVrUgD3rZQA
+/7WcAP+9pQDOs6kAz7euANG9tgDUxsEArWtSAMGNeADCkHsAxJWCAMSWgwDFmogAxpuKAMac
+iwDHnYwAx56NAMmklQDIo5QAyqaXAMmllgDLqZwAy6ueAMytoADNsaYA0LmwAM+4rwDQurEA
+z7mwANG+tgDSv7cA0sC5ANLBugDUx8IA1cnEANTIwwC/h24Av4hvAMCJcQC/iHAAwIpyAMGL
+dADBjHUAwY12AMGOdwDCjngAwpB5AMGOeADCkXwAw5J9AMKSfQDElX8Aw5N+AMOUfwDElYAA
+xJaBAMOUgABKOTEAxZiDAMWYhQDEl4QA/8atAMaahwDFmYYAxpuIAMWahwDGnIkAx56LAMef
+jgDIoI8Ax6CPAMihkADIopEAx6GQAMijkwDKp5gAyaaXAMqomQDJp5gAyqmaAMurnADKqpsA
+zK2fAMusngDLraAAzK6hAMyvogDMsKMAzLCkAM2xpQDNsqYAzbOoAM60qQDOtaoAz7esAM62
+qwDQu7IA0b20ANC8swDRwLgA0sK7ANPDvADTxL0A08W/ANPGwADVysUA1s3JANXMyADX0M0A
+1s/MAMKSewDHoI0AyKSTAMmmlQDJqJgAy6ydAMuuoAD/3s4AzbKlAM60pwDNtKcAz7itANC6
+rwDRvrUA1Ma/AP/v5wDVy8YA1s7KAFJCOQDPuq8A0cC3ANLCuQDTxr8A1czHAJxKGAD/eykA
+hEIYANTIwQBrORgA/4QpAIxKGAB7QhgA/+fWAEI5MQBjORAA//fvAP+cMQD/794A/7U5AP/O
+ewD/570A/85rAP/WhAD/3pQA/+/OAP/nrQD/78YA///3AABrjAAIc5QAAGOEAABaewAQc5QA
+GHOUACF7nAAAUnMAKXucADmEpQAAQmMAADlaADF7pQBajK0Ae5S1AABKtQCUnL0Axs7/AJyc
+vQC9vb0AOTk5ACEhIQBmZmZlPmVmaWlpZmZmZmZpaWlpaWZpZmZlPgICA2FgX2BfX15eXV1d
+XV1dXV1dW1tbWwAAZmZlPj5lZmZpZmZmZmZmZmlpaWZmZmZmZT4CAgNkPWBgX19fXl5dXV1d
+XV1dW1tbW1sAAD4+Pj5lZmZmZmZmZmZmZmZmZmZmZmZmZmU+PgIDZGE9PWBfX19eXV1dXV1d
+W11dXVtbAAACAj4+ZWZmZmZmZmU+PmVlZWVlZWVmZmZlPj4CYmRhYT1gX19fXl1dXV1dW1td
+XV1bWwAAAwM+Pj5lZWZmZmY+Pj4+Pj4+Pj4+ZWVlZT4+AmJkYWE9YF9fX15eXV1dXVtbW1td
+W1sAAGIDYz4+ZWVmZmZmPj4+AgICAj4+PmVlZWU+PgJiZGFhPWBfX19eXl5eXV1bW1tbXVtb
+AABiAwMCPj4+ZWVlZT4+AgICAgI+Pj4+Pj4+PgICA2RhPWBgX19fXl5eXl1dW1tbW1tbXAAA
+ZGIDAgI+Pj4+Pj4+PgICAgICAj4+Pj4+Pj4CAgNiYT1gYF9fX19fXl5dXV1bXFtbW1wAAGRi
+AwMCAgI+Pj4+Pj4+AgIDAwICPj4+Pj4+AgMDYmE9YGBgYF9fX15dXV1dW1xcXFxaAABiZGJi
+AwICAj4+Pj4+PgIDAwMDAj4+Pj4+PgIDA2RhPWA9PT1gYF9fXl1dXVxcXFpaWgAAYmRkZGID
+AwICPj4+PgIDAwMDAwI+Pj4+AgICAwNkYT09PT09YGBfX15eXVtcXFpZWVkAAGJkZGRkYgMD
+AgICAgICAwMDAwMCAj4+AgICAgMDYmRhYT09PWBgYF9fXl1bXFxZWVlZAABkZGRkZGRiAwMC
+AgICAwMDAwMCAgICAgIDAwMDAwNiZGE9PWBgYGBfX15dW1tcWVlZWQAAZGRkZGRkZGJiAwMD
+AwMDAwMDAgICAgIDAwMDAwMDYmJkYWE9YD09YF9fXV1bXFlZWVkAAGRkZGRkZGRkZGIDA2Ji
+AwMDAwICAgIDAwMDYmJiYmJiZGRhPWA9PT1fX11dW1xZWVlZAABkZGRkZGRkZGFkAwNiYgMD
+AwMCAgICAwMDA2JiYmJiYmRkYT1gPT09X19dXVtcWVlZWQAAYWFkYWFhZGRhZAMDYmIDAwMC
+AgICAgMDAwNiYmJkZGRhYT09YD09PWBfXV1bXFpZWVkAAD09YT09YWRkZGIDAwMDAwICAgIC
+AgICAgIDA2JkYWFhPWBgYGA9PT1gX11dW1xaWVlZAAA9PT09YWRkYgMDAwMDAwICAj4CAgI+
+AgICAgNkYT09YF9fX2A9PT1gX19dXVtcWllZWQAAPT09YWRiYgMDAgICAgICPj4+AgICPj4+
+AgIDZGE9YF9fX19gPT1gX19eXV1bXFpZWVkAAD09YWRiAwMDAwICAgICPj4+PgICAj4+PgIC
+A2JhPWBfX19fYGBgYF9fXl1dW1tcWlpZAAA9YWIDAwMDAwMCAj4+Pj4+Pj4CAgI+PgICAwNi
+YWBfX19fX19fX19fX15dXVtbXFxcWgAAZGIDAwICAgICAj4+Pj4+AgICAj4+Pj4CAwMDZD1f
+X19fX19fX19fX15eXV1bW1tbW1wAAGIDAwICAgICAj4+ZWVlPgICAgI+Pj4CAgMDYmFgX19f
+X15eX19fXl5eXl1dW1tbW1tbAABiAwMCAgICPj4+PmVlZT4CAgI+Pj4+AgIDA2RhYF9fX19e
+Xl5eXl5eXl5dXVtbW1tbWwAAYgMDAgICAj4+Pj5lZWU+Pj4+Pj4+PgICAwNkYT1gX19fXl5e
+Xl5eXl5eXV1dW1tbW1sAAGJiAwICAgI+Pj4+Pj4+Pj4+Pj4+AgICAgMDZGE9YF9fXl5eXl5e
+Xl5eXl1dXVtbW1tbAABkZAMCAgICPmVlPj4+Pj4+Pj4+PgICAgMDYmRhPWBfX15eXl5eXl5e
+Xl5eXl1dXVtbWwAAYWQDAgI+Pj5lZT4+Pj4+Pj4CAgICAgNiZGRkYWBfX15eXl5eXl9fX19f
+X15dXV1bW1sAAGFkAwICPj4+Pj4+Pj4+Pj4+AgICAgMDYmRhPWBfX19eXl5eXl9fX19fX19f
+Xl1dXVtbAABhZAMCPj4+Pj4+Pj4+Pj4CAgICAgMDYmJkPV9fX19eXl5eXl5fX19fX19fX15d
+XV1bWwAAZGIDAj4+Pj4CAj4+Pj4+AgICAgMDYmRkYWBfX19eXl1dXl5fX19fX19fX19eXV1d
+XVsAAGIDAwI+PgICAgICAgI+PgICAgMDZGFhPWBfX19eXl1dXV5eX19fX19fX19eXV1dXV1b
+AABiAwI+Pj4CAgICAgICPgICAgMDZD1gPV9fX19eXl5dXl5eX19fX19fX19fXl1dXV1dXQAA
+YgI+Pj4+AgICAgICAgICAgMDZD1gX19fX15eXl5eXl5eX19fX19fX19fX15dXV1dXV0AAAMC
+Pj4+PgICAwMDAgICAgIDYmFgX19fX19eXl5eXl9eX19fX19fX15eXl5eXl1dXV1dAAADAj4+
+Pj4CAgMDAwICAmJiA2JhYF9fX19fXl9fX19fX19fX19fX19eXl5eXl5eXV1dXQAAAwI+Pj4C
+AgMDAwMDAwNiYmJkPV9fX19fX19fX2BgYF9fX19fX19eXl5eXl5eXl1dXV0AAAI+Pj4CAgMD
+AwMDAwNiYmRhPWBfX19fX19fX2A9PT09YF9fX19fXl5eXl5eXl5dXV1dAAACPj4+AgMDAwMD
+AwNiYmRhYF9fX19fX19fX19gPWFhYWE9YGBfX15eXl5eXl5eXV1dXQAAAj4+AgMDYmJiAwMD
+YmRhPV9fX19fX19fX2BgPWFkZGRkYT09YF9fXl5eXl5eXl5eXl4AAD4+AgIDA2JkZGJiYmRh
+YF9fX19fX19fYGA9PT1hZGJiZGRhYT1gX19eXl9fXl5fX19fAAA+PgICAgNiZGRiZGQ9YF9f
+Xl5fX19gYD09YWE9YWRiA2JiZGFhPWBfX19fX19fX19fYAAAAj4+PgICA2JiZGE9X19eXl5e
+X19fYGA9PWFhPT1hYgMDYmRhYWE9YF9fX19fX19fPWEAAAI+Pj4+AgMDYmRgX19eXV1eXl5f
+X2A9PT09PT09YWQDAwNiYWFhYWE9X2BgYGBgPWRiAAACPj4+Pj4CA2JhX19eXV1dXl5eX19g
+PT09PT09PWFkYgMDYmRkZGFkZGFhYD09YWRiAwAAPj4+Pj4+AgNiYV9fXl1dXV5eXl9fYD09
+PT09PT1hZGIDA2JkZGRkZAMDYT09PWRkYgMAAGVlZWU+PgIDYmFfX15dXV1eXl5fXz1hYWFh
+YWFhZGRiAwNiYmJiAwMDA2JkYWFkYgMDAABmZmZlPj4CA2Q9YF9eXl1dXl5fX189YWRiYmJi
+YmJiYmJiYgMDAwMDAwMDYmRkZGIDAgAAZmZmZT4CAgNkPWBfXl5eXl5eX19fPWFiAwMDAwMD
+YmRkYmIDAgICAgICAwMDAwMDAwMAAGZmZT4CAgNiYWBfX19eXl5eXl9fYD1kAwICAgICA2Jk
+ZGIDAj4+AgICAgIDAwMDAwMDAABmZmU+AgNiYT1fX19fX15eXl5fXz1hYgICAgICAgIDYmID
+AwI+PgICPj4CAgICAgMDAwAAZmU+AgNiYT1gX19fX19eXl5eX19hYgMCPj4CPj4CAwMDAwIC
+Pj4CAj4+Pj4CAgIDAwMAAGY+AgNiYT1gPWBgYF9fXl5eXl9gYgMCPj4+Aj4+PgICAgICAj4+
+AgI+Pj4+PgICAwMDAABlPgNiYT1gYD09YGBfX15eXl9fYQMCAj4+Pj4+Pj4+Pj4+Pj4+PgIC
+AgICPj4CAwNiYgAAZT4DZGFgX19gPWBgYF9eXl9fX2QDAgI+Pj4+Pj4+ZmZlZj4+Pj4CAgIC
+AgI+AgMDYmQAAD5jA2RhYF9fYGBgYGBfX15fX2BkAwICPj4+Pj6jZWZmZWZnZT4+AgICAgIC
+AgIDA2JkAAACA2JkYWBfX19fX2BgYF9fX2BhYgMCAj5lZWVlZmZmZmZmZmZlPj4CAgICAgMD
+AwNiZAAAAwNiZGE9YF9fX19gYGBfX2A9YgMCAgI+ZWZmZmZpaWlmZmZmZmU+PgICAgNiYgMD
+YmQAAGJiYmQ9PT1gX19fYGBgYD1hZAMCAj4+PmVmZmZpaWlpaWlmZmZmZT4CAwNiZGRiYmJk
+AABhZGRhYGA9YGBgYD09PWFkYgMCAj4+Pj5lZmZmaWlqamlpaWZmZj4+AgMDYmRkZGJiZAAA
+PWFhPWBgYGA9YWFkZGRiAwMCAj4+Pj4+ZWVmZmlpampqaWlmZmU+AgIDA2JiZGRiYmQAAGBg
+YGA9PT09YWRkYmIDAwICPj4+ZWU+Pj5lZmZpaWlpamlpZmZlPgIDAwNiYmRiAwNiAABgX19g
+PWFhYWFkYgMDAwICPj4+ZWVlPj4+ZWZmaWlpaWlpaWZmZT4CAwMDYmJiAwMDYgAAYF9fXz1h
+YWFkYgMDAgI+Pj5lZWZmZT4+ZWZmaWlpamppaWlmZmU+AgMDAwMDYmJiA2IAAF9fX19gPT1h
+ZAMDAgI+Pj4+ZWZmZmVlPmZmaWlpampqamppaWZmZT4CAwMDAwNiYmJkAABfX19gYD09YWQD
+AgI+PmVlZWZmZmZmZmZmaWlpamptbWpqaWlmZmY+AmNjY2MDYgNiZAAAX19fYGA9PWFkAwIC
+Pj5lZWVmZmZmZmZmZmlpaWpqbW1qamlpZmZmPgICAgICAwMDYmQAAF9fYD09PWFkYgMCAj5l
+ZmZmZmZmZmZmaWlpaWlqam1tampqamlpZmU+Pj4+PgICA2JkAABfYD09YWFiAwMCAj4+ZmZm
+ZmZmZmZmaWpqamppamptbW1tampqaWZmZWVlZWU+PgIDYgAAYD09PWFkAwMCAj4+PmZmaWlp
+ZmZmaWpqampqampqam1tbW1tamppZmZmZmZmZmU+AgIAAGA9PT1hZAMCAj4+Pj5mZmlpaWlp
+aWlqbWttbWpqam1ra2tra21qamlpZmZmZmZmZmU+AAA9PT09YWQDAj4+Pj4+ZWZpaWpqampq
+ams/a21qampta2tra2tra21tamlpaWlpZmZmZgAAZGFhYWRiAwI+Pj4+PmVmaWlqampqam0/
+bD9rbWpqbW1ta2trP2w/P2ttamppamlpaWkAAGJkYWFkYgMCAgICAj5lZmlpampqam1rP2xs
+P2ttampqam1rP2w/Pz9sbGttampqampqAABiZGFhZGIDAgICAgICPmVmaWlpam1rP2xsbD9r
+P21qamptP2w/QEBAQD8/a2tqbWpqagAAYmRhYWRiAwICAgICAj4+ZmlpaWptP2xsbEBAP2xr
+bWpqbT9sQHFvb29AQD8/a2tqamoAAGJkYWFhZAMCAgICAgI+PmZmaWlqbT9sQEBAQEBsa21q
+am0/QEBxb29vcHFAQD9ra21tAABkZGFhYWQDAgICAgICPj5mZmlqam0/P0BAQEBAbD9rampt
+P0BxcHBwcHBxQEBAPz8/PwAAYWFhYWRiAwICAgICPj5lZmZpamptPz9AQEBAQGw/a21qbT9A
+b3B0dHRwb3FxcUBAQEAAAD1hZGFkAwMCAgI+PmVlZmZmaWpqa2xAQHFxcUBsbGttbWtsQG90
+dHZ0dHBwcHBvb29vAAA9YWRkYgMCPj4+PmVmZmZmZmlpamtsQEBxcXFAP2w/a2s/P0BwdHZ2
+dnZ0dHBwcHBwcAAAYD1hYgMCPj4+ZWZmZmZmZmZpaWprbEBAcXFxQEBsbD9sP0BvdHR2dnZ2
+dnR0dHR0dHYAAGA9YWIDAj4+PmZmZmZmZWZmZmlqa2w/QEBxcUBAPz8/QEBxcHR2dnZ2dnZ0
+dHR0dnZBAABgPWQDAwI+PmVmZmZmZmVlZWZmamtsP0BAcXFAQEBAQHFvcHR2dnZBQUF2dnZ2
+dkF1dQAAPWFiAwMCPj5lZmZmZmZlPj5lZmltP2xAQEBAQEBAcXBwdHR0dnZ2QXV1QXZ2dkF1
+QkIAAGFkAwMDAj5lZmZmZmZlZT4+ZWZpbT8/QEBAQEBxb3BwdHR0dnZBQXV1QkFzdnZBdXdC
+AABhZAMDAwI+ZWZmZmZmZWU+PmVmaWloP2xAQEBAcXBwcHR0dHZ2QUF1dUJ3dUFBd0J3QgAA
+ZGIDAwMCPmVmZmZmZT4+Pj5lZmZpamtsQEBAcW9wcHR0dHZ2QXV1dXVCd3dCQndCQkIAAGID
+AwMDAj5lZWVlPj4+Pj4+ZWZmaWptPz9AQG9wcHB0dHZ2QUF1dXV1d0JCQkJCQkJDAABiAwMD
+Aj4+Pj4+PgICAj4+Pj5lZmZpaj8/QHFwcHR0dHZBdXV1QkJCQndCQkNDQ0NDQwAAZAMDAgI+
+Pj4+Pj4CAgICPj4+ZWZmaWo/P0BxcHR0dnZBQnd3d3d3d3dCQkJDQ0NDQ0MAAGFiAwICPj4+
+Pj4+AgICAgI+PmVmZmlqP0Bxb3B0dkFCd0JCQkJCQkJCQkJCQkJCQkNDAABhYgMCAj4+Pj4+
+Pj4CAgICPj5lZmZpaj9AcXB0dnV3QkNDQ0NDQ0NDQkJCQkJCQkJDQwAAZAMDAgICPj4+Pj4+
+AgICAj4+ZWZmaWo/QG9wdnV3QkNERERERERDQ0NCQkJCQkJDQ0MAAGIDAwIDAgICAgICAgIC
+AgI+PmVmaWptbEBwdHZCQkNEREVFRUVFREREQ0NDQ0NDREREAABiAwMDAwMCAgICAgICAgIC
+PmVmZmlqaz9vcHR2QkJEREVFeXlFRUVFRUREQ0NERERERAAAYgMDAwMDAgICAgICAgICAj5l
+ZmZpamtAcHB0dkJCRERFRXl5RUV5eUVFRERDRUVEREQAAGIDAwNiAwMDAwMDAwMDAgI+ZmZp
+am1sQHB0dkFCQ0RFRXl5eXl5eXl5RUVFREVFRUREAAADAwMDYmJiAwMDAwMDAwICPmZmaWpr
+P3FwdHZCQkNERXl5eXl5eXl5eXl5eUVFRUVERAAAAwMDA2JiYgMDYgMDAgICPmVmaWltbEBv
+cHRBd0NERXl5eXl5eXl5eUV5eXl5eUVFREQAAAIDAwMDAwMDAwMDAj4+PmVmZmlqaz9Ab3B2
+dUJDREV5eXl5eXl5eUVFRXl5eXlFRUREAAACAgMDAwMDAwMCAj4+ZWVmZmZpaj8/QG90dkJC
+Q0RFeXl5eXl5RUVFRUVFRXl5RURERAAAAgIDAwMDAwICPj4+ZWVlZmZpamtsP0BwdEFCQkNE
+RXl5eXl5eUVFRUVFRUV5RUREREQAAAICAwMCAgICPj4+ZWVmZmZmaWo/QEBvdHZ1d0JDREVF
+RXl5eXl5RUVFRUVFRUVFREREAAACAwMCAgICPj5lZWVlZmZmZmltbEBvcHZBQndCQ0RERUV5
+eXl5eUVFRXl5eUVFRUVERAAAAwMCAj4CAj5lZWVmZmZmZmZqa2xxcHR2dXdCQ0NEREVFeXl5
+RUVFeXl5eXl5RUVFREQAAAMDAgI+Pj6jZWVlZmZmZmZmamtAcXB0dnV3QkNDRERFRXl5eUVF
+RXl5eXl5eUVFRUREAAADAgI+PmVlZmZmZmZmZmZmaWprQG9wdHZ1d0JDQ0RERUV5eXlFRXl5
+eXl5eXlFRUVERAAAAwI+PmVmZmZmZmZmZmZmZmlqa0BvdHZBdUJCQ0NEREVFRXl5eXl5eXl5
+eXlFRUVFREMAAAICPmVmZmlpaWlpZmZmZmZpams/cXR2dUJCQkNEREVFRUV5eXt7e3l5eXl5
+RUVFRENDAAACPmZmZmlpampqaWZmZmZpaWo/P3FwdnV3QkNEREVFRUV5eXt7e3t7eXl5eUVF
+RERDQgAAPmZmZmlpaWpqamppZmZpaWptbEBxcHZ1QkJDRERFRUV5eXt7e3t7e3l5eUVFRERD
+QkIAAGZmZmZpaWpqampqaWlpaWptPz9Ab3RBQkJCQ0RERUVFeXl7e3t7e3t5eUVFRERDQkJC
+AABmaWlpaWpqbW1tampqamptPz9Ab3B2QkJCQ0NEREVFRUV5eXt7e3t7eXlFRUREQ0JCQgAA
+aWlpampqam1tbWpqam1rPz9Ab3B0dUJCQ0NERERFRUVFeXt7e3t5eXl5RUVERENCQkIAAGlp
+aW1raGpra2tqamg/bD9Ab3R2dXdCQ0NERERERUVFRXl7e3t7eXl5eUVFRUREQkJCAABpaGtr
+a2s/a2trPz9rP0BxcHR2dXdCQ0NEREVFRUV5eXl5e3t7e3l5eXl5eUVFRERCQgAAaz8/Pz8/
+bGw/P2w/Pz9vcHR0dnV3Q0NDRERFRUVFeXl5eXt7e3t5eXl5eXlFRUREREIAAD8/P0BAQD8/
+Pz8/P0BAb3R2QXV3QkNDRERFRUVFeXl5eXl5eXl5eXl5eXl5eUVFRERDAABAQEBxQEBAQEBA
+QEBxb3B2QUJ3QkNDRERFRUV5RXl5eXl5eXl5eXl5eXl5eXl5RUVEQwAAQHFxcUBAQEBAQEBx
+b3B0dnV3QkNDRERFRXl5eUVFeXl5eXl5eXl5eXl5eXl5eUVFREMAAHFxcUBAQEBAcUBxcHB0
+dkFCQkJDRERERUV5eXlFRXl5eXl5eXl5eXl5eXl5eXlFRUREAABxcUBAQEBAcXFxb3B0dnZ1
+d0JCQ0REREVFeXl5eXl5eXl5eXl5eXl5eXl5eXl5RUVERAAAcXFAPz8/QHFvcHB0dnZBQndC
+QkNDREVFeXl5eXl5eXl5eXl5RUV5eXl5eXl5eUVEREQAAEBAQD8/P0BAb3B0dHZBdUJCQkJC
+Q0RFRXl5eXl7e3l5eXl5eUVFeXl5eXl5eUVEREREAABAPz8/QEBAcW90dHZ2QXVCd0JCQ0NE
+RUVFeXl7e3t7e3t7eXl5eXl5eXl5eXlFRERERQAAQGxsP0BAQG9wdHZ2QUF1QndCQkNDREVF
+RXl5e3t+fn57e3t7eXl5eXl5eXl5RURERUUAAGxsbD9AcHFvcHR2dkFBdUJDQkRDQ0RERUVF
+eXt7fn5+e3t7e3l5eUVFRXl5eUVFRXl5AABsP2xAcXBwcHB0dnZ2QUJ3Q0NERERERERFRUV7
+e35+fn5+e3t7e3lFRUV5eXl5eXl5eQAAbGw/QG9wdHR0dnZ2dnV3QkNERERERERERUVFeXt+
+fn5+fn5+e3t5eUVFeXl5eXl5eXkAAD8/QEBvcHR2dkFBQUFCQkNERERERERERUVFRXl7fn5+
+fn5+fnt7e3lFRXl5eXl5e3t7AABAQEBAcXB0dkF1dXVCd0JDRERERERERUV5eXl5e3t+fn5+
+fn57e3t5RUV5eXl5eXt7fgAAcG9vcW9wdHZ1QkJCd0JDREVERERFRUV5eXl5eXl7e3t+fn58
+fn57eUV5eXl5eXl7fnwAAHRwcHBwcHR2dUJCd0JCQ0RFRUVFRXl5eXl5eXl5eXt7fn5+fHx+
+e3t5eXl7e3t7e358AAB2dHRwcHB0dnVCd0JCQ0NERUVFRXl5eXl5e3t7e3t7e3t7fnx8fnt7
+e3t7e35+e3t+fAAAdnZ0dHBwdHZ1d0JCQ0NERXl5eXl7e3l5eXt7e3t+fn57e35+fn57e3t7
+e358fH5+fH0AAHNBdHRwcHRzdUJCQkNERUV5e3l7fnt7e3t7e3t+fHx8fn58fn5+e3t+enp8
+fX18fX19AAB1QXZ0dHR2dUJCQkJDREV5eXt+e357e3t7e3t7fnx8fH5+fHx8fnt7fn19fH19
+fH19fwAAd0JBQXZBdXdCQkNDQ0RFeXt7fnx8fnt7e3t7e358fHx8fHx8fH5+fnx9fX19fX19
+fX8AAEJCQkJ1QndCQ0NDQ0RFeXl7fnx9fXx+fn5+fnx8fXx8fHx8fHx+fHx9fX19fX19fX9/
+AABDQ0NCQkJCQ0RERERFRXl7e358fX19fH19fXx9fX18fHx8fn5+fnx9fX19fX19fX1/fwAA
+RURERERDREVFRUVFRXl7fnx8fX19fX19fX19fX19fH5+fn5+fn58fX19fX19fX1/f38AAHl5
+RUVFRUV5e3t5eXl7fH19fX19fX19f39/fX19fXx+fn5+fn5+fH19fX19fX1/f0dHAAB7e3l5
+e3t7fnx8fnt7fH19fX19fX19f0dGR399fX18fn5+fHx8fH19fX19fX19f0dGRgAAfH57e35+
+fH19fX18fH19fX1/f39/f0dGRkZ/fX19fXx8fHx8fHx9fX9/fX19fX9HRkYAAH19fHx9fX1/
+f39/f39/f39/f39HR0ZGRkZGR399fX19fX18fn58fX1/f399fX1/RkZGAAB/fX19fX9/RkZG
+RkZGRkZGRn9/RkZGRkZGRkZHfX19fX19fH5+fH19f0d/f31/R0ZGRgAApX1/fX9HRkZGRkZG
+RkZGRkZGRkZGRkZGRkZGR0d9fX99fXx+fnx9fX9Hf399f0dGRkYAAEd/f0dHRkZGRklJRkZG
+RkZGRkZGRkZGRkZGRkZHf39/f319fHx9fX9/R39/f39HRkZGAABGRkZGRklJSUlJSUlGRkZG
+RklJSUlJRkZGRkZGRkd/f399fX19fX1/f39/f39/R0dGRgAASUlJSUlJSYGBgUlJSUlJSUmB
+SUlJSUZGRkZGRkZGR39/f319fX19f39/f39/f0dHRkYAAICDgYGBgYGDg4GBgYGBgYGBgYGB
+gUlGRkZGRkZGRkd/f39/fX19fX9/f39/f39HRkZJAACEgoKCgoKCgoKAg4ODgIKAgIOBgYGB
+SUZGSUZGRkZGRkZHf39/f39/f0dHR39HRkZJSQAASoaGhoaEhISEgoKCgoKCgoKAgICDgUlJ
+SUlGRkZGRkZGRkZHf39/f39HR0dHRkZJgYEAAEuoqKiFS4aGhoSEhISEhIKCgoKCgICBgUlJ
+RkZGRkZJSUlGRkdHR0dHR0dHRkZJgYODAABMh4eHiIhLS4VKSoaGhoSEhISEgoKCgIOBSUlG
+RkZJSYGBSUZGRkZGRkdHR0ZJgYOAgAAAi4qKikyHh0tLS0tLS0uFSoSEhISCgoCDgUlJSUZG
+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
+iEyKigAAO52cnJycm5qZVVSYUjqXlVBOT085lJKRkI+OjYuKikyJiIiIiIiIiIiIiIiIiImK
+iosAADs7nZycm5uamVVUVFNSlpeVUFFPOZSSkZCPj46Ni4qKikyJiIiIiIiIiIiIiIlMiouM
+AAA7OzucnJubmplVVVRTUjqXlVBRTzmUlJGRkI+OjY2Li4qKTImIiIiIiIiJiUyKioqLjQAA
+Ozs7nZycm5uamVVUmFOwl5VQTzk5k5SSkZGPj46NjYyLiopMiYiIiIlMioqKi4uLjI0AADs7
+O52dnJubmplVVJhTsJeVUE85rpOUlJKRkI+Ojo2Ni4uKiopMTEyKioqKi4yNjY2OAAA7Ozs7
+O52bm5uaVVSYU7CXlVBPT645lJSUkqyPj46NjYyLi4qKioqKi4uLi4yNjY2OjwAAOzs7Ozud
+nZubmlVUmFOwl5VQT09POZSUlJKRkI+OjY2Mi4uKiouLi4uMjI2MjY2Nj48AADs7Ozs7O52c
+m5qZVZhTOpeVUE9PT66TlJSSkZCPjo6NjYyLi4uLi4uMjIyNjY6Ojo+PAAA7Ozs7OzudnJua
+mVVUUzqXlVBRT085OZOUlJKRj4+Pjo2NjIuLi4yNjY2NjY6Ojo+PjwAAOzs7Ozs7nZybmZlV
+VFOwl5VQUU9PT645k5SSkZCPj4+OjY2NjY2NjY2NjY6Oj4+Pj48AADs7OzudnZybmpmZVVWY
+UpaXUE5RUU+uOZOUkpGQkI+Pjo6NjY2NjY2NjY6Oj4+Pj4+PAAA7OzudnJycm5qamZlVVFM6
+l5VQTlFPOa45lJSRkZCPj4+Ojo6Ojo2NjY2Njo+Pj4+QkAAAOzudnJycm5uampqaVVRTsJeX
+lVBOT085OZSUkpGQj4+Pj4+Ojo6Ojo2NjY6Oj4+QkJAAADudnJycnJubmpubmplVmFI6l5eV
+UE5PTzmUkpGRkJCPj4+Pjo6Ojo6Ojo6Ojo+PkZGRAACdnJycnJybm5qbm5uaVVRTUjqXl5VQ
+Tk85lJKRkZGQkI+Pjo6OjY2Ojo+Pj4+PkJGRkQAAnZycnJycm5uam5ubmplUU1NSOpaXUFBP
+rpSSkZGRkZCQj46Ojo2Njo+Pj4+PkJGRkZEAAJ2cnJycnJubmpubm5qZVFNTUrCWl5VQT645
+lJKRkZGQkI+Ojo6NjY6Pj4+Pj5CRkZGRAACdnJycnJycm5ubm5uamVRUU1KwOpaXlVE5OZSU
+kpGRkZCPj46Ojo6Pj4+Pj4+QkZGRkQAAnZ2dnZydnJybm5ubmplVVJhTUlI6l5VOT645k5SS
+kpGRkI+Pj4+Pj4+Pj4+QkJGRkZEAADs7OzudnZycnJybm5qamVVUmFNSsJeVUFFPOa45lJSS
+kZGQkJCQkI+PkJCQkJCQkJCQAAA7Vjs7O52dnJycnJuampqZVVSYU1I6l5VQUU9POa6UlJSR
+kZGRkZGQkJCRkZGRkJCQkAAAWFhWVjs7nZycnJybm5uamplVVJhTUpaXlVBOUU9PrjmUlJKS
+kZGRkZGRkZGRkZGQj48AAFdYWFZWO52cnJycnJubm5qZmVVUU1KwlpeXlVBQTk85OZSUlJSS
+kpGRkZGRkZGRkI+PAABXV1hYVjs7nJycnJybm5ubmplVVJhTUlI6lpeXlVBOT645k5OUlJKS
+kpGRkZGRkZCPjwAAnldXV1hWO52cnJycnJubm5qamVVUmFNTUrCWl5eVUE85rjmuOZOUkpKS
+kZGRkZGQkI8AAJ6enldYVjs7nZycnJybm5uamplVVFRUVFNTUpaXl1CvOTk5Oa45lJKSkpKR
+kZGQkJCPAACenp6eV1a+Ozu5uZ2cnJubm5uZVVVVVVVUVFOwl5eXUE5OT0+urjmTlJKSkZGR
+kJCQjwAAnp6enldYVr47nTudnJybm5ybmplVVVVVVFS3UpaXl1BQTlFPOa45k5SUkpGRkZCQ
+kI8AAJ6enp5XV1hWOzs7O52cnJycm5uamZmZVVVUVFOwlpeVlVBQUU85OTk5lJSSkZGQkI+P
+AACenp6enp5XWFZWOzs7OzudnJybm5qampmZVVSYUrCWl5eVlVBRT09POTmUlJKRkJCPjwAA
+np6enp6eV1dYVlY7Ozs7O52cnJubmpqamVVUVFNSOpeXl5WVUE5RT0+uk5SSkZGQkI8AAJ6e
+nrOznp6eV1hYVlZWOzs7nZybm5qampmZVVRTUrCWl5eXl5VQTk5RTzmUkpGRkJCPAACzs7Oz
+s56enp5XWFhYVjs7O52cm5uampqZmVVUmFNSOpaXl5eXlVBQUE+ulJSSkZGQkAAAs7Ozs7Oz
+np6eV1dXV1hWO52cm5ubmpqamZlVVFRTUrA6lpaWl5eVlVBRT5OUkpKRkZEAALq6urqzs7Oe
+np5XV1dYVjudnJubm5uamZmZVVVUmFNSsDo6OpaXl5VQTk+uk5SUkpKRAACgoKCgurqznp6e
+V1dXWFZWO5ycnJubmpmZVVVVVJhTUlKwsLCwlpeVlVBROTmUlJSSkQAAoKCgoKC6s56enldX
+V1hWVju5nJybm5qZmVVVVVRUU1JSsLBSUjqXlZVQUU+uk5SUkpEAAKCgoKCgurOenp5XV1dY
+VlY7O5ycm5uamZlVVVVUVFO3UlJSUlI6l5WVUFFPrpOUlJKRAACgn5+foKCznp6eV1dYWFhW
+OzudnJybm5qZVVVVVVRUmFNTU1JSsJeVUE5RTzmuk5SUkgAAn5+fn6Cgs7OenldYWFhYVlY7
+O5ycm5uamZmZmVVVVFRUmFNTUrCXlVBOUU9POTmTlJIAAJ+fn5+foLqznp5XV1hYWFhWOzuc
+nJubmpmZmZmZVVVVVFSYU1Kwl5eVUE5RT0+uk5SUAAC0n5+fn6Cgs56enldXWFhYVjs7nJub
+m5qamZmZmZlVVVVUVFNSsJaXl5VQTlFPrpOUlAAAtLSfn5+goLOenp5XV1dYWFY7nZybm5ub
+mpqZmZmZmZmZVVSYUrA6lpeVUE5RT66TlJQAALS0tLSfn6C6s56eV1dXWFhWO52cnJybm5ub
+mpqZmZmZmZlUmFJSsDqXl1BOUU+uk5SUAAC0orS0tLSgoLOenldXV1hYVjs7nJycm5ubm5ua
+mZmampqZVFRTUrA6l5eVUFFPrpOTkwAAtKKiorS0n5+gs56eV1dYWFZWO52cnJubm5ubmpqa
+mpqamVRUU1KwlpeXlVBRT645OTkAALSioqKitLSfoKCenp5XWFhWVjs7sZycm5ubm5qampqa
+mplUVFNSsJaXl5VQUU+urjmuAAC0oqKiorS0n6Cgs56eV1hYVlY7OzucnJubm5uampqampqZ
+VFRTUrCWl5eVUFFPOa45rgAAtKKioqK0tLSfoLqznldXWFZWVjs7nZycnJubm5ubmpqZVVSY
+U1KwOpeXlVBRT085rq4AALSioaGiorS0n5+gurOeV1hWVlZWOzudnJycnJubm5qamVVUmFNS
+UrCWl5VQTk5RTzmuAAC0oqGhoaK0tLSfn6C6s55XWFZWVjs7O52dnZ2cm5qamVVVVJhTU1JS
+OpeXlVBQUE5POQAAtKKhoaGhorS0tJ+foLqeV1hYVlY7Ozs7OzudnJubmplVVFSYU1NTUrA6
+l5eVlZVQTk8AAKKioaGhoaKitLS0n5+gs55XWFhWOztWVjs7nZybm5pVVFSYU1NTU1JSsDqW
+l5eVlVBRAAChoaGhoaGhorS0tLSfoLqznldYVlZWVlY7O52cm5uaVVVUmFNTUlJSUrA6lpeX
+l5VQTgAAoS8voaGhoaKitLS0n6Cgs56eV1hYWFZWOzucnJuamZlVVJhTUlJSUrA6lpeXl5eV
+lVAAAC8vLy+hoaGiorS0tJ+goLqznp5XWFhWVjudnJubmpmZVVSYU1JSUlKwOpaXlZWVlZWV
+AAAvLy8voaGhoqK0tLSfoKC6s7OeV1hYVjs7nJubmpqZmVVUmFKwsFJSOpaXl5WVlZWVlwAA
+Ly8vL6GhoaKitLS0n6CgurOznldYWFY7O5ybmpmamZlVVJhSsLCWljqWl5eVlZWVlZcAAC8v
+Ly8vL6GioqK0tJ+goLqzs55XWFhWOzucm5qZmZlVVVRTUjo6lpaWl5eXl5eXl5eXAAChLy8v
+Ly+hoqKitLSfoKC6s56eV1hYVjudnJuamVVVVVSYUrA6lpeXl5eXl5eXl5aWlgAAoS8vLy8v
+oaK0tLS0n5+gurOeV1dYWFY7nZybmlVVVFRUU1KwOpaXl5eXl5eXljqwsDoAAKGhLy8voaK0
+tLS0tJ+foLOenldXWFY7O5ybmplVVFRUVFNSsDqWl5eXl5eXljqwUlKwAAChoaGhoaGitLSf
+n5+foKCznp5XV1ZWO52cm5qZVVVUVJhTUlI6lpeXl5eXljqwUlJSUgAAoqGhoaKitLSfoKCg
+oKC6s56eV1hWO52cm5uZVVVVVFSYU1JSOpeXl5aWl5Y6UlJTU1IAAKKioqK0tLSfoKC6uqCg
+urOenldYO52cnJuaVVVUVFRUmFNSUpaXl5c6OpY6OlJSUlNTAACioqK0tJ+foKC6s7O6urOz
+np5XVjucm5yamVVUVFRUVFRTUrCWl5eWOjo6OjqwUlJTUwAAoqKitJ+gurq6s7Ozs7qznp6e
+V1Y7nJuamVVVVFRUVFRUmFOwOpaWljqwsLA6sFJSU1MAAKKiorSfoLq6urOzs56zs56enldW
+O5ybmplVVVRUVFRUVJhTUrA6Ojo6sLCwsFJTmJhTAACioqK0n6C6s7Ozs56enp6enldYVjuc
+m5qZVVVUVFRUVFSYU1KwOjo6OrCwsLBSU5iYUwAAoqK0n6CgurOzs7Oenp6enp5XWFY7nJuZ
+VVVVVVRUVFSYmFNSsDo6sLCwsFJSUlOYmFMAAKK0tJ+goKC6s7Oznp6enp5XV1g7nZybmVVV
+VVVUVFSYU1NTUrCwsFJSsLBSUlNTU1NTAAC0tJ+foKCgurOznp6eV1dXV1hWO52cm5lVVVVV
+VFSYmFOYU1JSUlJSUrBSUlJTU1NTUwAAtLSfn6CgurOznp6enldXWFhWVjudnJuamVVVVVRU
+mJiYmFNTU1NTUlJSUlJSU1NTU1MAALSfn5+goLOznp6enp5XWFZWOzs7nZybm5qZmVVUVFSY
+mJiYU1NTU1JSUlNTU1NTU1NTAACfn5+foKCznp6enp6eV1hWOzudnZycm5ubmplVVFRUmFNT
+mJiYmFNTUlJTU1NTU1NTUwAAoKCgoKCgs56enp5XV1hWVjudnJycnJubm5qZmVVUVJhTU5iY
+mJiYU1NTU1NTU1JSUlIAAKCgoKCgurOenleeWFhWVjs7nZycnJybm5uamZlVVJiYmJiYmJiY
+mJhTU1NTU1JSUlKwAACgoKCgoLqznp5XWFZWvlY7O52cnJycm5ubmpmZVVSYmJiYmJiYmJhU
+mJhTU1NSUlJSsAAAoKC6urqznp6eV1hWOzs7O52cnJycnJubm5qZmVVUmJiYmFNTU1OYVJiY
+U1NSUrCwUjoAAKCgurqzs56enldYVjs7O52cnJycnJybm5uamZlVVFSYmJhTU1NTmFRUmFNT
+UlKwsLA6AAC6oKC6s56enldYVlY7O5ycnJubm5ubm5uampmZVVRUVJiYU1NTmJhUVJhTU1NS
+sDo6lgAAuqCgs56enldYVjs7O52bm5ubm5ubm5uamZmZVVVUVFSYmJiYmFRUVFSYU1NTUrA6
+lpcAAKCgurOenldXWFY7O52cm5uampqbm5qamVVVVVVVVFRUmJiYVFRUVFRUVJhTU1KwOpaX
+AACgurOenldXWFY7O52cm5uampqampqZVVRUVFRVVVRUmJiYmFRUVFRUVFSYU1NSUjqWlwAA
+urqznldYWFY7nZycm5ubmpqampqZVVRUmJhUVFVUVJiYmJhUVFRUVJiYmFNTU1KwlpcAALOz
+np5YVlY7nZybm5ubmpqZmZmZmVVUU1NTmFRUVFRUmJiYmJiYmFNTU1NTU1NSUjqWAACzs55X
+WFY7O5ybm5qampqZmZmZmVVUmFNSUlOYVFRUVJiYU1NTU1NTUlJTU1NTUlKwOgAAnp6eV1Y7
+Ozucm5uamZmaVVVVVVW4VFNSUlJTU1RUVFSYU1NSUlJSUlJSUlNTU1JSUrAAAJ6enldWOzs7
+nJuamplVmVVVVFVVVFNTUlJSU1O3VFRUmFNTUlJSsLBSUlJTU1NSUlKwAACenldYVjs7nZyb
+mpmZVVVVVVRUVFRTU1JSUlNTU5iYmJhTU1JSUrCwUlJSUlJSUlKwOgAAV1dYVjs7nZybm5qZ
+VVRUVFRUVFSYU1JSUlJTU1NTU1NTU1JSUrA6OrBSUlKwsLA6lpYAAFhYVlY7nZycm5qZVVRU
+VFRUmFNTU1JSUlJSU1NTU1NTU1JSUlKwlpawsLCwOjo6lpeXAABWVjs7O5ybm5uaVVRUmJiY
+U1NSUlJSUlJSUlJSUlJSUlJSsLCwOpaWOjo6OpaWl5eXlwAAOzs7nZybm5uamVVUVFNTU1NS
+sLCwsFJSUlJSUlJSUlJSsLCwOpaXl5aWlpaXl5eXl5UAAJycnJybm5qampmZVVRTU1NSUjqW
+ljqwsLA6OrCwsDo6Ojo6OpaXl5eXl5eXl5eVlZWVAACbm5ubmpqampmZmVVUU1JSUjqWl5eW
+OjqWlpaWlpaWlpaWlpaXl5eXl5eXl5eXlZVQUAAAm5uampmZmZmZmVVUmFNSsDqXl5eXl5eX
+l5eXl5eXl5eXl5eXl5eXlZWVl5eXl5VQUE4AAJuampmZmZmZmVVVVFNSUpaXlZWXl5eXl5eX
+l5eXl5eXl5eXlZWVl5VQUJeXl5WVUE5RAACZmZqZmZmZmZlVVFRTUrCWlVBQl5eXl5eXl5eX
+l5eXl5eXl1BQlVCVTlBQl5eVlVBOUQAAmZmZmVWZmZlVVVSYU1KWl5VQUJWVl5eXl5eXl5eV
+lZWVlZVQUFBQUE5QUJWVlVBQTlEAAJlVVZlVmZlVVVRUU1I6l5WVUFBQlZWVl5eXlZWVlVBQ
+UFBOTk5RTlFRTlBQUFBQUE5RAABVVVVVVVVVVVRUU1I6l5eVUFBQUFCVlZWVlVBQUFBQUE5R
+T09PT09PT1FOUFBQUE5RTwAAVVRUVVVVVFRUU1KwlpeVUFBQUE5QUFBQUFBOTlFRT09PTzk5
+OTk5OTlPT1FRTk5RT08AAFRUVFRUVFSYU1KwOpeXlVBQUFBOTlBQUE5RT09POa45OTk5OTk5
+OTk5rjlPT09PT09PAABUVFRUVFSYU1I6lpaXl5VQUFBQTk5QTk5RTzmuOTmTlJSUlJSUlJSU
+lJM5rq45rjk5OQAAVFRUVJhTU1KwlpeXl5eVUFBOTk5OTlFPTzk5k5SUlJSSkpKSkpKSlJSU
+lJOTOZM5rq4AAFRUVJhTUlKwlpeXl5eXlVBOUVFPUU9POTk5k5SUlJKSkZGRkZKSkpSUlJSU
+lJSUkzmTAACYmJhTUlKwlpeXl5eXlVBQtk9POTlPOTmTlJSUlJKRkZGRkZGSkpKUlJSSkpKU
+lJQ5lAAAmJiYU1JSsJeXl5eXl5VQr085OTmTk5M5k5SUlJSRkZGRkZGRkpKSlJSUkpGRlJSU
+lJQAAFNTU1NSsDqXl5eXl5eVUE85rpM5k5SUlJSUkpKSkZGRkZGRkZKSkpKSkpKRkZKSlJSU
+AABTUlJSsDqXl5WVl5WVUFFPrjmTlJSUlJSSkpGRkZGRkZGRkZGRkpKSkpKRkZGRkZKRkgAA
+UlKwsDqWl5VQlZWVUE5POTmTlJSUkpKSkpGRkZGRkZGRkZGRkZGRkZGRkZCRkZGRkZEAALCw
+OjqWl5VQUFBQUE5RTzk5lJSUkpKSkpGRkZCQkJGRkZGRkZGRkZGRkZCQkJCQkJCQAACwOpaX
+l5eVUE5OUVFPT0+uk5SUlJKSkZGRkZCQkJCRkZGRkJCQkJGRkZCQj4+Pj4+PjwAAOpaXl5eV
+UFBOUU9PT085OZSUlJKSkZGRkJCPj4+QkJCQkJCPj4+QkJCQj4+Pjo6Oj48AAJeXl5eXlVBO
+UU9PTzk5rpOUlJKSkZGRkJCPj4+Pj4+Pj4+Pj4+Pj4+Pj4+Ojo6Ojo6OAACVl5eXl5VQTk9P
+T0+uOZOUkpKRkZGRkI+Pj4+Pj4+Pj4+Pjo6Ojo9Njo6OjY2NjY2OjgAAUJWXl5eVUE5PT09P
+rpOUkpGRkZGRrY+Pj4+Oj6urq4+Ojo2NjY2OjY2MjIyNjY2Ojo4AAFBQUFBQlVBOT09POa6T
+kpGRkZGRrI+Pj4+Pjo2Ojo6OjYuMi42Ni42NjIyMjY2Njo6OAABQUFBQUFBQTk9POa45lJKR
+kZGQkI+Pj4+Pjo6NjI2Mi4uKioqLi4uLi4uLi4yNjY6OjgAAUU5OUFBQUFFPOa6TlJSSkZGR
+kJCPj4+Pjo6OjYyLi4qKioqKi4uLi4uLi4uLjI2NjY4AAE9PT1FRUVFPT66TlJKSkpGRkZCP
+j4+Pj46Ojo2LiopMiUyKioqKiouLi4uKiouLjI2NAAA5T09PT09PTzk5lJSSkZGRkZCPj4+O
+j4+Ojo2MiopMiIiITIqKioqKioqKioqKi4uMjAAAOTk5Oa6urq6uk5SSkZGRkZCQj46Ojo6O
+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
+Q0RERDA0Kn59fQAASoaEhIKDGg7DfQEBAQEBAQEBAQHSciITKccfNhbLxgEXzxbhRUREQ0NE
+RCg8K3l+fX0AAISEgoKAgUZHf318AQEBAQEBAQEBxjIrGDQgGSImw8YBAQHDLCFDQ0NDROUT
+HcN5e3x9AACCgoCBgUlGf319fH4BF9IBAQEBARXV3TwVFTAYLarSAQEBASwyHEJDQ8YaNjYB
+eXl7fAAAgIOBSUlGRn99fXx+e3t5RURDQ9baxBLF3m4kKgQmxgEBAdIWzR82CQGyxhosRUV5
+e34AAIFJSUZGRkd/fX18fnt5RUVEQ9W1xMISEhLiEegSxLIBAQHILc7KLAEBARoVLEVFeXl7
+AABJSUZGR39/fX18e3t5eUVFREK1bsTd3hESEhEREjTDAQEBAQHGy9EmNtIjAQFFRXl5ewAA
+RkZGR399fXx+e3l5RUVFRMAkvbW9Er+/v94REhEdAQEBAQEBAQEBAQHSqgEXRUV5eXsAAEd/
+f399fXx+e3lFRUVERCTT1rvEvRIS3cQSEm4qHLIB0qoWAQEBAQEBAQEdAUVFeXl7AAB/fX18
+fn57e3lFREREQxIktcS1bsTCEhISEhLWIQsPAQEB0M7JFwYtMkNEREVFRXl5ewAAf35+e3t7
+eXmkREN4eEIktbXdwcLExMTExMQSxDDEJBMXAdIBAcgBLEJDQ0RFRUV5eXsAAHx7eXt5eUVF
+RURCQ0NC3W7dbsHEvRLEtcQSEdQuJLXTNDQeJgEPF3VCQ0NERUVFeXl7AAB5RUVFRUR4eERD
+QkJCdbVubt0SxMTExBISEhHXFSTTKtfW1QQmIyJBdXdDREVFRUV5ewAARERDQ0NDQ0NDQ0J3
+QiTabsS9xMTExMQSxMTEERG1JBQwbiowGCo1QXV3QkRFRUVFeXsAAENCQkJCQkJCQkJCdUHE
+3W7ExBLExBISxBISbnBw3G4dtS7ELnUuNEF1QkJDREVFRXl7AAB3d3d3d0JCQkJ1QXbatcTE
+bsTExMTExMQSEsQUcHBwtXQuHkF1deNBQXVCQ0RFRUV5ewAAdXVCQnVBdnZ2dnTWbm69xMTE
+bsTEEsTExMRuI29wcHB0dnZBQUFBdnZBd0NERERFeXkAAHZ2dXVBdnR0cHC1bsRu3d3EbsTn
+xG7ExCRuLEBxb3BwdHZ2dnZ2dnZ2dnVCQ0RERXl5AAB2dnZ2dnRwb3Fu2m7d3cTEbm7ExMTn
+xLW1QEBAQHFwcHR0dHZ2dnZ2dnZ2dUJDREVFeQAAdHR0dHRwbxLW2m7ExMTEtW5utcTEtS4u
+Pz8/Pz9xcHB0dHR0dHR0dHR0dnZCQkNEREUAAHR0cHBwGG61tbXEbsS1tS4UFShsP7Uua2tr
+P2w/cXBwcHBwdHR0dHBwdHR2dkJDQ0NFAAB0cHBvcW4k5i61tdW1tTC1QD8/P2u1ampqams/
+P0BwcHBwcHBwdHRvcHB0dnR2QXdDQwAAdHBwb0ApFRzmtcTmLio/Pz9sbD9rbWppaWprPz9A
+cHBwcHBwcHBwb3BvdHB0dkFCd0IAAHBwb3Eu5ubXteYVxD8/P2trbGw/a2pqaWlqbWtsP0Bx
+cW9vb29xcXFvb3BwdHR2dnV1AABwb3FAQCTm5uYUbW1ra2traz9sP2tqamlpaWpta2xsQEBA
+QEBAQEBAcXFvcHBwdHR2dgAAcG9xQD8/bW1tampta2trbW1rPz9rbWpqamlpamptaz9sbGxs
+bD9AQEBAcW9vb3BwdHQAAG9vcUA/a2pqampqbWtrbWpqbWtra21qamppaWlpamptbWtra2s/
+bD8/QEBAQHFvb3BwAABvb3FAbGtqaWlqam1rbWpqampqbW1qamlpaWlpZmlpampqbW1taz9s
+bD9AQEBAcXFvcAAAb29APz9tamlpampqampqampqampqamlpaWlpZmZmZmlpampqam1rPz9s
+QEBAQHFAQHEAAG9xQGxrbWpqaWlpaWlpaWpqampqaWlpaWlpZmZmZmZmaWlpamptaz8/bD9A
+QEBAQEBAAABxQD9sa21qamlpaWlpaWlqampqaWlmZmZmZmZmZmZmZmlpaWptbWs/P2xsP0BA
+QD8/QAAAQEA/bD9ramppaWlmZmlpampqamlpZmZmZmZmZmZmZmZpaWpqbW1taz8/P2xAQD9s
+bEAAAEBAP2w/a2pqaWlpZmZpaWpqamppaWZmZmZmZmZmZmZmaWlqam1tbWs/Pz9sbD9rbGw/
+AABAQD8/bD9qamlpZmZmaWlpaWpqaWlpaWlpaWlpaWlpaWlpampqampta2trP2xsaz8/PwAA
+Pz8/P2w/bWppaWZmZmlpaWlpaWlpampqamlpaWpqamlpaWlqampqam1tbWs/a21tbW0AAGxs
+bD9sP2tqaWlpaWZmZmZmaWlqampqampqampqampqaWlpaWlpampqampqbWpqampqAABraz9s
+bD9ramlpaWlmZmZmZmlpampqampqbW1tampqamlpaWlpaWlpaWpqampqamlpaQAAAAA=
+
+--Message-Boundary-20828--
+)
+a1 OK FETCH complete.</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT      STATE SERVICE        VERSION
+25/tcp    open  smtp           Mercury/32 smtpd (Mail server account Maiser)
+| smtp-commands: localhost Hello nmap.scanme.org; ESMTPs are:, TIME, SIZE 0, HELP
+|_ Recognized SMTP commands are: HELO EHLO MAIL RCPT DATA RSET AUTH NOOP QUIT HELP VRFY SOML Mail server account is &#39;Maiser&#39;.
+79/tcp    open  finger         Mercury/32 fingerd
+| finger: Login: Admin         Name: Mail System Administrator\x0D
+| \x0D
+|_[No profile information]\x0D
+105/tcp   open  ph-addressbook Mercury/32 PH addressbook server
+106/tcp   open  pop3pw         Mercury/32 poppass service
+110/tcp   open  pop3           Mercury/32 pop3d
+|_pop3-capabilities: USER APOP TOP UIDL EXPIRE(NEVER)
+135/tcp   open  msrpc          Microsoft Windows RPC
+139/tcp   open  netbios-ssn    Microsoft Windows netbios-ssn
+143/tcp   open  imap           Mercury/32 imapd 4.62
+|_imap-capabilities: CAPABILITY OK complete IMAP4rev1 X-MERCURY-1A0001 AUTH=PLAIN                                
+443/tcp   open  ssl/http       Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)                           
+| ssl-cert: Subject: commonName=localhost                                                                        
+| Not valid before: 2009-11-10T23:48:47                                                                          
+|_Not valid after:  2019-11-08T23:48:47
+| tls-alpn: 
+|_  http/1.1
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+|_ssl-date: TLS randomness does not represent time
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-title: Time Travel Company Page
+445/tcp   open  microsoft-ds?
+2224/tcp  open  http           Mercury/32 httpd
+|_http-title: Mercury HTTP Services
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+8000/tcp  open  http           Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: Time Travel Company Page
+11100/tcp open  vnc            VNC (protocol 3.8)
+| vnc-info: 
+|   Protocol version: 3.8
+|   Security types: 
+|_    Unknown security type (40)
+20001/tcp open  ftp            FileZilla ftpd 0.9.41 beta
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -r--r--r-- 1 ftp ftp            312 Oct 20  2020 .babelrc
+| -r--r--r-- 1 ftp ftp            147 Oct 20  2020 .editorconfig
+| -r--r--r-- 1 ftp ftp             23 Oct 20  2020 .eslintignore
+| -r--r--r-- 1 ftp ftp            779 Oct 20  2020 .eslintrc.js
+| -r--r--r-- 1 ftp ftp            167 Oct 20  2020 .gitignore
+| -r--r--r-- 1 ftp ftp            228 Oct 20  2020 .postcssrc.js
+| -r--r--r-- 1 ftp ftp            346 Oct 20  2020 .tern-project
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 build
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 config
+| -r--r--r-- 1 ftp ftp           1376 Oct 20  2020 index.html
+| -r--r--r-- 1 ftp ftp         425010 Oct 20  2020 package-lock.json
+| -r--r--r-- 1 ftp ftp           2454 Oct 20  2020 package.json
+| -r--r--r-- 1 ftp ftp           1100 Oct 20  2020 README.md
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 src
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 static
+|_-r--r--r-- 1 ftp ftp            127 Oct 20  2020 _redirects
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+|_ftp-bounce: bounce working!
+33006/tcp open  mysql          MariaDB 10.3.24 or later (unauthorized)
+49664/tcp open  msrpc          Microsoft Windows RPC
+49665/tcp open  msrpc          Microsoft Windows RPC
+49666/tcp open  msrpc          Microsoft Windows RPC
+49667/tcp open  msrpc          Microsoft Windows RPC
+49668/tcp open  msrpc          Microsoft Windows RPC
+49669/tcp open  msrpc          Microsoft Windows RPC
+Service Info: Host: localhost; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-06-24T20:50:28
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required</code></pre><ul>
+<li><p>Navigating on port 80, we found list of users</p>
+</li>
+<li><p>making a list of users from these names</p>
+</li>
+<li><p>Everyone has a job title but under jonas,  it is <code>SicMundusCreatusEst</code> which does not seem to be a job title, maybe a password</p>
+</li>
+<li><p>All the user exists</p>
+</li>
+<li><p>trying to connect to imap we see there are 5 emails</p>
+</li>
+<li><p>Upon inspecting the body of each email inside jonas&#39;s inbox, I discovered a recurring theme:</p>
+<ul>
+<li>&quot;All the spreadsheets and documents will be first procesed in the mail server directly to check the compatibility.”</li>
+</ul>
+</li>
+<li><p>This suggests that the mail server is actively parsing or handling uploaded documents — potentially opening up a file-based attack surface (e.g., macro injection).</p>
+</li>
+<li></li>
+</ul>
+<h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

