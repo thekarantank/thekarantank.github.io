@@ -1,318 +1,317 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Karan Tank | Cybersecurity Portfolio</title>
-  <meta name="description" content="Portfolio of Karan Tank, Cybersecurity Engineer specializing in penetration testing, WAF, and threat detection.">
-  <meta name="author" content="Karan Tank">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- TailwindCSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-  <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
-
+  <meta name="description" content="Karan Tank is a Senior Security Engineer focused on application security, offensive security, detection, and response.">
+  <meta name="author" content="Karan Tank">
+  <title>Karan Tank | Senior Security Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      scroll-behavior: smooth;
-      background: linear-gradient(135deg, #0f1724 0%, #1e293b 100%);
-      color: #f0f0f0;
-      overflow-x: hidden;
-    }
-    .section { min-height: 100vh; padding: 100px 20px; position: relative; }
-    header { position: sticky; top: 0; z-index: 1000; background: rgba(15,23,36,0.8); backdrop-filter: blur(10px); }
-    .nav-link { color: #f0f0f0; margin-left: 20px; font-weight: 600; transition: color 0.3s; }
-    .nav-link:hover { color: #facc15; }
-    .btn { border: 2px solid #facc15; color: #facc15; padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 8px; transition: all 0.3s ease; }
-    .btn:hover { background: #facc15; color: #111827; }
-    #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
-    .fade-in { opacity: 0; transform: translateY(40px); }
-
-    /* Timeline */
-    .timeline { position: relative; margin: 50px 0; }
-    .timeline::after { content: ''; position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 4px; height: 100%; background: #facc15; }
-    .timeline-item { position: relative; width: 50%; padding: 20px 40px; box-sizing: border-box; }
-    .timeline-item-left { left: 0; text-align: right; }
-    .timeline-item-right { left: 50%; text-align: left; }
-    .timeline-dot { position: absolute; top: 20px; width: 12px; height: 12px; border-radius: 50%; background: #facc15; border: 2px solid #fff; z-index: 1; }
-    .timeline-left .timeline-dot { right: -6px; }
-    .timeline-right .timeline-dot { left: -6px; }
-    .timeline-spark { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #facc15; }
-
-    /* Certification Cards */
-    .cert-card { background: rgba(15,23,36,0.7); border-radius: 10px; padding: 20px; transition: all 0.3s; cursor: pointer; }
-    .cert-card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(250,204,21,0.4); }
-
-    /* Responsive certification images */
-    .cert-card img {
-      width: 100%;
-      max-width: 120px;
-      height: auto;
-    }
-
-    @media (max-width: 1024px) {
-      .grid.md\:grid-cols-5 {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .cert-card img {
-        max-width: 80px;
-      }
-      .grid.md\:grid-cols-5 {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @keyframes sparkAnim {
-      0% {transform: translateY(0) translateX(0);}
-      50% {transform: translateY(-10px) translateX(-2px);}
-      100% {transform: translateY(0) translateX(0);}
-    }
+    :root { --ink:#edf5f3; --muted:#9eafad; --bg:#071513; --panel:#0b201d; --line:#24423d; --accent:#c7ff5e; --accent-ink:#102008; }
+    * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { margin:0; background:var(--bg); color:var(--ink); font-family:Manrope,Arial,sans-serif; line-height:1.65; } a { color:inherit; }
+    .shell { width:min(1120px,calc(100% - 40px)); margin:auto; } .eyebrow { color:var(--accent); font:500 .75rem/1.2 "DM Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .skip { position:absolute; left:-9999px; top:auto; } .skip:focus { left:1rem; top:1rem; z-index:10; background:var(--accent); color:var(--accent-ink); padding:.6rem 1rem; }
+    header { position:sticky; top:0; z-index:5; background:rgba(7,21,19,.91); border-bottom:1px solid rgba(36,66,61,.8); backdrop-filter:blur(12px); } .nav { min-height:76px; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .brand { font-weight:800; text-decoration:none; letter-spacing:-.03em; } nav { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.25rem 1.2rem; } nav a { color:var(--muted); font-size:.85rem; text-decoration:none; } nav a:hover,nav a:focus { color:var(--accent); }
+    .hero { min-height:690px; display:grid; align-items:center; padding:100px 0 78px; background:radial-gradient(circle at 80% 18%,rgba(137,255,102,.16),transparent 24rem),radial-gradient(circle at 10% 70%,rgba(24,122,112,.2),transparent 28rem); } .hero-grid { display:grid; grid-template-columns:1.3fr .7fr; gap:4rem; align-items:end; }
+    h1,h2,h3,p { margin-top:0; } h1 { max-width:790px; margin:.65rem 0 1.3rem; font-size:clamp(3rem,8vw,6.6rem); line-height:.98; letter-spacing:-.075em; } h1 span { color:var(--accent); } .lede { max-width:640px; color:#c1cfcc; font-size:clamp(1.05rem,2vw,1.28rem); }
+    .actions { display:flex; flex-wrap:wrap; gap:.8rem; margin-top:2rem; } .button { display:inline-block; padding:.8rem 1.1rem; border:1px solid var(--accent); border-radius:3px; color:var(--accent); font-weight:700; font-size:.9rem; text-decoration:none; transition:.2s ease; } .button:hover { background:var(--accent); color:var(--accent-ink); transform:translateY(-2px); } .button.ghost { border-color:var(--line); color:var(--ink); } .button.ghost:hover { border-color:var(--accent); }
+    .hero-note { padding:1.3rem; border-left:2px solid var(--accent); background:rgba(11,32,29,.78); color:var(--muted); } .hero-note strong { color:var(--ink); display:block; margin-bottom:.3rem; }
+    section { padding:100px 0; border-top:1px solid var(--line); } .section-heading { display:grid; grid-template-columns:220px 1fr; gap:2rem; margin-bottom:3rem; } h2 { margin:0; font-size:clamp(2rem,4vw,3rem); line-height:1.05; letter-spacing:-.055em; } .section-intro { max-width:650px; color:var(--muted); }
+    .about-copy { max-width:790px; font-size:1.14rem; } .about-copy p { margin-bottom:1.15rem; } .principles { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:3rem; } .principle { padding:1.35rem; border:1px solid var(--line); background:var(--panel); } .principle b { display:block; margin-bottom:.45rem; font-size:.95rem; } .principle span { color:var(--muted); font-size:.9rem; }
+    .work-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; } .work-card { min-height:245px; padding:1.55rem; border:1px solid var(--line); background:linear-gradient(135deg,rgba(11,32,29,.98),rgba(7,21,19,.98)); display:flex; flex-direction:column; } .work-card.featured { grid-column:span 2; min-height:200px; background:linear-gradient(115deg,rgba(32,75,48,.56),rgba(11,32,29,.98) 60%); } .tag { color:var(--accent); font:500 .74rem "DM Mono",monospace; letter-spacing:.07em; text-transform:uppercase; } .work-card h3 { margin:.8rem 0 .7rem; font-size:1.3rem; letter-spacing:-.035em; } .work-card p { margin-bottom:1rem; color:var(--muted); } .card-link { color:var(--accent); margin-top:auto; font-size:.9rem; font-weight:700; text-decoration:none; }
+    .journey { position:relative; margin-left:14px; padding-left:38px; border-left:1px solid var(--line); } .journey-item { position:relative; display:grid; grid-template-columns:170px 1fr; gap:1.5rem; padding:0 0 2.4rem; } .journey-item::before { content:""; position:absolute; left:-45px; top:.35rem; width:13px; height:13px; border:3px solid var(--bg); border-radius:50%; background:var(--accent); box-shadow:0 0 0 1px var(--accent); } .journey-date { color:var(--accent); font:500 .82rem "DM Mono",monospace; } .journey-item h3 { margin:0 0 .15rem; font-size:1.16rem; } .journey-item p { margin:0; color:var(--muted); }
+    .thinking { display:grid; grid-template-columns:1fr 1fr; gap:1rem; } .quote { padding:2rem; background:var(--accent); color:var(--accent-ink); font-size:clamp(1.45rem,3vw,2.2rem); font-weight:800; line-height:1.18; letter-spacing:-.05em; } .questions { padding:1.6rem; border:1px solid var(--line); } .questions p { color:var(--muted); } .questions ul { margin:0; padding:0; list-style:none; } .questions li { padding:.55rem 0; border-top:1px solid var(--line); }
+    .now-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; } .now { padding:1.4rem; border-top:2px solid var(--accent); background:var(--panel); } .now b { display:block; margin:.5rem 0; } .now p { margin:0; color:var(--muted); font-size:.92rem; }
+    .certs { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; } .cert { display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:112px; padding:1rem 1.15rem; border:1px solid var(--line); background:var(--panel); text-decoration:none; transition:.2s; } .cert:hover { border-color:var(--accent); transform:translateY(-2px); } .cert img { width:58px; max-height:60px; object-fit:contain; flex:none; } .cert b,.cert small { display:block; } .cert small { color:var(--muted); } .external { color:var(--accent); }
+    .tool-groups { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; } .tool-group { padding:1.35rem; border:1px solid var(--line); background:var(--panel); } .tool-group h3 { margin:0 0 1rem; font-size:1.1rem; } .tool-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.65rem; } .tool { min-height:92px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.45rem; padding:.6rem; border:1px solid rgba(36,66,61,.8); background:rgba(7,21,19,.6); text-align:center; font-size:.72rem; } .tool img { width:34px; height:34px; object-fit:contain; } .tool .wordmark,.tool .brandmark { color:var(--accent); font-weight:800; font-size:.78rem; } .tool .brandmark { display:grid; place-items:center; width:35px; height:35px; border:1px solid var(--accent); font-size:.62rem; letter-spacing:-.04em; }
+    footer { padding:3rem 0; background:#06100f; } .footer-inner { display:flex; justify-content:space-between; gap:2rem; align-items:end; } .footer-inner p { margin:.5rem 0 0; color:var(--muted); font-size:.9rem; } .footer-links { display:flex; gap:1rem; flex-wrap:wrap; } .footer-links a { color:var(--accent); font-size:.9rem; }
+    @media (max-width:760px) { .shell { width:min(100% - 28px,1120px); } .nav { padding:1rem 0; align-items:flex-start; } nav { gap:.4rem .85rem; } .hero { min-height:auto; padding:100px 0 70px; } .hero-grid,.section-heading,.thinking { grid-template-columns:1fr; gap:1.5rem; } .principles,.now-grid,.certs { grid-template-columns:1fr 1fr; } .tool-groups { grid-template-columns:1fr; } .work-grid { grid-template-columns:1fr; } .work-card.featured { grid-column:auto; } .journey-item { grid-template-columns:1fr; gap:.25rem; } .footer-inner { align-items:flex-start; flex-direction:column; } } @media (max-width:450px) { header .nav { display:block; } nav { margin-top:.7rem; justify-content:flex-start; } .principles,.now-grid,.certs { grid-template-columns:1fr; } .tool-grid { grid-template-columns:repeat(2,1fr); } }
   </style>
 </head>
-<body onload="window.scrollTo(0,0)">
-
-<div id="particles-js"></div>
-
-<header class="w-full py-4 px-8 flex justify-between items-center">
-  <div class="text-2xl font-bold">Karan Tank</div>
-  <nav>
-    <a href="#intro" class="nav-link">Intro</a>
-    <a href="#about" class="nav-link">About</a>
-    <a href="#timeline" class="nav-link">Experience</a>
-    <a href="#certifications" class="nav-link">Certifications</a>
-    <a href="#contact" class="nav-link">Contact</a>
-  </nav>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header>
+<div class="shell nav">
+<a class="brand" href="#top">KARAN TANK<span aria-hidden="true" style="color:var(--accent)">.</span>
+</a>
+<nav aria-label="Main navigation">
+<a href="#about">About</a>
+<a href="#work">Selected work</a>
+<a href="#journey">Journey</a>
+<a href="#certifications">Credentials</a>
+<a href="#contact">Contact</a>
+</nav>
+</div>
 </header>
-
-<section id="intro" class="section flex flex-col justify-center items-center text-center">
-  <h1 class="text-5xl md:text-6xl font-bold mb-4">I am Karan Tank</h1>
-  <h2 class="text-2xl md:text-3xl text-yellow-400 mb-4"><span id="typewriter"></span></h2>
-  <p class="mb-6">Exploring, testing, and securing the digital world.</p>
-  <a href="#about" class="btn">Learn More</a>
+  <main id="main">
+    <section class="hero" id="top">
+<div class="shell hero-grid">
+<div>
+<p class="eyebrow">Senior Security Engineer · Thales ASRT</p>
+<h1>I find how systems <span>break</span>—then help make them stronger.</h1>
+<p class="lede">I work across application security, offensive security, threat detection, and response. My background in the SOC shapes how I test: every attack path should lead to a better defense.</p>
+<div class="actions">
+<a class="button" href="#work">See selected work</a>
+<a class="button ghost" href="#contact">Contact me</a>
+</div>
+</div>
+<aside class="hero-note">
+<strong>My edge: blue → purple → red.</strong>I have investigated attacks, engineered defenses, and tested how those defenses hold up in practice.</aside>
+</div>
 </section>
-
-<section id="about" class="section">
-  <div class="relative z-10 max-w-4xl mx-auto text-center fade-in">
-    <h2 class="text-4xl font-bold text-yellow-400 mb-6">About Me</h2>
-    <p class="mb-4">
-      I’m <strong>Karan Tank</strong>, a Senior Security Engineer at Thales (Advanced Security Response Team). I specialize in incident response, threat detection, application defense, and penetration testing. My work spans web application testing, bot protection, DDoS emulation, and automating security testing to reduce manual effort.
-    </p>
-    <p class="mb-4">
-      I have hands-on experience in offensive security operations, conducting SQL injection, XSS, and RCE testing, building automated payload scripts, and authoring detailed vulnerability reports. I have trained and mentored interns, contributing to a stronger team and higher retention rates.
-    </p>
-    <p class="mb-4">
-      I hold certifications including <strong>OSCP+, SANS GPEN, eCPPTv3, SANS GCIH, SANS GSEC, SANS GFACT, CompTIA Security+, EC-Council CHFI</strong>, and constantly expand my knowledge through platforms like Proving Grounds, TryHackMe and HackTheBox.
-    </p>
-
-    <div class="flex justify-center gap-6 mt-6">
-      <a href="assets/Proving Grounds/index.html" class="btn">Read My WriteUps</a>
-      <a href="#contact" class="btn">Request Resume</a>
-    </div>
-  </div>
+    <section id="about">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">01 / Who I am</p>
+<h2>Security is more useful when you understand both sides of it.</h2>
+</div>
+<div class="about-copy">
+<p>I’m Karan, a Senior Security Engineer at Thales’ Advanced Security Response Team. I started in security operations, where I learned to investigate suspicious activity and understand the evidence an attack leaves behind. That experience pulled me toward application defense and offensive security.</p>
+<p>Today I assess web applications, test attack techniques, build and tune defenses, and automate repetitive security work. Outside the day job, I build labs, work through practical challenges, and write down what I learn—because explaining a technique is often the fastest way to find the parts I do not yet understand.</p>
+</div>
+<div class="principles">
+<div class="principle">
+<b>Ask the question first</b>
+<span>Understand the risk before reaching for a tool.</span>
+</div>
+<div class="principle">
+<b>Test realistically</b>
+<span>Validate how an attacker would actually move.</span>
+</div>
+<div class="principle">
+<b>Leave better defenses</b>
+<span>Turn findings into detection or prevention.</span>
+</div>
+<div class="principle">
+<b>Keep learning in public</b>
+<span>Document lessons, not just outcomes.</span>
+</div>
+</div>
+</div>
 </section>
-
-
-<!-- <section id="timeline" class="section">
-  <div class="max-w-6xl mx-auto fade-in">
-    <h2 class="text-4xl font-bold text-yellow-400 mb-12 text-center">Experience & Education</h2>
-    <div class="timeline relative">
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">July 2024 - Present</p><h3>Security Engineer</h3><p>Thales - Advanced Security Response Team (ASRT)</p></div>
-      <div class="timeline-item timeline-item-right fade-in"><p class="font-semibold">July 2025 - Oct 2025</p><h3>Advance Cyber Education</h3><p>Toronto Metropolitan University</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">Jan 2024 - July 2024</p><h3>SOC Engineer</h3><p>Imperva</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">May 2023 - Dec 2023</p><h3>Senior Security Analyst (SOC)</h3><p>SecureOps</p></div>
-      <div class="timeline-item timeline-item-right fade-in"><p class="font-semibold">July 2022 - Jan 2023</p><h3>Cybersecurity Training Program</h3><p>Toronto Metropolitan University</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">May 2022 - Apr 2023</p><h3>Security Analyst (SOC)</h3><p>SecureOps</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">Nov 2021 - Apr 2022</p><h3>Datacenter Technician</h3><p>Microsoft</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">Jan 2021 - Nov 2021</p><h3>Technical Support Specialist</h3><p>Vox Mobile</p></div>
-      <div class="timeline-item timeline-item-right fade-in"><p class="font-semibold">Jan 2022 - Apr 2022</p><h3>Junior QA & Security Analyst Program</h3><p>NPower Canada</p></div>
-      <div class="timeline-item timeline-item-left fade-in"><p class="font-semibold">Jan 2020 - Apr 2020</p><h3>Information Security Analyst</h3><p>City of Brampton</p></div>
-      <div class="timeline-item timeline-item-right fade-in"><p class="font-semibold">Jan 2018 - Apr 2020</p><h3>Advanced Diploma in CSI</h3><p>Sir Sandford Fleming College</p></div>
-    </div>
-  </div>
-</section> -->
-
-<section id="timeline" class="section">
-    <div class="max-w-6xl mx-auto fade-in">
-      <h2 class="text-4xl font-bold text-yellow-400 mb-12 text-center">Experience & Education</h2>
-  
-      <div class="timeline relative">
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">Jan 2026 - Present</p>
-          <h3>Senior Security Engineer</h3>
-          <p>Thales - Advanced Security Response Team (ASRT)</p>
-        </div>
-
-      <div class="timeline relative">
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">July 2024 - Dec 2025</p>
-          <h3>Security Engineer</h3>
-          <p>Thales - Advanced Security Response Team (ASRT)</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-right fade-in">
-          <p class="font-semibold">July 2025 - Oct 2025</p>
-          <h3>Advance Cyber Education</h3>
-          <p>Toronto Metropolitan University</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">Jan 2024 - July 2024</p>
-          <h3>SOC Engineer</h3>
-          <p>Imperva</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">May 2023 - Dec 2023</p>
-          <h3>🏢 Senior Security Analyst (SOC)</h3>
-          <p>SecureOps</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-right fade-in">
-          <p class="font-semibold">July 2022 - Jan 2023</p>
-          <h3>Cybersecurity Training Program</h3>
-          <p>Toronto Metropolitan University</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">May 2022 - Apr 2023</p>
-          <h3>Security Analyst (SOC)</h3>
-          <p>SecureOps</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">Nov 2021 - Apr 2022</p>
-          <h3>Datacenter Technician</h3>
-          <p>Microsoft</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">Jan 2021 - Nov 2021</p>
-          <h3>Technical Support Specialist</h3>
-          <p>Vox Mobile</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-right fade-in">
-          <p class="font-semibold">Jan 2022 - Apr 2022</p>
-          <h3>Junior QA & Security Analyst Program</h3>
-          <p>NPower Canada</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-left fade-in">
-          <p class="font-semibold">Jan 2020 - Apr 2020</p>
-          <h3>Information Security Analyst</h3>
-          <p>City of Brampton</p>
-        </div>
-  
-        <div class="timeline-item timeline-item-right fade-in">
-          <p class="font-semibold">Jan 2018 - Apr 2020</p>
-          <h3>Advanced Diploma in Computer Security & Investigations</h3>
-          <p>Sir Sandford Fleming College</p>
-        </div>
-      </div>
-    </div>
-  </section>
-  
-
-<section id="certifications" class="section">
-  <div class="max-w-6xl mx-auto fade-in text-center">
-    <h2 class="text-4xl font-bold text-yellow-400 mb-8">Certifications</h2>
-    <div class="grid md:grid-cols-5 gap-6">
-      <div class="cert-card"><a href="https://credentials.offsec.com/dde38819-6bbc-4e65-86f7-1922f9adb3b9#acc.waZoij0r" target="_blank"><img src="assets/img/OSCP_Logo.png" alt="OSCP" class="mx-auto mb-2"><strong>OSCP</strong></a></div>
-      <div class="cert-card"><a href="https://www.credly.com/badges/1846f4e4-1d5d-40cb-9d71-b58d4103de82/public_url" target="_blank"><img src="assets/img/GPEN.png" alt="GIAC GPEN" class="mx-auto mb-2"><strong>GIAC GPEN</strong></a></div>
-      <div class="cert-card"><a href="https://certs.ine.com/813807b9-6d8e-4035-ae87-eac5af5b8235#acc.a6y2mIHq" target="_blank"><img src="assets/img/ecppt.png" alt="eCPPTv3" class="mx-auto mb-2"><strong>eCPPTv3</strong></a></div>
-      <div class="cert-card"><a href="https://www.credly.com/badges/ec66a487-308e-4a23-9dcb-705a5fb80609" target="_blank"><img src="assets/img/GCIH.png" alt="SANS GCIH" class="mx-auto mb-2"><strong>SANS GCIH</strong></a></div>
-      <div class="cert-card"><a href="https://www.credly.com/badges/b30ebfa1-61d8-4e51-a143-1d4e0cf792cd" target="_blank"><img src="assets/img/GSEC.png" alt="SANS GSEC" class="mx-auto mb-2"><strong>SANS GSEC</strong></a></div>
-      <div class="cert-card"><a href="https://www.credly.com/badges/c410bd9c-0dfc-42a2-b969-27e9b2f06008" target="_blank"><img src="assets/img/GFACT.png" alt="SANS GFACT" class="mx-auto mb-2"><strong>SANS GFACT</strong></a></div>
-      <div class="cert-card"><a href="https://www.credly.com/badges/e197b52d-a576-4a23-b001-9636495e388a/public_url" target="_blank"><img src="assets/img/SecurityPlus.png" alt="CompTIA Security+" class="mx-auto mb-2"><strong>CompTIA Security+</strong></a></div>
-      <div class="cert-card"><a href="https://www.eccouncil.org/train-certify/certified-hacking-forensic-investigator-chfi-north-america/" target="_blank"><img src="assets/img/CHFI.png" alt="EC-Council CHFI" class="mx-auto mb-2"><strong>EC-Council CHFI</strong></a></div>
-      <div class="cert-card"><a href="https://www.pristinetraining.in/course/certified-information-security-and-ethical-hacker.php" target="_blank"><img src="assets/img/pristine.webp" alt="Pristine CISEH" class="mx-auto mb-2"><strong>Pristine CISEH</strong></a></div>
-      <div class="cert-card"><a href="https://tryhackme-certificates.s3-eu-west-1.amazonaws.com/THM-ULR9A9ZCGQ.pdf" target="_blank"><img src="assets/img/tryhackme.png" alt="TryHackMe" class="mx-auto mb-2"><strong>TryHackMe Jr. Penetration Tester</strong></a></div>
-      <div class="cert-card"><img src="assets/img/TCM.png" alt="TCM Security" class="mx-auto mb-2"><strong>TCM Security: Practical Web App Security</strong></div>
-    </div>
-  </div>
+    <section id="work">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">02 / Selected work</p>
+<div>
+<h2>Evidence of how I approach a problem.</h2>
+<p class="section-intro">A small, deliberate selection of hands-on research—not an exhaustive list of every lab or writeup.</p>
+</div>
+</div>
+<div class="work-grid">
+<article class="work-card">
+<span class="tag">Offensive security</span>
+<h3>eCPPTv3: lessons from the assessment</h3>
+<p>A candid reflection on preparation, decision-making under pressure, and the lessons I carried into future testing.</p>
+<a class="card-link" href="assets/pdf/eCPPT.html">Read the writeup →</a>
+</article>
+<article class="work-card">
+<span class="tag">Attack &amp; defense</span>
+<h3>Proving Grounds labs</h3>
+<p>A curated archive of authorized lab assessments, organized by the techniques and security questions each one explores.</p>
+<a class="card-link" href="assets/Proving%20Grounds/index.html">Browse the lab archive →</a>
+</article>
+</div>
+</div>
 </section>
-
-<section id="contact" class="section">
-  <div class="max-w-4xl mx-auto text-center fade-in">
-    <h2 class="text-4xl font-bold text-yellow-400 mb-6">Get In Touch</h2>
-    <p class="mb-2">
-      <a href="mailto:tankkaran89@gmail.com" class="text-yellow-400 underline">tankkaran89@gmail.com</a>
-    </p>
-    <p class="mb-4">
-      Let’s build something secure together — reach out via email or LinkedIn.
-    </p>
-
-    <div class="flex justify-center gap-6 mb-6">
-      <a href="https://linkedin.com/in/karan-tank" target="_blank" class="btn">Connect on LinkedIn</a>
-    </div>
-
-    <div class="flex justify-center gap-6">
-      <a href="https://linkedin.com/in/karan-tank" target="_blank"><i class="fab fa-linkedin fa-2x text-yellow-400"></i></a>
-    </div>
-  </div>
+    <section id="journey">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">03 / My security journey</p>
+<div>
+<h2>From detecting attacks to understanding how they happen.</h2>
+<p class="section-intro">My path is why I naturally connect offensive testing with detection and application defense.</p>
+</div>
+</div>
+<div class="journey">
+<article class="journey-item">
+<div class="journey-date">2026 — Present</div>
+<div>
+<h3>Senior Security Engineer · Thales ASRT</h3>
+<p>Advanced Security Response Team.</p>
+</div>
+</article>
+<article class="journey-item">
+<div class="journey-date">2024 — 2025</div>
+<div>
+<h3>Security Engineer · Thales ASRT</h3>
+<p>Application defense, threat response, and security engineering.</p>
+</div>
+</article>
+<article class="journey-item">
+<div class="journey-date">2024</div>
+<div>
+<h3>SOC Engineer · Imperva</h3>
+<p>Security operations and investigation.</p>
+</div>
+</article>
+<article class="journey-item">
+<div class="journey-date">2022 — 2023</div>
+<div>
+<h3>Security Analyst → Senior Security Analyst · SecureOps</h3>
+<p>Detection, triage, investigation, and incident-response foundations.</p>
+</div>
+</article>
+<article class="journey-item">
+<div class="journey-date">2020 — 2020</div>
+<div>
+<h3>Information Security &amp; Infrastructure</h3>
+<p>City of Brampton, Microsoft, and technical-support roles that built a practical infrastructure baseline.</p>
+</div>
+</article>
+</div>
+</div>
 </section>
-
-<!-- <footer class="text-center py-6 bg-gray-900">© 2025 Karan Tank</footer> -->
-<footer class="text-center py-6 bg-gray-900 text-gray-400 text-sm">
-    © 2025 Karan Tank · <a href="mailto:karantank.cyber@gmail.com" class="text-yellow-400 hover:underline">Email</a> ·
-    <a href="https://linkedin.com/in/karan-tank" target="_blank" class="text-yellow-400 hover:underline">LinkedIn</a>
-  </footer>
-  
-
-<script>
-const typewriter = document.getElementById("typewriter");
-const words = ["Security Engineer", "Penetration Tester", "Threat Hunter"];
-let i = 0, currentWord = "", isDeleting = false;
-
-function type() {
-  const fullWord = words[i];
-  if (isDeleting) currentWord = fullWord.substring(0, currentWord.length - 1);
-  else currentWord = fullWord.substring(0, currentWord.length + 1);
-  typewriter.innerHTML = currentWord;
-  let typingSpeed = isDeleting ? 100 : 150;
-  if (!isDeleting && currentWord === fullWord) { setTimeout(() => { isDeleting = true; type(); }, 1500); return; }
-  else if (isDeleting && currentWord === "") { isDeleting = false; i = (i + 1) % words.length; }
-  setTimeout(type, typingSpeed);
-}
-type();
-
-gsap.utils.toArray('.fade-in').forEach(el=>{
-  gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,scrollTrigger:{trigger:el,start:"top 80%"},duration:1});
-});
-
-particlesJS("particles-js",{
-  "particles":{"number":{"value":80,"density":{"enable":true,"value_area":800}},
-  "color":{"value":"#facc15"},"shape":{"type":"circle"},"opacity":{"value":0.4},
-  "size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#facc15",
-  "opacity":0.2,"width":1},"move":{"enable":true,"speed":2,"direction":"none","random":false,"straight":false,"out_mode":"out"}},
-  "interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}}}
-});
-
-
-const timeline = document.querySelector('.timeline');
-for(let i=0;i<30;i++){
-  let spark=document.createElement('div');
-  spark.classList.add('timeline-spark');
-  spark.style.top=Math.random()*timeline.offsetHeight+'px';
-  spark.style.left='50%';
-  spark.style.opacity=Math.random()*0.8+0.2;
-  spark.style.animation=`sparkAnim ${2+Math.random()*2}s linear infinite`;
-  timeline.appendChild(spark);
-}
-</script>
-
+    <section id="thinking">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">04 / How I think</p>
+<h2>Better security starts with better questions.</h2>
+</div>
+<div class="thinking">
+<div class="quote">“I don’t start with the tool. I start with the question: what are we protecting, how could it fail, and what would that failure look like?”</div>
+<div class="questions">
+<p class="eyebrow">When I assess a system</p>
+<ul>
+<li>What is the real attack surface?</li>
+<li>Which path is most likely—not merely possible?</li>
+<li>What evidence would the attack leave behind?</li>
+<li>Can we reproduce, detect, and reduce the risk?</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+    <section id="currently">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">05 / Currently</p>
+<h2>What has my attention right now.</h2>
+</div>
+<div class="now-grid">
+<article class="now">
+<span class="tag">Learning</span>
+<b>Advanced offensive-security techniques</b>
+<p>Building depth through hands-on labs and applied research.</p>
+</article>
+<article class="now">
+<span class="tag">Building</span>
+<b>More repeatable security testing</b>
+<p>Finding opportunities to automate repetitive validation and investigation work.</p>
+</article>
+<article class="now">
+<span class="tag">Exploring</span>
+<b>The application-security / purple-team space</b>
+<p>Connecting realistic testing with controls that make defenders stronger.</p>
+</article>
+</div>
+</div>
+</section>
+    <section id="certifications">
+<div class="shell">
+<div class="section-heading">
+<p class="eyebrow">06 / Credentials</p>
+<div>
+<h2>Certifications that support the practice.</h2>
+<p class="section-intro">Click a credential to open its public verification page.</p>
+</div>
+</div>
+<div class="certs">
+<a class="cert" href="https://credentials.offsec.com/dde38819-6bbc-4e65-86f7-1922f9adb3b9#acc.waZoij0r" target="_blank" rel="noopener">
+<img src="assets/img/OSCP_Logo.png" alt="OSCP logo">
+<span>
+<b>OSCP</b>
+<small>OffSec</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://www.credly.com/badges/1846f4e4-1d5d-40cb-9d71-b58d4103de82/public_url" target="_blank" rel="noopener">
+<img src="assets/img/GPEN.png" alt="GPEN logo">
+<span>
+<b>GPEN</b>
+<small>GIAC</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://certs.ine.com/813807b9-6d8e-4035-ae87-eac5af5b8235#acc.a6y2mIHq" target="_blank" rel="noopener">
+<img src="assets/img/ecppt.png" alt="eCPPT logo">
+<span>
+<b>eCPPTv3</b>
+<small>INE Security</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://www.credly.com/badges/ec66a487-308e-4a23-9dcb-705a5fb80609" target="_blank" rel="noopener">
+<img src="assets/img/GCIH.png" alt="GCIH logo">
+<span>
+<b>GCIH</b>
+<small>GIAC</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://www.credly.com/badges/b30ebfa1-61d8-4e51-a143-1d4e0cf792cd" target="_blank" rel="noopener">
+<img src="assets/img/GSEC.png" alt="GSEC logo">
+<span>
+<b>GSEC</b>
+<small>GIAC</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://www.credly.com/badges/c410bd9c-0dfc-42a2-b969-27e9b2f06008" target="_blank" rel="noopener">
+<img src="assets/img/GFACT.png" alt="GFACT logo">
+<span>
+<b>GFACT</b>
+<small>GIAC</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://www.credly.com/badges/e197b52d-a576-4a23-b001-9636495e388a/public_url" target="_blank" rel="noopener">
+<img src="assets/img/SecurityPlus.png" alt="Security Plus logo">
+<span>
+<b>Security+</b>
+<small>CompTIA</small>
+</span>
+<span class="external">↗</span>
+</a>
+<a class="cert" href="https://tryhackme-certificates.s3-eu-west-1.amazonaws.com/THM-ULR9A9ZCGQ.pdf" target="_blank" rel="noopener">
+<img src="assets/img/tryhackme.png" alt="TryHackMe logo">
+<span>
+<b>Jr Penetration Tester</b>
+<small>TryHackMe</small>
+</span>
+<span class="external">↗</span>
+</a>
+</div>
+</div>
+</section>
+    <section id="tools">
+<div class="shell">
+<div class="section-heading"><p class="eyebrow">07 / Tools &amp; platforms</p><div><h2>Tools I have used in practice.</h2><p class="section-intro">Grouped by the security work they support, rather than presented as an unstructured wall of logos.</p></div></div>
+<div class="tool-groups">
+<article class="tool-group"><p class="eyebrow">Offensive security</p><h3>Assess, validate, and report</h3><div class="tool-grid"><div class="tool"><img src="https://cdn.simpleicons.org/kalilinux/c7ff5e" alt="Kali Linux logo">Kali Linux</div><div class="tool"><img src="https://cdn.simpleicons.org/portswigger/c7ff5e" alt="Burp Suite logo">Burp Suite Pro</div><div class="tool"><img src="https://cdn.simpleicons.org/metasploit/c7ff5e" alt="Metasploit logo">Metasploit</div><div class="tool"><span class="wordmark">NMAP</span>Nmap</div><div class="tool"><span class="brandmark" aria-label="Tenable">TEN</span>Nessus</div><div class="tool"><img src="https://cdn.simpleicons.org/owasp/c7ff5e" alt="OWASP logo">OWASP ZAP</div></div></article>
+<article class="tool-group"><p class="eyebrow">Security operations</p><h3>Detect, investigate, respond</h3><div class="tool-grid"><div class="tool"><img src="https://cdn.simpleicons.org/splunk/c7ff5e" alt="Splunk logo">Splunk</div><div class="tool"><span class="brandmark" aria-label="CrowdStrike">CS</span>CrowdStrike</div><div class="tool"><span class="wordmark">CB</span>Carbon Black</div><div class="tool"><span class="brandmark" aria-label="Microsoft Defender">MS</span>Defender</div><div class="tool"><img src="https://cdn.simpleicons.org/wireshark/c7ff5e" alt="Wireshark logo">Wireshark</div></div></article>
+<article class="tool-group"><p class="eyebrow">Application &amp; network security</p><h3>Protect the edge</h3><div class="tool-grid"><div class="tool"><span class="brandmark" aria-label="Imperva">IMP</span>Imperva WAF</div><div class="tool"><span class="brandmark" aria-label="Imperva">IMP</span>DDoS Protection</div><div class="tool"><span class="brandmark" aria-label="Imperva">IMP</span>Bot Management</div><div class="tool"><span class="wordmark">HTTP</span>HTTP debugging</div><div class="tool"><img src="https://cdn.simpleicons.org/wireshark/c7ff5e" alt="Wireshark logo">Traffic analysis</div></div></article>
+<article class="tool-group"><p class="eyebrow">Development &amp; automation</p><h3>Build repeatable security work</h3><div class="tool-grid"><div class="tool"><img src="https://cdn.simpleicons.org/python/c7ff5e" alt="Python logo">Python</div><div class="tool"><img src="https://cdn.simpleicons.org/gnubash/c7ff5e" alt="Bash logo">Bash</div><div class="tool"><img src="https://cdn.simpleicons.org/git/c7ff5e" alt="Git logo">Git</div><div class="tool"><img src="https://cdn.simpleicons.org/github/c7ff5e" alt="GitHub logo">GitHub</div><div class="tool"><span class="brandmark" aria-label="PowerShell">PS</span>PowerShell</div><div class="tool"><img src="https://cdn.simpleicons.org/postman/c7ff5e" alt="Postman logo">Postman</div><div class="tool"><img src="https://cdn.simpleicons.org/docker/c7ff5e" alt="Docker logo">Docker</div></div></article>
+</div></div>
+</section>
+  </main>
+  <footer id="contact">
+<div class="shell footer-inner">
+<div>
+<p class="eyebrow">Let’s connect</p>
+<h2>Have a security problem worth solving?</h2>
+<p>For opportunities and conversation, reach out by email or LinkedIn.</p>
+</div>
+<div class="footer-links">
+<a href="mailto:tankkaran89@gmail.com">Email</a>
+<a href="https://linkedin.com/in/karan-tank" target="_blank" rel="noopener">LinkedIn ↗</a>
+<a href="mailto:tankkaran89@gmail.com?subject=Résumé%20request">Request résumé</a>
+</div>
+</div>
+</footer>
 </body>
 </html>
